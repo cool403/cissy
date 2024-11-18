@@ -2,13 +2,14 @@
                (:import [java.lang.String]))
 
 ;定义一个节点类型
-(defrecord TaskNodeInfo [^String node-id ^String node-name]
-  
-  (get-startup-nodes [this]
-    ()))
+(defrecord TaskNodeInfo [^String node-id ^String node-name])
 
 ;定义一个任务执行依赖
-(defrecord TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree])
+(deftype TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree] 
+  Object
+  (get-startup-nodes [this]
+    (prn "hello"))
+  )
 
 ;定义一个任务类型
 (defrecord TaskInfo [^String task-id ^String task-name
