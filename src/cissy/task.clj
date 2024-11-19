@@ -23,7 +23,7 @@
     (let [res (java.util.ArrayList.)]
       (for [it all-node-id-set]
         (let [parent-nodes (get parent-node-map (:node-id it))]
-          (cond (or (nil? parent-nodes) (= 0 (count parent-nodes)))
+          (if (or (nil? parent-nodes) (= 0 (count parent-nodes)))
                 (.add res it))))
       res))
   (build-node-tree [this])
