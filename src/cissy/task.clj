@@ -17,7 +17,7 @@
 (defrecord TaskNodeInfo [^String node-id ^String node-name])
 
 ;定义一个任务执行依赖
-(deftype TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree]
+(defrecord TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree]
   TaskNodeGraphDef
   (get-startup-nodes [this]
     (let [res (java.util.ArrayList.)]
