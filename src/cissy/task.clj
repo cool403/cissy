@@ -17,11 +17,14 @@
 (defrecord TaskNodeInfo [^String node-id ^String node-name])
 
 ;定义一个任务执行依赖
-(deftype TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree]
-  TaskNodeGraphDef
-  
+(deftype TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree] 
+  TaskNodeGraphDef 
   (get-startup-nodes [this]
-    )
+    (for [it all-node-id-set]
+      (if (or (contains? parent-node-map (:node-id it)) ())
+       then-expr
+       else-expr)
+      ))
   (build-node-tree [this])
   (add-node-pair [this from-node to-node])
   (get-child-nodes [this])
