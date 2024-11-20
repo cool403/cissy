@@ -1,6 +1,7 @@
 (ns cissy.task
     #_{:clj-kondo/ignore [:syntax]}
-    (:import [java.lang.String]))
+  (:import [java.lang.String]
+           (java.util ArrayList)))
 
 (defprotocol TaskNodeGraphDef
   ;获取启动节点
@@ -24,7 +25,7 @@
       (cond
         (nil? to-node) ()
         (contains? (get d from-node-id) (:node-id to-node)) (.add (get d from-node-id) from-node)
-        :else (-> (java.util.ArrayList.)
+        :else (-> (ArrayList.)
                   (.add to-node)
                   ((fn [x] (.put d from-node-id x))))))))
 
@@ -32,7 +33,7 @@
 (defrecord TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree]
   TaskNodeGraphDef
   (get-startup-nodes [this]
-    (let [res (java.util.ArrayList.)]
+    (let [res (ArrayList.)]
       (doseq [it all-node-id-set]
         (let [parent-nodes (get parent-node-map (:node-id it))]
           (cond
