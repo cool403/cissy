@@ -1,4 +1,4 @@
-(ns cissy.task #_{:clj-kondo/ignore [:syntax]}
+(ns cissy.task
     (:import [java.lang.String]))
 
 (defprotocol TaskNodeGraphDef
