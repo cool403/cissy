@@ -42,7 +42,8 @@
   ;递归获取深度,思路：遍历所有节点判断每个节点的所有父节点是否都已经在depth<= tree_depth的树上，如果是，那么就绑定到当前深度上
   ;其他继续遍历,直至所有节点都被访问过
   (build-node-tree [this]
-    )
+    (-> (.get-startup-nodes this)
+        ))
   (add-node-pair [this from-node to-node]
     (_add-node-pair from-node to-node child-node-map)
     (_add-node-pair to-node from-node parent-node-map)
