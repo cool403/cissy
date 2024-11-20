@@ -21,10 +21,11 @@
   TaskNodeGraphDef
   (get-startup-nodes [this]
     (let [res (java.util.ArrayList.)]
-      (for [it all-node-id-set]
+      (doseq [it all-node-id-set]
         (let [parent-nodes (get parent-node-map (:node-id it))]
-          (if (or (nil? parent-nodes) (= 0 (count parent-nodes)))
-                (.add res it))))
+          (cond
+            (nil? parent-nodes) (.add res it)
+            (= 0 (count parent-nodes)) (.add res it))))
       res))
   (build-node-tree [this])
   (add-node-pair [this from-node to-node])
