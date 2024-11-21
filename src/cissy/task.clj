@@ -50,7 +50,7 @@
       (when (< x 20)
         (.push task-node-tree x (ArrayList.))
         (recur (inc x))))
-    ;匹配深度
+    ;匹配深度,start-up-nodes,每层节点的所有直接子节点
     (loop [start-up-nodes (get-startup-nodes) depth 0 visited-nodes #{}]
       (when (> (count start-up-nodes) 0)
         (doseq [tmp-node all-node-id-set tmp-node-id (:node-id tmp-node)]
