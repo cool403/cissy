@@ -53,11 +53,12 @@
     ;匹配深度,start-up-nodes,每层节点的所有直接子节点
     (loop [start-up-nodes (get-startup-nodes) depth 0 visited-nodes #{}]
       (when (> (count start-up-nodes) 0)
-        (doseq [tmp-node all-node-id-set tmp-node-id (:node-id tmp-node)]
+        (doseq [tmp-node start-up-nodes tmp-node-id (:node-id tmp-node)]
           ;已经被遍历过
           (if-not (contains? visited-nodes tmp-node-id)
             (when (set/superset? visited-nodes (map (fn [it] (:node-id it)) (get-parent-nodes tmp-node-id)))
               (.add (.get task-node-tree depth) tmp-node)
+              ()
               ))
           ))))
   ;注册节点对
