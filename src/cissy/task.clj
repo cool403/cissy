@@ -1,7 +1,8 @@
 (ns cissy.task
-    #_{:clj-kondo/ignore [:syntax]}
+  #_{:clj-kondo/ignore [:syntax]}
   (:import [java.lang.String]
-           (java.util ArrayList)))
+           (java.util ArrayList))
+  (:require [clojure.set :as set]))
 
 (defprotocol TaskNodeGraphDef
   ;获取启动节点
@@ -44,9 +45,21 @@
   ;递归获取深度,思路：遍历所有节点判断每个节点的所有父节点是否都已经在depth<= tree_depth的树上，如果是，那么就绑定到当前深度上
   ;其他继续遍历,直至所有节点都被访问过
   (build-node-tree [this]
-   (let [start-up-nodes (get-startup-nodes)]
-     (if (> (count start-up-nodes) 0)
-       ())))
+    ;初始化tree
+    (loop [x 0]
+      (when (< x 20)
+        (.push task-node-tree x (ArrayList.))
+        (recur (inc x))))
+    ;匹配深度
+    (loop [start-up-nodes (get-startup-nodes) depth 0 visited-nodes #{}]
+      (when (> (count start-up-nodes) 0)
+        (doseq [tmp-node all-node-id-set tmp-node-id (:node-id tmp-node)]
+          ;已经被遍历过
+          (if-not (contains? visited-nodes tmp-node-id)
+            (when (set/superset? visited-nodes (map (fn [it] (:node-id it)) (get-parent-nodes tmp-node-id)))
+              (.add (.get task-node-tree depth) tmp-node)
+              ))
+          ))))
   ;注册节点对
   (add-node-pair [this from-node to-node]
     (_add-node-pair from-node to-node child-node-map)
