@@ -1,6 +1,6 @@
 (ns cissy.task
   #_{:clj-kondo/ignore [:syntax]}
-  (:import [java.lang.String]
+  (:import (java.lang.String)
            (java.util ArrayList))
   (:require [clojure.set :as set]))
 
@@ -46,16 +46,14 @@
   ;其他继续遍历,直至所有节点都被访问过
   (build-node-tree [this]
     ;初始化tree
-    (loop [x 0]
-      (when (< x 20)
-        (.push task-node-tree x (ArrayList.))
-        (recur (inc x))))
+    (dotimes [i 10]
+      (.put task-node-tree i (ArrayList.)))
     ;匹配深度,start-up-nodes,每层节点的所有直接子节点
     (loop [start-up-nodes (get-startup-nodes)
            depth 0
            visited-nodes (atom #{})]
       (def next-nodes (atom (ArrayList.)))
-      (when (> (count start-up-nodes) 0) 
+      (when (> (count start-up-nodes) 0)
         (doseq [tmp-node start-up-nodes
                 ;获取node-id
                 tmp-node-id (:node-id tmp-node)
