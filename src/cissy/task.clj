@@ -64,6 +64,7 @@
             ;(set/superset? #{} nil) 启动节点是空的话，这个语句也是 true 的
             (set/superset? visited-nodes parent-node-id-set)
             (do
+              ;注册节点 
               (.add (.get task-node-tree depth) tmp-node)
               ()))))))
   ;注册节点对
