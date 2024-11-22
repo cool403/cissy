@@ -53,14 +53,19 @@
     ;匹配深度,start-up-nodes,每层节点的所有直接子节点
     (loop [start-up-nodes (get-startup-nodes) depth 0 visited-nodes #{}]
       (when (> (count start-up-nodes) 0)
-        (doseq [tmp-node start-up-nodes tmp-node-id (:node-id tmp-node)]
+        (doseq [tmp-node start-up-nodes
+                ;获取node-id
+                tmp-node-id (:node-id tmp-node)
+                ;获取父节点列表
+                parent-node-id-set (set (map #(:node-id %) (get-parent-nodes tmp-node-id)))]
           ;已经被遍历过
-          (if-not (contains? visited-nodes tmp-node-id)
-            (when (set/superset? visited-nodes (map (fn [it] (:node-id it)) (get-parent-nodes tmp-node-id)))
+          (cond
+            (contains? visited-nodes tmp-node-id) nil
+            ;(set/superset? #{} nil) 启动节点是空的话，这个语句也是 true 的
+            (set/superset? visited-nodes parent-node-id-set)
+            (do
               (.add (.get task-node-tree depth) tmp-node)
-              ()
-              ))
-          ))))
+              ()))))))
   ;注册节点对
   (add-node-pair [this from-node to-node]
     (_add-node-pair from-node to-node child-node-map)
