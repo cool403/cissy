@@ -23,10 +23,14 @@
   "docstring"
   [task-execution-info]
   (timbre/info "start to get startup nodes for task")
-  (let [{^task/TaskInfo task-info :task-info} @task-execution-info
+  (let [{^task/TaskInfo task-info :task-info}   @task-execution-info
         {^task/TaskNodeGraph node-graph :node-graph} task-info
-        startup-nodes (task/get-startup-nodes node-graph)]
+        startup-nodes            (task/get-startup-nodes node-graph)]
     (if (<= (count startup-nodes) 0) (timbre/warn "未匹配到启动节点")
-                                     (for [startup-node startup-nodes startup-node-id (:node-id startup-node)]
-                                       ;获取注册节点配置 
-                                       ()))))
+        ;从深度遍历执行
+        (loop [iter-nodes (get (:task-node-tree node-graph) 0) 
+               depth      0]
+          (when (> (count iter-nodes) 0)
+            (for [tmp-node iter-nodes]
+              (prn "ok"))
+            (recur nil (inc depth)))))))
