@@ -10,8 +10,8 @@
   (get-task-sched-name [this] "执行一次")
   (sched-task-execution [this ^TaskExecutionInfo task-execution-info]
     (timbre/info "execute task info local mod")
-    ((let [{task-info  :task-info
-            start-time :start-time} @task-execution-info]
+    ((let [{task-info  :task-info start-time :start-time} @task-execution-info 
+           {node-graph :node-graph} task-info]
        (timbre/info "start to get startup nodes for " (:task-exec-type task-info))
        )))
   )
