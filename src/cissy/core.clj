@@ -27,4 +27,6 @@
         {^task/TaskNodeGraph node-graph :node-graph} task-info
         startup-nodes (get-startup-nodes node-graph)]
     (if (<= (count startup-nodes) 0) (timbre/warn "未匹配到启动节点")
-        ())))
+        (for [startup-node startup-nodes]
+          ;获取注册节点配置
+          ()))))
