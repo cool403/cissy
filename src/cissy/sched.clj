@@ -1,6 +1,9 @@
 (ns cissy.sched
-  (:import (cissy.executions TaskExecutionInfo TaskSched))
-  (:require [taoensso.timbre :as timbre]))
+  (:require
+   [cissy.core :refer [run-task-in-local]]
+   [taoensso.timbre :as timbre])
+  (:import
+   (cissy.executions TaskExecutionInfo TaskSched)))
 
 
 
@@ -33,6 +36,9 @@
           (timbre/info "start to run task=" (:task-name task-info) "in the " round "round")
            ;执行轮数塞到执行上下文中
           (reset! task-execution-dict (assoc @task-execution-dict :execution-round round))
-          
+          ;执行方法
+          (run-task-in-local task-execution-info)
+          ;随机sleep避免空转
+          (Thread/sleep (rand-int 200))
           (recur (inc round)))))
     ))

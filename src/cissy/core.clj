@@ -1,8 +1,6 @@
 (ns cissy.core
-  (:import (cissy.executions TaskExecutionInfo)))
+  (:require [cissy.executions :refer [TaskExecutionInfo]]))
 
-((defn run-task-in-local
+(defn run-task-in-local
   "docstring"
-  [^TaskExecutionInfo task-execution-info]
-   
-  ))
+  [^TaskExecutionInfo task-execution-info])
