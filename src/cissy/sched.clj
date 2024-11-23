@@ -40,5 +40,7 @@
           (run-task-in-local task-execution-info)
           ;随机sleep避免空转
           (Thread/sleep (rand-int 200))
-          (recur (inc round)))))
+          (recur (inc round))))
+      ;纪录执行结束时间
+      (reset! task-execution-info (assoc @task-execution-info :stop-time (System/currentTimeMillis))))
     ))

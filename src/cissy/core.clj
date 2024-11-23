@@ -3,4 +3,5 @@
 
 (defn run-task-in-local
   "docstring"
-  [^TaskExecutionInfo task-execution-info])
+  [^TaskExecutionInfo task-execution-info]
+  (let [{} @task-execution-info]))
