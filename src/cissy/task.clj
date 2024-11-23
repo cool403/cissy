@@ -6,15 +6,15 @@
 
 (defprotocol TaskNodeGraphDef
   ;获取启动节点
-  (get-startup-nodes [])
+  (get-startup-nodes [this])
   ;构造graph
-  (build-node-tree [])
+  (build-node-tree [this])
   ;添加节点对
-  (add-node-pair [from-node to-node])
+  (add-node-pair [this from-node to-node])
   ;获取子节点列表
-  (get-child-nodes [node-id])
+  (get-child-nodes [this node-id])
   ;获取父节点列表
-  (get-parent-nodes [node-id]))
+  (get-parent-nodes [this node-id]))
 
 ;定义一个节点类型
 (defrecord TaskNodeInfo [^String node-id ^String node-name])
@@ -49,7 +49,7 @@
     (dotimes [i 10]
       (.put task-node-tree i (ArrayList.)))
     ;匹配深度,start-up-nodes,每层节点的所有直接子节点
-    (loop [start-up-nodes (get-startup-nodes)
+    (loop [start-up-nodes (get-startup-nodes this)
            depth 0
            visited-nodes (atom #{})]
       (def next-nodes (atom (ArrayList.)))
@@ -58,7 +58,7 @@
                 ;获取node-id
                 tmp-node-id (:node-id tmp-node)
                 ;获取父节点列表
-                parent-node-id-set (set (map #(:node-id %) (get-parent-nodes tmp-node-id)))]
+                parent-node-id-set (set (map #(:node-id %) (get-parent-nodes this tmp-node-id)))]
           ;已经被遍历过
           (cond
             (contains? @visited-nodes tmp-node-id) nil
@@ -70,7 +70,7 @@
               ;记录已访问节点
               (reset! visited-nodes (conj @visited-nodes tmp-node-id))
               ;记录下一层要访问的节点
-              (.addAll @next-nodes (get-child-nodes tmp-node-id))))))
+              (.addAll @next-nodes (get-child-nodes this tmp-node-id))))))
       ;递归
       (recur @next-nodes (inc depth) visited-nodes)))
   ;注册节点对
