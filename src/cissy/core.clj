@@ -30,7 +30,9 @@
         ;从深度遍历执行
         (loop [iter-nodes (get (:task-node-tree node-graph) 0) 
                depth      0]
-          (when (> (count iter-nodes) 0)
-            (for [tmp-node iter-nodes]
-              (prn "ok"))
-            (recur nil (inc depth)))))))
+          ;future-list 采集所有的future,用于结果处理
+          (let [future-list (atom #{})]
+            (when (> (count iter-nodes) 0)
+              (for [tmp-node iter-nodes]
+                (prn "ok"))
+              (recur nil (inc depth))))))))
