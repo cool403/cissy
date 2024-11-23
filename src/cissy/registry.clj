@@ -1,7 +1,8 @@
 (ns cissy.registry
   (:require
    [clojure.core :as core]
-   [taoensso.timbre :as timbre]))
+   [taoensso.timbre :as timbre])
+  (:import java.lang.IllegalArgumentException))
 
 ;注册器
 (core/def task-node-register (atom {}))
@@ -29,5 +30,13 @@
   "docstring"
   ;不包含注册函数,报错
   (if-not (contains? @task-node-register (keyword node-id))
-    (throw (IllegalAccessException. (str "没有发现node-id=" node-id "注册节点，请先注册节点")))
+    (throw (IllegalArgumentException. (str "没有发现node-id=" node-id "注册节点，请先注册节点")))
     (get @task-node-register (keyword node-id))))
+
+
+
+(comment 
+  (defn test-node []
+    (prn "test node"))
+  (regist-node-fun "test" test-node)
+  ((get-node-func "test")))
