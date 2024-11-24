@@ -1,8 +1,9 @@
 (ns cissy.core
   (:require
     ;; [cissy.executions :refer [TaskExecutionInfo]]
-    [cissy.task :as task]
-    [taoensso.timbre :as timbre]))
+   [cissy.task :as task]
+   [cissy.registry :as register]
+   [taoensso.timbre :as timbre]))
 
 (comment
   (defprotocol Human
@@ -12,6 +13,8 @@
     (age [this] age))
   (def j (->Jissy "张三" 23))
   (age j))
+
+;to-future
 
 
 ;A----->B---------->F
@@ -33,6 +36,7 @@
           ;future-list 采集所有的future,用于结果处理
           (let [future-list (atom #{})]
             (when (> (count iter-nodes) 0)
-              (for [tmp-node iter-nodes]
+              (for [tmp-node    iter-nodes
+                    tmp-node-id (:node-id tmp-node)]
                 (prn "ok"))
               (recur nil (inc depth))))))))
