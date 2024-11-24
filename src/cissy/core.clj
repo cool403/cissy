@@ -31,8 +31,18 @@
   node-execution-info)
 
 ;填充执行结果集
-(defn- fill-node-result-cxt [node-execution-info]
-  ())
+(defn- fill-node-result-cxt [node-execution-info curr-node-id node-graph may-used-node-res]
+  ;获取父节点列表
+  #_{:clj-kondo/ignore [:missing-else-branch]}
+  (if-let [parent-node-list (task/get-parent-nodes node-graph curr-node-id)]
+    (doseq [parent-node parent-node-list 
+            parent-node-id (:node-id parent-node)
+            parent-node-res (get (keyword parent-node-id) may-used-node-res)
+            node-result-dict (:node-result-dict node-execution-info)] 
+      ;传入父节点的执行结果作为此次节点的执行依赖传入
+      (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "执行结果" parent-node-res)
+      (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) parent-node-res))) )
+  node-execution-info)
 
 
 ;A----->B---------->F
@@ -49,14 +59,34 @@
         startup-nodes            (task/get-startup-nodes node-graph)]
     (if (<= (count startup-nodes) 0) (timbre/warn "未匹配到启动节点")
         ;从深度遍历执行
-        (loop [depth      0]
+        (loop [depth             0
+               may-used-node-res (atom {})]
           (timbre/info "开始迭代执行depth=" depth "节点列表")
           ;future-list 采集所有的future,用于结果处理
-          (let [future-list (atom #{})
+          (let [future-list (atom {})
                 iter-nodes  (get (:task-node-tree node-graph) depth)]
             (when (> (count iter-nodes) 0)
+              #_{:clj-kondo/ignore [:unused-value]}
               (for [tmp-node    iter-nodes
-                    tmp-node-id (:node-id tmp-node)]
+                    tmp-node-id (:node-id tmp-node)
+                    ;获取注册的方法
+                    node-func   (register/get-node-func tmp-node-id)
+                    ]
                 (-> (exeuctions/new-node-execution-info tmp-node-id task-execution-info)
-                    ()))
-              (recur (inc depth))))))))
+                    (fill-node-param tmp-node-id (:task-config task-info))
+                    (fill-node-result-cxt tmp-node-id node-graph may-used-node-res)
+                    ;转换成future,添加结果依赖
+                    #(future (node-func %))
+                    ;注册结果集
+                    #(reset! future-list (assoc @future-list (keyword tmp-node-id ) %))
+                    ))
+              (timbre/info "当前depth=" depth "所有节点转换成future完成")
+              ;通过future 获取结果集
+              (doseq [[k v] @future-list]
+                (-> (deref v 60000 nil)
+                    #(do 
+                       (timbre/info "父节点node-id" k "执行完成")
+                       %)
+                    ;记录执行结果
+                    #(reset! may-used-node-res (assoc @may-used-node-res k %))))
+              (recur (inc depth) {})))))))
