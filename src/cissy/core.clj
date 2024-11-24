@@ -2,6 +2,7 @@
   (:require
     ;; [cissy.executions :refer [TaskExecutionInfo]]
    [cissy.task :as task]
+   [cissy.executions :as exeuctions]
    [cissy.registry :as register]
    [taoensso.timbre :as timbre]))
 
@@ -14,7 +15,13 @@
   (def j (->Jissy "张三" 23))
   (age j))
 
-;to-future
+;填充执行参数
+(defn- fill-node-param [node-execution-info curr-node-id task-config]
+  ())
+
+;填充执行结果集
+(defn- fill-node-result-cxt [node-execution-info]
+       ())
 
 
 ;A----->B---------->F
@@ -31,12 +38,14 @@
         startup-nodes            (task/get-startup-nodes node-graph)]
     (if (<= (count startup-nodes) 0) (timbre/warn "未匹配到启动节点")
         ;从深度遍历执行
-        (loop [iter-nodes (get (:task-node-tree node-graph) 0) 
-               depth      0]
+        (loop [depth      0]
+          (timbre/info "开始迭代执行depth=" depth "节点列表")
           ;future-list 采集所有的future,用于结果处理
-          (let [future-list (atom #{})]
+          (let [future-list (atom #{})
+                iter-nodes  (get (:task-node-tree node-graph) depth) ]
             (when (> (count iter-nodes) 0)
               (for [tmp-node    iter-nodes
                     tmp-node-id (:node-id tmp-node)]
-                (prn "ok"))
-              (recur nil (inc depth))))))))
+                (-> (exeuctions/new-node-execution-info tmp-node-id task-execution-info)
+                    ()))
+              (recur (inc depth))))))))
