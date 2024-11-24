@@ -4,6 +4,7 @@
    [cissy.task :as task]
    [cissy.executions :as exeuctions]
    [cissy.registry :as register]
+   [clojure.string :as str]
    [taoensso.timbre :as timbre]))
 
 (def DB_SUFFIX_KEY "_db")
@@ -20,16 +21,18 @@
 ;填充执行参数
 (defn- fill-node-param [node-execution-info curr-node-id task-config]
   (let [node-rel-config ((keyword curr-node-id) task-config)
-        db-keys (filter #(clojure.string/ends-with? % DB_SUFFIX_KEY) (keys node-rel-config))]
+        db-keys (filter #(str/ends-with? % DB_SUFFIX_KEY) (keys node-rel-config))]
     (doseq [db-key db-keys
-            db-ins (register/get-datasource-ins db-key)]
-      ()
-      ()
-    )))
+            db-ref-key (get node-rel-config db-key)
+            db-ins (register/get-datasource-ins db-ref-key)]
+      (timbre/info "node=" curr-node-id "依赖数据源配置:" db-ref-key "添加")
+      (-> (:node-param-dict node-execution-info)
+          (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins))))))
+  node-execution-info)
 
 ;填充执行结果集
 (defn- fill-node-result-cxt [node-execution-info]
-       ())
+  ())
 
 
 ;A----->B---------->F
@@ -50,7 +53,7 @@
           (timbre/info "开始迭代执行depth=" depth "节点列表")
           ;future-list 采集所有的future,用于结果处理
           (let [future-list (atom #{})
-                iter-nodes  (get (:task-node-tree node-graph) depth) ]
+                iter-nodes  (get (:task-node-tree node-graph) depth)]
             (when (> (count iter-nodes) 0)
               (for [tmp-node    iter-nodes
                     tmp-node-id (:node-id tmp-node)]
