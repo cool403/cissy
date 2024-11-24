@@ -6,6 +6,8 @@
    [cissy.registry :as register]
    [taoensso.timbre :as timbre]))
 
+(def DB_SUFFIX_KEY "_db")
+
 (comment
   (defprotocol Human
     (age []))
@@ -17,7 +19,13 @@
 
 ;填充执行参数
 (defn- fill-node-param [node-execution-info curr-node-id task-config]
-  ())
+  (let [node-rel-config ((keyword curr-node-id) task-config)
+        db-keys (filter #(clojure.string/ends-with? % DB_SUFFIX_KEY) (keys node-rel-config))]
+    (doseq [db-key db-keys
+            db-ins (register/get-datasource-ins db-key)]
+      ()
+      ()
+    )))
 
 ;填充执行结果集
 (defn- fill-node-result-cxt [node-execution-info]
