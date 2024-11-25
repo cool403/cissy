@@ -1,27 +1,28 @@
 (ns cissy.sched
   (:require
    [cissy.core :refer [run-task-in-local]]
-   [taoensso.timbre :as timbre])
-  (:import
-   (cissy.executions TaskExecutionInfo TaskSched)))
+   [taoensso.timbre :as timbre]
+   [cissy.executions :as executions]))
 
 
 
 (deftype ExecutionOnceSched []
-  TaskSched
+  executions/TaskSched
   (get-task-sched-type [this] "exec_once")
   (get-task-sched-name [this] "执行一次")
-  (sched-task-execution [this ^TaskExecutionInfo task-execution-info]
+  (sched-task-execution [this ^executions/TaskExecutionInfo task-execution-info]
     (timbre/info "start to execute task in once policy")
     ((let [{task-info  :task-info start-time :start-time} @task-execution-info
            {node-graph :node-graph} task-info]
-       (timbre/info "start to get startup nodes for " (:task-exec-type task-info))))))
+       (timbre/info "start to get startup nodes for " (:task-exec-type task-info))
+      ;设置成ding
+      (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))))))
 
 (deftype ExecutionAlwaysSched []
-  TaskSched
+  executions/TaskSched
   (get-task-sched-type [this] "exec_always")
   (get-task-sched-name [this] "循环执行")
-  (sched-task-execution [this ^TaskExecutionInfo task-execution-info]
+  (sched-task-execution [this ^executions/TaskExecutionInfo task-execution-info]
     (timbre/info "start to execute task in always policy")
     (let [{task-info           :task-info 
            start-time          :start-time 
