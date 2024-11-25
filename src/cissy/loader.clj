@@ -1,6 +1,8 @@
 (ns cissy.loader
   ;;   (:import (cissy.task TaskInfo))
-  (:require [cheshire.core :as json]))
+  (:require [cheshire.core :as json]
+            [taoensso.timbre :as timbre]
+            [clojure.string :as str]))
 
 (def demo-json "{\n    \"task_name\":\"demo\",\n    \"nodes\":\"demo->\",\n    \"demo\":{\n        \n    }\n}")
 ;从 json 中解析任务
@@ -8,7 +10,10 @@
   "从 json 中解析任务。
   ;ret TaskInfo 返回一个任务类型"
   ;json->keyword map,keyword map才能用(:name 方式访问)
+  (timbre/info "开始解析任务配置"  task-json)
   (let [task-map (json/parse-string task-json #(keyword %))
         {task-name :task_name nodes :nodes datasource :datasource} task-map]
+    (-> nodes
+        (str))
     )
   (json/parse-string demo-json #(keyword %)))
