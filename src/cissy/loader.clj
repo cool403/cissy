@@ -1,9 +1,10 @@
 (ns cissy.loader
   ;;   (:import (cissy.task TaskInfo))
   (:require [cheshire.core :as json]
-            [cissy.task :as task]
+            [cissy.task :as task :refer [TaskNodeGraph]]
             [taoensso.timbre :as timbre]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (java.util ArrayList HashMap)))
 
 (def demo-json "{\n    \"task_name\":\"demo\",\n    \"nodes\":\"demo->\",\n    \"demo\":{\n        \n    }\n}")
 
@@ -29,6 +30,7 @@
   (timbre/info "开始解析任务配置"  task-json)
   (let [task-map (json/parse-string task-json #(keyword %))
         {task-name :task_name nodes :nodes datasource :datasource} task-map
+        node-grpah (->TaskNodeGraph (HashMap.) (HashMap.) (ArrayList.) (HashMap.))
         task-info (atom (->task/TaskInfo nil task-name nil ))]
     ())
   (json/parse-string demo-json #(keyword %)))
