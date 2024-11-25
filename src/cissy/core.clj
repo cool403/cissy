@@ -1,7 +1,7 @@
 (ns cissy.core
   (:require
     ;; [cissy.executions :refer [TaskExecutionInfo]]
-   [cissy.task-test :as task]
+   [cissy.task :as task]
    [cissy.executions :as exeuctions]
    [cissy.registry :as register]
    [clojure.string :as str]
