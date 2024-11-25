@@ -24,7 +24,7 @@
 (comment 
   (parse-node-rel-str "a->b;a->c,d;e->"))
 
-;初始化数据源配置
+;//todo 初始化数据源配置
 (defn- init-db-ins-from-config [db-config]
   (nil))
 
