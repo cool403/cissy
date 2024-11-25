@@ -5,7 +5,7 @@
    [cissy.executions :as executions]))
 
 
-
+;单次执行
 (deftype ExecutionOnceSched []
   executions/TaskSched
   (get-task-sched-type [this] "exec_once")
@@ -14,10 +14,15 @@
     (timbre/info "start to execute task in once policy")
     ((let [{task-info  :task-info start-time :start-time} @task-execution-info
            {node-graph :node-graph} task-info]
-       (timbre/info "start to get startup nodes for " (:task-exec-type task-info))
+       (timbre/info "开始执行单次任务" (:task-exec-type task-info))
       ;设置成ding
-      (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))))))
-
+       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
+       (run-task-in-local task-execution-info)
+       (timbre/info "任务执行完成")
+       (reset! task-execution-info 
+               (assoc @task-execution-info :stop-time (System/currentTimeMillis)
+                      :curr-task-status "done"))))))
+;while true一直执行
 (deftype ExecutionAlwaysSched []
   executions/TaskSched
   (get-task-sched-type [this] "exec_always")
