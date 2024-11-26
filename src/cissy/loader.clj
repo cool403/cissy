@@ -4,6 +4,7 @@
             [cissy.task :as task]
             [taoensso.timbre :as timbre]
             [cissy.sched :as sched]
+            [cissy.registry :as registry]
             [clojure.string :as str])
   (:import (java.util ArrayList HashMap)))
 
@@ -50,6 +51,9 @@
     (task/build-node-tree node-grpah)
     (timbre/info "解析节点关系完成")
     ;注册数据源
-    (doseq [[db-sign db-config] (vals datasource)]
-      ()))
+    (timbre/info "开始初始化数据源配置")
+    (doseq [[db-sign db-config-map] datasource]
+      (timbre/info "开始初始化db-sign的" db-sign "数据源")
+      (-> (init-db-ins-from-config db-config-map)
+          #(registry/register-datasource db-sign %))))
   (json/parse-string demo-json #(keyword %)))
