@@ -55,5 +55,9 @@
     (doseq [[db-sign db-config-map] datasource]
       (timbre/info "开始初始化db-sign的" db-sign "数据源")
       (-> (init-db-ins-from-config db-config-map)
-          #(registry/register-datasource db-sign %))))
+          #(registry/register-datasource db-sign %)))
+    (timbre/info "初始化数据源配置完成")
+    (when (contains? (:all-node-id-set node-grpah) (keyword :drn))
+      (timbre/info "由于当前任务配置包含drn 节点，自动切换为ExecutionAlwaysSched 策略")
+      (reset! task-info (assoc @task-info :sched-info (sched/->ExecutionAlwaysSched)))))
   (json/parse-string demo-json #(keyword %)))
