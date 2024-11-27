@@ -5,10 +5,11 @@
             [taoensso.timbre :as timbre]
             [cissy.sched :as sched]
             [cissy.registry :as registry]
+            [cissy.const :as const]
             [clojure.string :as str])
   (:import (java.util ArrayList HashMap)))
 
-(def demo-json "{\n    \"task_name\":\"demo\",\n    \"nodes\":\"demo->\",\n    \"demo\":{\n        \n    }\n}")
+;; (def demo-json "{\n    \"task_name\":\"demo\",\n    \"nodes\":\"demo->\",\n    \"demo\":{\n        \n    }\n}")
 
 ;解析json中的nodes 配置
 (defn- parse-node-rel-str [s]
@@ -27,7 +28,7 @@
 
 ;//todo 初始化数据源配置
 (defn- init-db-ins-from-config [db-config]
-  (nil))
+  nil)
 
 
 ;从 json 中解析任务
@@ -55,6 +56,12 @@
       (let [datasource-instance (init-db-ins-from-config db-config-map)]
         #(registry/register-datasource db-sign datasource-instance)))
     (timbre/info "初始化数据源配置完成")
-    (when (contains? (:all-node-id-set node-grpah) (keyword :drn))
+    (when (contains? (set (map #(:node-id %) (:all-node-id-set node-grpah))) const/DRN_NODE_NAME)
       (timbre/info "由于当前任务配置包含drn 节点，自动切换为ExecutionAlwaysSched 策略")
       (reset! task-info (assoc @task-info :sched-info (sched/->ExecutionAlwaysSched))))))
+
+
+
+;测试
+(def demo-json (slurp "/home/mawdx/Desktop/task_config.json"))
+(get-task-from-json demo-json)
