@@ -54,6 +54,7 @@
            visited-nodes (atom #{})]
       (let [next-nodes (ArrayList.)]
         (when (> (count start-up-nodes) 0)
+          (prn "hello")
           (doseq [tmp-node start-up-nodes
                   ;获取node-id
                   tmp-node-id (:node-id tmp-node)
