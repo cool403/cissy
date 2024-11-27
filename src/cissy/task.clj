@@ -39,7 +39,7 @@
         (let [parent-nodes (get parent-node-map (:node-id it))]
           (cond
             (nil? parent-nodes) (.add res it)
-            (= 0 (count parent-nodes)) (.add res it))))
+            (= 0 (.size parent-nodes)) (.add res it))))
       res))
   ;刷新树结构,必须要节点添加完毕,到时候可以研究下一定要调用这个方法才能访问属性
   ;递归获取深度,思路：遍历所有节点判断每个节点的所有父节点是否都已经在depth<= tree_depth的树上，如果是，那么就绑定到当前深度上
@@ -55,25 +55,24 @@
       (let [next-nodes (ArrayList.)]
         (when (> (count start-up-nodes) 0)
           (prn "hello" start-up-nodes)
-          (doseq [tmp-node start-up-nodes
-                  ;获取node-id
-                  tmp-node-id (:node-id tmp-node)
+          (doseq [tmp-node start-up-nodes]
+            (let [tmp-node-id (:node-id tmp-node) ;获取node-id
                   ;获取父节点列表
-                  parent-node-id-set (set (map #(:node-id %) (get-parent-nodes this tmp-node-id)))]
-            (prn "---------------------")
-            (prn "hello")
-            ;已经被遍历过
-            (cond
-              (contains? @visited-nodes tmp-node-id) nil
-              ;(set/superset? #{} nil) 启动节点是空的话，这个语句也是 true 的
-              (set/superset? visited-nodes parent-node-id-set)
-              (do
-                ;注册节点
-                (.add (.get task-node-tree depth) tmp-node)
-                ;记录已访问节点
-                (reset! visited-nodes (conj @visited-nodes tmp-node-id))
-                ;记录下一层要访问的节点
-                (.addAll next-nodes (get-child-nodes this tmp-node-id)))))
+                  parent-node-id-set (set (map #(:node-id %) (get-parent-nodes this tmp-node-id)))] 
+              (prn "---------------------")
+              (prn "hello")
+              ;已经被遍历过
+              (cond
+                (contains? @visited-nodes tmp-node-id) nil
+                            ;(set/superset? #{} nil) 启动节点是空的话，这个语句也是 true 的
+                (set/superset? visited-nodes parent-node-id-set)
+                (do
+                  ;注册节点
+                  (.add (.get task-node-tree depth) tmp-node)
+                  ;记录已访问节点
+                  (reset! visited-nodes (conj @visited-nodes tmp-node-id))
+                  ;记录下一层要访问的节点
+                  (.addAll next-nodes (get-child-nodes this tmp-node-id))))))
           ;递归
           (recur next-nodes (inc depth) visited-nodes)))
       ))
