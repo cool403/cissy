@@ -54,12 +54,14 @@
            visited-nodes (atom #{})]
       (let [next-nodes (ArrayList.)]
         (when (> (count start-up-nodes) 0)
-          (prn "hello")
+          (prn "hello" start-up-nodes)
           (doseq [tmp-node start-up-nodes
                   ;获取node-id
                   tmp-node-id (:node-id tmp-node)
                   ;获取父节点列表
                   parent-node-id-set (set (map #(:node-id %) (get-parent-nodes this tmp-node-id)))]
+            (prn "---------------------")
+            (prn "hello")
             ;已经被遍历过
             (cond
               (contains? @visited-nodes tmp-node-id) nil
