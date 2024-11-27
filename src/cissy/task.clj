@@ -53,7 +53,7 @@
            depth 0
            visited-nodes (atom #{})]
       (let [next-nodes (ArrayList.)]
-        (when (> (count start-up-nodes) 0)
+        (when (> (.size start-up-nodes) 0)
           (prn "hello" start-up-nodes)
           (doseq [tmp-node start-up-nodes]
             (let [tmp-node-id (:node-id tmp-node) ;获取node-id
