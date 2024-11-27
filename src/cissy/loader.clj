@@ -32,16 +32,14 @@
 
 ;从 json 中解析任务
 (defn get-task-from-json [^String task-json]
-  "从 json 中解析任务。
-  ;ret TaskInfo 返回一个任务类型"
   ;json->keyword map,keyword map才能用(:name 方式访问)
   (timbre/info "开始解析任务配置" task-json)
-  (let [task-map (json/parse-string task-json #(keyword %))
+  (let [task-map                                                     (json/parse-string task-json #(keyword %))
         {task-name  :task_name
          nodes      :nodes
          datasource :datasource} task-map
-        node-grpah (task/->TaskNodeGraph (HashMap.) (HashMap.) (ArrayList.) (HashMap.))
-        task-info (atom (task/->TaskInfo nil task-name nil (sched/->ExecutionOnceSched) node-grpah task-map))]
+        node-grpah                                                   (task/->TaskNodeGraph (HashMap.) (HashMap.) (ArrayList.) (HashMap.))
+        task-info                                                    (atom (task/->TaskInfo nil task-name nil (sched/->ExecutionOnceSched) node-grpah task-map))]
     ;解析节点配置nodes(a->b;)为节点对
     (doseq [[from-node-id to-node-id] (parse-node-rel-str nodes)]
       (cond
@@ -54,10 +52,9 @@
     (timbre/info "开始初始化数据源配置")
     (doseq [[db-sign db-config-map] datasource]
       (timbre/info "开始初始化db-sign的" db-sign "数据源")
-      (-> (init-db-ins-from-config db-config-map)
-          #(registry/register-datasource db-sign %)))
+      (let [datasource-instance (init-db-ins-from-config db-config-map)]
+        #(registry/register-datasource db-sign datasource-instance)))
     (timbre/info "初始化数据源配置完成")
     (when (contains? (:all-node-id-set node-grpah) (keyword :drn))
       (timbre/info "由于当前任务配置包含drn 节点，自动切换为ExecutionAlwaysSched 策略")
-      (reset! task-info (assoc @task-info :sched-info (sched/->ExecutionAlwaysSched)))))
-  (json/parse-string demo-json #(keyword %)))
+      (reset! task-info (assoc @task-info :sched-info (sched/->ExecutionAlwaysSched))))))
