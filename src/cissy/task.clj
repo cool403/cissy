@@ -65,20 +65,23 @@
               (cond
                 (contains? @visited-nodes tmp-node-id) nil
                             ;(set/superset? #{} nil) 启动节点是空的话，这个语句也是 true 的
-                (set/superset? @visited-nodes parent-node-id-set)
+                (or (= 0 (count parent-node-id-set)) (set/superset? @visited-nodes parent-node-id-set))
                 (do
                   ;注册节点
                   (.add (.get task-node-tree depth) tmp-node)
                   ;记录已访问节点
                   (reset! visited-nodes (conj @visited-nodes tmp-node-id))
                   ;记录下一层要访问的节点
+                  (prn "1121221")
+                  (prn (get-child-nodes this tmp-node-id))
                   (.addAll next-nodes (get-child-nodes this tmp-node-id))
-                  ))))
+                  (prn "222222222")))))
+                  
           ;递归
-          (recur next-nodes (inc depth) visited-nodes)))
-      )
+          (recur next-nodes (inc depth) visited-nodes)))))
+      
       ;; (prn "Ok")
-      )
+      
   ;注册节点对
   (add-node-pair [this from-node to-node]
     (_add-node-pair from-node to-node child-node-map)
@@ -89,10 +92,11 @@
   ;获取子节点列表
   (get-child-nodes [this node-id] 
                   ;;  (prn child-node-map)
-                   (get child-node-map node-id))
+                   (get child-node-map node-id #{}))
   ;获取父节点列表
   (get-parent-nodes [this node-id]
-    (get parent-node-map node-id)))
+     ;要设置默认值，不然会抛出空指针
+    (get parent-node-map node-id #{})))
 
 ;定义一个任务类型
 (defrecord TaskInfo [^String task-id ^String task-name
