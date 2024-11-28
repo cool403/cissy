@@ -52,6 +52,7 @@
     (loop [start-up-nodes (get-startup-nodes this)
            depth 0
            visited-nodes (atom #{})]
+      (prn start-up-nodes)
       (let [next-nodes (ArrayList.)]
         (when (> (.size start-up-nodes) 0)
           (prn "hello" start-up-nodes)
@@ -59,27 +60,25 @@
             (let [tmp-node-id (:node-id tmp-node) ;获取node-id
                   ;获取父节点列表
                   parent-node-id-set (set (map #(:node-id %) (get-parent-nodes this tmp-node-id)))] 
-              (prn "---------------------")
-              (prn "hello")
+              (prn tmp-node-id visited-nodes parent-node-id-set)
               ;已经被遍历过
               (cond
                 (contains? @visited-nodes tmp-node-id) nil
                             ;(set/superset? #{} nil) 启动节点是空的话，这个语句也是 true 的
                 (set/superset? @visited-nodes parent-node-id-set)
                 (do
-                  (prn "helllo1")
                   ;注册节点
                   (.add (.get task-node-tree depth) tmp-node)
-                  (prn "hello2")
                   ;记录已访问节点
                   (reset! visited-nodes (conj @visited-nodes tmp-node-id))
-                  (prn "hello3")
                   ;记录下一层要访问的节点
                   (.addAll next-nodes (get-child-nodes this tmp-node-id))
-                  (prn "hello4")))))
+                  ))))
           ;递归
           (recur next-nodes (inc depth) visited-nodes)))
-      ))
+      )
+      ;; (prn "Ok")
+      )
   ;注册节点对
   (add-node-pair [this from-node to-node]
     (_add-node-pair from-node to-node child-node-map)
@@ -89,7 +88,7 @@
       (not (nil? to-node)) (.add all-node-id-set to-node)))
   ;获取子节点列表
   (get-child-nodes [this node-id] 
-                   (prn child-node-map)
+                  ;;  (prn child-node-map)
                    (get child-node-map node-id))
   ;获取父节点列表
   (get-parent-nodes [this node-id]
