@@ -12,8 +12,7 @@
   (get-task-sched-name [this] "执行一次")
   (sched-task-execution [this ^executions/TaskExecutionInfo task-execution-info]
     (timbre/info "start to execute task in once policy")
-    ((let [{task-info  :task-info start-time :start-time} @task-execution-info
-           {node-graph :node-graph} task-info]
+    ((let [{task-info  :task-info} @task-execution-info]
        (timbre/info "开始执行单次任务" (:task-exec-type task-info))
       ;设置成ding
        (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
@@ -30,9 +29,7 @@
   (sched-task-execution [this ^executions/TaskExecutionInfo task-execution-info]
     (timbre/info "start to execute task in always policy")
     (let [{task-info           :task-info 
-           start-time          :start-time 
-           task-execution-dict :task-execution-dict} @task-execution-info
-          {node-graph :node-graph}                                                                 task-info]
+           task-execution-dict :task-execution-dict} @task-execution-info]
       (timbre/info "start to get startup nodes for " (:task-exec-type task-info))
        ;设置成ding
       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
