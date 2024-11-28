@@ -1,5 +1,5 @@
 {:paths ["src"]
- :pods  {org.babashka/go-sqlite3 {:version "0.2.3"}
+ :pods  {org.babashka/go-sqlite3 {:version "0.2.4"}
          org.babashka/oracle     {:version "0.1.0"}
          org.babashka/mysql      {:version "0.1.2"}
          org.babashka/postgresql {:version "0.1.2"}}
