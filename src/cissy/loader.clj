@@ -65,4 +65,4 @@
 
 ;测试
 (def demo-json (slurp "/home/mawdx/Desktop/task_config.json"))
-(prn (get-task-from-json demo-json))
+(get-task-from-json demo-json)
