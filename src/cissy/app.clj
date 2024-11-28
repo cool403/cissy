@@ -39,9 +39,9 @@
 
 
 (defn usage [options-summary]
-  (->> ["This is my program. There are many like it, but this one is mine."
+  (->> ["cissy是一个支持数据节点同步工具;支持数据同步"
         ""
-        "Usage: program-name [options] action"
+        "Usage: cissy [-h] {start,demo} ..."
         ""
         "Options:"
         options-summary
