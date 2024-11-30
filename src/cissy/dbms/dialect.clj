@@ -1,5 +1,5 @@
 (ns cissy.dbms.dialect
-  (:require [babashka.pods :as pods]))
+  (:require [babashka.pods :as pod]))
 
 
-(pods/load-pod 'org.babashka/buddy "0.1.0")
+(pod/load-pod 'org.babashka/go-sqlite3 "0.2.3")
