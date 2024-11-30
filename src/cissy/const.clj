@@ -5,3 +5,7 @@
 
 ;drn节点名称
 (def DRN_NODE_NAME "drn")
+
+
+;支持的数据库类型
+(def SUPPORTED_DB_TYPE #{"mysql" "postgresql","oracle","sqlite"})

@@ -1,7 +1,8 @@
 (ns cissy.registry
   (:require
    [clojure.core :as core]
-   [taoensso.timbre :as timbre])
+   [taoensso.timbre :as timbre]
+   [cissy.const :as const])
   (:import java.lang.IllegalArgumentException))
 
 ;注册器
@@ -43,14 +44,28 @@
 ;db register
 (core/def datasource-ins-register (atom {}))
 
+;oracle, mysql, pg 都是这个格式;sqlite 特殊些
+;约定sqlite文件还是host里，只是到时候特殊处理, dbtype枚举值: mysql,postgresql
+;oracle
+(comment (def db {:dbtype   "postgresql"
+         :host     "your-db-host-name"
+         :dbname   "your-db"
+         :user     "develop"
+         :password "develop"
+         :port     5432}))
 (defn register-datasource 
   "注册一个数据源"
   [^String db-sign datasource-config]
   (when-not (contains? @datasource-ins-register (keyword db-sign))
     ;不包含，首先实例化
-    
-    (prn "TBD"))
-  )
+    (if-let [_ (contains? const/SUPPORTED_DB_TYPE (:dbtype datasource-config))] 
+      (cond 
+        (= (:dbtype datasource-config) "sqlite") (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) (:host datasource-config)))
+        :else
+        (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) datasource-config)))
+      (do
+        (timbre/error "数据源配置必须有dbtype属性,且有效值类型只有oracle,mysql,sqlite,postgresql")
+        (throw (IllegalArgumentException. "数据源配置必须有dbtype属性,且有效值类型只有oracle,mysql,sqlite,postgresql"))))))
 
 
 (defn get-datasource-ins [^String db-sign]
@@ -60,3 +75,9 @@
   )
 
 (comment (get-datasource-ins "21"))
+;; (def db1 {:dbtype "postgresql", :host "localhost", :user "hello", :password "123456", :port 5432})
+;; (register-datasource "from-db" db1)
+;; (def db5 {:dbtype "sqlite", :host "/home/mawdx/mywork/jissy/jissy-tests/jissy.db"})
+;; (register-datasource "db5" db5)
+;; (def db6 {:dbtype "sqlit2e", :host "/home/mawdx/mywork/jissy/jissy-tests/jissy.db"})
+;; (register-datasource "db6" db6)
