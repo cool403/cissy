@@ -1,5 +1,19 @@
 (ns cissy.dbms.dialect
-  (:require [babashka.pods :as pod]))
+  (:require [honey.sql :as sql]))
 
 
-(pod/load-pod 'org.babashka/go-sqlite3 "0.2.4")
+(defmulti read-data-sql :dbtype)
+(defmethod read-data-sql :oracle
+  [sql-params-map])
+(defmethod read-data-sql :postgresql
+  [sql-params-map])
+(defmethod read-data-sql :default
+  [sql-params-map]
+  ())
+
+
+(defmulti write-data-sql :dbtype)
+
+(defmethod write-data-sql :default
+  [sql-params-map])
+
