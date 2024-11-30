@@ -1,8 +1,9 @@
 {:paths ["src"]
-;;  :pods  {org.babashka/go-sqlite3 {:version "0.2.4"}
-        ;;  org.babashka/oracle     {:version "0.1.0"}
-        ;;  org.babashka/mysql      {:version "0.1.2"}
-        ;;  org.babashka/postgresql {:version "0.1.2"}}
+ :pods  {org.babashka/go-sqlite3 {:version "0.2.4"}
+         org.babashka/oracle     {:version "0.1.0"}
+         org.babashka/mysql      {:version "0.1.2"}
+         org.babashka/postgresql {:version "0.1.2"}
+        }
  :deps  {clojure.java-time/clojure.java-time {:mvn/version "1.1.0"}
          ;; org.clojure/tools.cli {:mvn/version "1.1.230"}
          cheshire/cheshire                   {:mvn/version "5.13.0"}
