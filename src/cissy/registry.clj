@@ -43,9 +43,12 @@
 ;db register
 (core/def datasource-ins-register (atom {}))
 
-(defn register-datasource [^String db-sign datasource-config]
-  ;注册一个数据源
+(defn register-datasource 
+  "注册一个数据源"
+  [^String db-sign datasource-config]
   (when-not (contains? @datasource-ins-register (keyword db-sign))
+    ;不包含，首先实例化
+    
     (prn "TBD"))
   )
 
