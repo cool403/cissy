@@ -1,52 +1,50 @@
 (ns cissy.dbms.dialect
   (:require [honey.sql :as sql]
-            [honey.sql.helpers :as helpers])
+            [honey.sql.helpers :as helpers]
+            [clojure.string :as str])
   (:import (java.lang IllegalArgumentException)))
 
 
+(defn- build-where-cond
+  "构造where条件"
+  [prefix-sql sql-params-map]
+  (prn prefix-sql)
+  (if-let [incr-key (:incr_key sql-params-map)]
+    ;where lastmodify_time >= '2021-12-12'
+    (str/join " " [prefix-sql "where" incr-key ">=" (str "'" (:incr_key_value sql-params-map) "'")])
+    (str/join " " [prefix-sql "where 1=1 "])))
 
+(defn- build-orderby-cond
+  "构造orderby"
+  [prefix-sql sql-params-map]
+  (prn prefix-sql)
+  (if-let [order-by (:order_by sql-params-map)]
+    (str/join " " [prefix-sql "order by" order-by])
+    prefix-sql))
 
+(defn- build-page-cond
+  "构造分页"
+  [prefix-sql sql-params-map]
+  (prn prefix-sql)
+  #_{:clj-kondo/ignore [:syntax]}
+  (when-let [db-type (:dbtype sql-params-map)]
+    (let [page-offset (:page_offset sql-params-map)
+          page-size (:page_size sql-params-map)]
+      (prn "ok")
+      (cond
+        (= db-type "oracle") (str/join " " [prefix-sql "offset"
+                                            page-offset "rows fetch next" page-size "rows only"])
+        (= db-type "postgresql") (str/join " " [prefix-sql page-size "offset" page-offset])
+        :else (str/join " " [prefix-sql "limit" page-offset "," page-size])))))
 
-(defmulti read-data-sql (fn [sql-params-map]
-                          (let [db-type (:dbtype sql-params-map)]
-                            (cond
-                              (= db-type "oracle") :oracle
-                              (= db-type "postgresql") :pg
-                              :else :common))))
-(defmethod read-data-sql :oracle
+(defn read-data-sql
+  "获取读取数据sql"
   [sql-params-map]
-  (-> (helpers/select :*)
-      (helpers/from (keyword (:from_table sql-params-map)))
-      (when-let [incr-key (:incr_key sql-params-map)]
-        (helpers/where (>= (keyword (incr-key)) (:incr_key_value sql-params-map))))
-      (when-let [order-by (:order_by sql-params-map)]
-        (helpers/order-by (keyword order-by)))
-      (helpers/offset (:page_offset sql-params-map))
-      (helpers/fetch (:page_size sql-params-map))
-      (sql/format {:dialect :oracle})))
-(defmethod read-data-sql :pg
-  [sql-params-map]
-  (-> (helpers/select :*)
-      (helpers/from (keyword (:from_table sql-params-map)))
-      (when-let [incr-key (:incr_key sql-params-map)]
-        (helpers/where (>= (keyword (incr-key)) (:incr_key_value sql-params-map))))
-      (when-let [order-by (:order_by sql-params-map)]
-        (helpers/order-by (keyword order-by)))
-      (helpers/offset (:page_offset sql-params-map))
-      (helpers/fetch (:page_size sql-params-map))
-      sql/format))
-(defmethod read-data-sql :common
-  [sql-params-map]
-  (-> (helpers/select :*)
-      (helpers/from (keyword (:from_table sql-params-map)))
-      (cond->
-       (:incr_key sql-params-map) (helpers/where (>= #_{:clj-kondo/ignore [:type-mismatch]}
-                                                  (keyword (:incr_key sql-params-map)) (:incr_key_value sql-params-map))))
-      (cond->
-       (:order_by sql-params-map) (helpers/order-by (keyword (:order_by sql-params-map))))
-      (helpers/offset (:page_offset sql-params-map))
-      (helpers/fetch (:page_size sql-params-map))
-      (sql/format {:dialect :mysql})))
+  (-> "select * from "
+      (str (:from_table sql-params-map))
+      (build-where-cond sql-params-map)
+      (build-orderby-cond sql-params-map)
+      (build-page-cond sql-params-map)))
 
 (def aa {:from_db "db1"
          :dbtype "mysql"
@@ -56,7 +54,6 @@
          :page_size  2,
          :sql_template ""})
 (read-data-sql aa)
-
 
 (defmulti write-data-sql :dbtype)
 
