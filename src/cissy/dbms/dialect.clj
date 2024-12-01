@@ -8,7 +8,7 @@
 (defn- build-where-cond
   "构造where条件"
   [prefix-sql sql-params-map]
-  (prn prefix-sql)
+  ;; (prn prefix-sql)
   (if-let [incr-key (:incr_key sql-params-map)]
     ;where lastmodify_time >= '2021-12-12'
     (str/join " " [prefix-sql "where" incr-key ">=" (str "'" (:incr_key_value sql-params-map) "'")])
@@ -17,7 +17,7 @@
 (defn- build-orderby-cond
   "构造orderby"
   [prefix-sql sql-params-map]
-  (prn prefix-sql)
+  ;; (prn prefix-sql)
   (if-let [order-by (:order_by sql-params-map)]
     (str/join " " [prefix-sql "order by" order-by])
     prefix-sql))
@@ -25,12 +25,11 @@
 (defn- build-page-cond
   "构造分页"
   [prefix-sql sql-params-map]
-  (prn prefix-sql)
+  ;; (prn prefix-sql)
   #_{:clj-kondo/ignore [:syntax]}
   (when-let [db-type (:dbtype sql-params-map)]
     (let [page-offset (:page_offset sql-params-map)
           page-size (:page_size sql-params-map)]
-      (prn "ok")
       (cond
         (= db-type "oracle") (str/join " " [prefix-sql "offset"
                                             page-offset "rows fetch next" page-size "rows only"])
@@ -40,11 +39,15 @@
 (defn read-data-sql
   "获取读取数据sql"
   [sql-params-map]
-  (-> "select * from "
-      (str (:from_table sql-params-map))
-      (build-where-cond sql-params-map)
-      (build-orderby-cond sql-params-map)
-      (build-page-cond sql-params-map)))
+  ;如果是sql模板，直接渲染返回
+  (if-not (str/blank? (:sql_template sql-params-map))
+    (-> (:sql_template sql-params-map)
+        (build-page-cond sql-params-map))
+    (-> "select * from "
+         (str (:from_table sql-params-map))
+         (build-where-cond sql-params-map)
+         (build-orderby-cond sql-params-map)
+         (build-page-cond sql-params-map))))
 
 (def aa {:from_db "db1"
          :dbtype "mysql"
