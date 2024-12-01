@@ -3,7 +3,10 @@
             [cissy.dbms.dialect :as dialect]
             [pod.babashka.mysql :as mysql]
             [pod.babashka.oracle :as oracle]
-            [pod.babashka.postgresql :as pg]
+            [pod.babashka.postgresql :as pg] 
+            [pod.babashka.mysql.sql :as mysql-sql]
+            [pod.babashka.oracle.sql :as oracle-sql]
+            [pod.babashka.postgresql.sql :as pg-sql]
             [pod.babashka.go-sqlite3 :as sqlite]
             [taoensso.timbre :as timbre]))
 
