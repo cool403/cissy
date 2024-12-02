@@ -47,7 +47,7 @@
         (:sqlite) (sqlite/query from-db-ins [read-sql])
         (:postgresql) (pg/execute! from-db-ins [read-sql])))))
 
-
+;(mysql-sql/insert-multi! aa :users ["id" "username","email"] [[22222222 "njones" "2332"]])
 (defn write-rows
   "按行写数据库到db"
   [task-node-execution-info]
