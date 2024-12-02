@@ -48,6 +48,8 @@
         (:postgresql) (pg/execute! from-db-ins [read-sql])))))
 
 ;(mysql-sql/insert-multi! aa :users ["id" "username","email"] [[22222222 "njones" "2332"]])
+;(vec (map (fn[x] (vec (vals x))) ee)) --> (vec (map #(vec (vals %)) ee))
+;(vec (map (fn [x] (name x)) (keys (first ee)))) -->(vec (map #(name %) (keys (first ee))))
 (defn write-rows
   "按行写数据库到db"
   [task-node-execution-info]
