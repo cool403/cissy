@@ -8,6 +8,7 @@
       [pod.babashka.oracle.sql :as oracle-sql]
       [pod.babashka.postgresql.sql :as pg-sql]
       [pod.babashka.go-sqlite3 :as sqlite]
+      [cissy.const :as const] 
       [taoensso.timbre :as timbre]))
 
  (defn- fill-page-params
@@ -19,7 +20,7 @@
               ;默认 1000
               page-size (get @node-param-dict :page_size 1000)
               page-offset (* page-size (- execution-round 1))]
-             (reset! node-param-dict (assoc @node-param-dict :page_offset page-offset))))
+             (reset! node-param-dict (assoc @node-param-dict :page_offset page-offset)))))
 
 ;从数据库读取数据
 (defn read-rows
@@ -60,5 +61,6 @@
             ;获取关联数据源配置
             to-db-ins (register/get-datasource-ins to-db)
             ;获取db类型
-            db-type (if (map? to-db-ins) (:dbtype to-db-ins) "sqlite")]) 
-      ())
+            db-type (if (map? to-db-ins) (:dbtype to-db-ins) "sqlite")]
+        (if drn-res ((keyword const/DRN_NODE_NAME) node-result-dict))
+        ))

@@ -68,7 +68,7 @@
         (throw (IllegalArgumentException. "数据源配置必须有dbtype属性,且有效值类型只有oracle,mysql,sqlite,postgresql"))))))
 
 
-(defn get-datasource-ins [^String db-sign]
+(defn get-datasource-ins [db-sign]
   ;获取注册数据源
   (if-not (contains? @datasource-ins-register (keyword db-sign)) (throw (IllegalArgumentException. (str "未发现db-sign" db-sign "注册数据源")))
           (get @datasource-ins-register (keyword db-sign)))
@@ -82,7 +82,10 @@
 ;; (def db6 {:dbtype "sqlit2e", :host "/home/mawdx/mywork/jissy/jissy-tests/jissy.db"})
 ;; (register-datasource "db6" db6)
 
-(mysql-sql/insert-multi! aa :users ["id" "username"] [{:users/id 22222222,
-  :users/username "njones"}
- {:users/id 22222223,
-  :users/username "fzuniga"}])
+(comment
+  (mysql-sql/insert-multi! aa :users ["id" "username"] [{:users/id 22222222,
+                                                         :users/username "njones"}
+                                                        {:users/id 22222223,
+                                                         :users/username "fzuniga"}])
+  )
+
