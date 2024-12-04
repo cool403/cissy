@@ -53,6 +53,9 @@
 ;(mysql-sql/insert-multi! aa :users ["id" "username","email"] [[22222222 "njones" "2332"]])
 ;(vec (map (fn[x] (vec (vals x))) ee)) --> (vec (map #(vec (vals %)) ee))
 ;(vec (map (fn [x] (name x)) (keys (first ee)))) -->(vec (map #(name %) (keys (first ee))))
+(defn- get-table-columns [sql columns]
+  (helpers/columns sql columns))
+
 (defn write-rows
       "按行写数据库到db"
       [task-node-execution-info]
@@ -77,7 +80,7 @@
                 :mysql (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
                 :postgresql (pg-sql/insert-multi! to-db-ins to-table  columns datas)
                 :sqlite (let [insert-sql (-> (helpers/insert-into to-table)
-                                             (helpers/columns :col1 :col2)
+                                             (get-table-columns columns)
                                              (helpers/values datas)
                                              sql/format)] 
                             (sqlite/execute! to-db-ins insert-sql)))
