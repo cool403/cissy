@@ -57,31 +57,31 @@
         {^task/->TaskNodeGraph node-graph :node-graph} task-info
         startup-nodes            (task/get-startup-nodes node-graph)]
     (if (<= (count startup-nodes) 0) (timbre/warn "未匹配到启动节点")
-                                     ;从深度遍历执行
+        ;从深度遍历执行
         (loop [depth             0
                may-used-node-res (atom {})]
           (timbre/info "开始迭代执行depth=" depth "节点列表")
-                                       ;future-list 采集所有的future,用于结果处理
+          ;future-list 采集所有的future,用于结果处理
           (let [node-future-map (atom {})
                 iter-nodes      (get (:task-node-tree node-graph) depth)]
             (when (> (count iter-nodes) 0)
               #_{:clj-kondo/ignore [:unused-value]}
               (for [tmp-node    iter-nodes
                     tmp-node-id (:node-id tmp-node)
-                                                 ;获取注册的方法
+                    ;获取注册的方法
                     node-func   (register/get-node-func tmp-node-id)]
                 (let [tmp-node-execution-info (-> (executions/new-node-execution-info tmp-node-id task-execution-info)
                                                   (fill-node-param tmp-node-id (:task-config task-info))
                                                   (fill-node-result-cxt tmp-node-id node-graph may-used-node-res))
                                                    ;方法执行转换成future
                       node-future             (future node-func tmp-node-execution-info)]
-                                               ;future 保存
+                  ;future 保存
                   (reset! node-future-map (assoc @node-future-map (keyword tmp-node-id) node-future))))
               (timbre/info "当前depth=" depth "所有节点转换成future完成")
-                                           ;通过future 获取结果集
+              ;通过future 获取结果集
               (doseq [[k v] @node-future-map]
                 (let [v-res (deref v 60000 nil)]
                   (timbre/info "父节点node-id" k "执行完成")
-                                               ;记录执行结果
+                  ;记录执行结果
                   (reset! may-used-node-res (assoc @may-used-node-res k v-res))))))
           (recur (inc depth) may-used-node-res)))))
