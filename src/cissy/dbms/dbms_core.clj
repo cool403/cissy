@@ -45,10 +45,10 @@
                      (timbre/info "加载数据脚本:[" read-sql "]")
                      ;执行db读数据
                      (case (keyword db-type)
-                           (:oracle) (oracle/execute! from-db-ins [read-sql])
-                           (:mysql) (mysql/execute! from-db-ins [read-sql])
-                           (:sqlite) (sqlite/query from-db-ins [read-sql])
-                           (:postgresql) (pg/execute! from-db-ins [read-sql])))))
+                           :oracle (oracle/execute! from-db-ins [read-sql])
+                           :mysql (mysql/execute! from-db-ins [read-sql])
+                           :sqlite (sqlite/query from-db-ins [read-sql])
+                           :postgresql (pg/execute! from-db-ins [read-sql])))))
 
 ;(mysql-sql/insert-multi! aa :users ["id" "username","email"] [[22222222 "njones" "2332"]])
 ;(vec (map (fn[x] (vec (vals x))) ee)) --> (vec (map #(vec (vals %)) ee))
@@ -73,13 +73,13 @@
                   datas (vec (map #(vec (vals %)) drn-res))]
               ;根据db类型写入不同的数据库
               (case (keyword db-type)
-                (:oralce) (oracle-sql/insert-multi! to-db-ins to-table  columns datas)
-                (:mysql) (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
-                (:postgresql) (pg-sql/insert-multi! to-db-ins to-table  columns datas)
-                (:sqlite) (let [insert-sql (-> (helpers/insert-into to-table)
+                :oralce (oracle-sql/insert-multi! to-db-ins to-table  columns datas)
+                :mysql (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
+                :postgresql (pg-sql/insert-multi! to-db-ins to-table  columns datas)
+                :sqlite (let [insert-sql (-> (helpers/insert-into to-table)
                                                (fn [sql] (apply helpers/columns sql columns))
                                                (helpers/values datas)
-                                               sql/format)]
+                                               sql/format)] 
                             (sqlite/execute! to-db-ins insert-sql)))
               ))
         ))
