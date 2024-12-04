@@ -61,6 +61,18 @@
             ;获取关联数据源配置
             to-db-ins (register/get-datasource-ins to-db)
             ;获取db类型
-            db-type (if (map? to-db-ins) (:dbtype to-db-ins) "sqlite")]
-        (if drn-res ((keyword const/DRN_NODE_NAME) node-result-dict))
+            db-type (if (map? to-db-ins) (:dbtype to-db-ins) "sqlite")
+            drn-res ((keyword const/DRN_NODE_NAME) node-result-dict)]
+        ;判断drn节点数据是否为空
+        (if (or (nil? drn-res) (= (count drn-res) 0)) (timbre/warn "drn节点未读取到数据，什么都不做")
+            :else
+            ;获取列信息
+            (let [columns (vec (map #(name %) (keys (first drn-res))))
+                  datas (vec (map #(vec (vals %)) drn-res))]
+              ;根据db类型写入不同的数据库
+              (case (keyword db-type)
+                (:oralce) (oracle-sql/insert-multi! to-db-ins columns datas)
+                (:mysql) (mysql-sql/insert-multi! to-db-ins columns datas)
+                (:postgresql) (pg-sql/insert-multi! to-db-ins columns datas))
+              ))
         ))
