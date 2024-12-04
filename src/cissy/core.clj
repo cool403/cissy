@@ -8,14 +8,14 @@
     [taoensso.timbre :as timbre]
     [cissy.const :as const]))
 
-(comment
-  (defprotocol Human
-    (age []))
-  (deftype Jissy [name age]
-    Human
-    (age [this] age))
-  (def j (->Jissy "张三" 23))
-  (age j))
+;; (comment
+;;   (defprotocol Human
+;;     (age []))
+;;   (deftype Jissy [name age]
+;;     Human
+;;     (age [this] age))
+;;   (def j (->Jissy "张三" 23))
+;;   (age j))
 
 ;填充执行参数
 (defn- fill-node-param [node-execution-info curr-node-id task-config]

@@ -82,10 +82,10 @@
 ;; (def db6 {:dbtype "sqlit2e", :host "/home/mawdx/mywork/jissy/jissy-tests/jissy.db"})
 ;; (register-datasource "db6" db6)
 
-(comment
-  (mysql-sql/insert-multi! aa :users ["id" "username"] [{:users/id 22222222,
-                                                         :users/username "njones"}
-                                                        {:users/id 22222223,
-                                                         :users/username "fzuniga"}])
-  )
+;; (comment
+;;   (mysql-sql/insert-multi! aa :users ["id" "username"] [{:users/id 22222222,
+;;                                                          :users/username "njones"}
+;;                                                         {:users/id 22222223,
+;;                                                          :users/username "fzuniga"}])
+;;   )
 

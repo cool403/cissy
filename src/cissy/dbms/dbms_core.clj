@@ -22,7 +22,7 @@
               ;默认 1000
               page-size (get @node-param-dict :page_size 1000)
               page-offset (* page-size (- execution-round 1))]
-             (reset! node-param-dict (assoc @node-param-dict :page_offset page-offset)))))
+             (reset! node-param-dict (assoc @node-param-dict :page_offset page-offset))))
 
 ;从数据库读取数据
 (defn read-rows
@@ -68,7 +68,6 @@
             to-table (:to_table node-param-dict)]
         ;判断drn节点数据是否为空
         (if (or (nil? drn-res) (= (count drn-res) 0)) (timbre/warn "drn节点未读取到数据，什么都不做")
-            :else
             ;获取列信息
             (let [columns (vec (map #(name %) (keys (first drn-res))))
                   datas (vec (map #(vec (vals %)) drn-res))]
