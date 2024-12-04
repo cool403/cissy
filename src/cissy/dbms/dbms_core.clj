@@ -76,9 +76,9 @@
                 :oralce (oracle-sql/insert-multi! to-db-ins to-table  columns datas)
                 :mysql (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
                 :postgresql (pg-sql/insert-multi! to-db-ins to-table  columns datas)
-                :sqlite (let [insert-sql (-> (helpers/insert-into to-table) 
-                                             (fn [sql] (apply helpers/columns sql columns)) 
-                                             (helpers/values datas) 
+                :sqlite (let [insert-sql (-> (helpers/insert-into to-table)
+                                             (helpers/columns :col1 :col2)
+                                             (helpers/values datas)
                                              sql/format)] 
                             (sqlite/execute! to-db-ins insert-sql)))
               ))
