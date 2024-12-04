@@ -8,7 +8,9 @@
       [pod.babashka.oracle.sql :as oracle-sql]
       [pod.babashka.postgresql.sql :as pg-sql]
       [pod.babashka.go-sqlite3 :as sqlite]
-      [cissy.const :as const] 
+      [cissy.const :as const]
+      [honey.sql.helpers :as helpers] 
+      [honey.sql :as sql]      
       [taoensso.timbre :as timbre]))
 
  (defn- fill-page-params
@@ -62,7 +64,8 @@
             to-db-ins (register/get-datasource-ins to-db)
             ;获取db类型
             db-type (if (map? to-db-ins) (:dbtype to-db-ins) "sqlite")
-            drn-res ((keyword const/DRN_NODE_NAME) node-result-dict)]
+            drn-res ((keyword const/DRN_NODE_NAME) node-result-dict)
+            to-table (:to_table node-param-dict)]
         ;判断drn节点数据是否为空
         (if (or (nil? drn-res) (= (count drn-res) 0)) (timbre/warn "drn节点未读取到数据，什么都不做")
             :else
@@ -71,8 +74,13 @@
                   datas (vec (map #(vec (vals %)) drn-res))]
               ;根据db类型写入不同的数据库
               (case (keyword db-type)
-                (:oralce) (oracle-sql/insert-multi! to-db-ins columns datas)
-                (:mysql) (mysql-sql/insert-multi! to-db-ins columns datas)
-                (:postgresql) (pg-sql/insert-multi! to-db-ins columns datas))
+                (:oralce) (oracle-sql/insert-multi! to-db-ins to-table  columns datas)
+                (:mysql) (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
+                (:postgresql) (pg-sql/insert-multi! to-db-ins to-table  columns datas)
+                (:sqlite) (let [insert-sql (-> (helpers/insert-into to-table)
+                                               (fn [sql] (apply helpers/columns sql columns))
+                                               (helpers/values datas)
+                                               sql/format)]
+                            (sqlite/execute! to-db-ins insert-sql)))
               ))
         ))
