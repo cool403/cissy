@@ -54,7 +54,7 @@
 ;(vec (map (fn[x] (vec (vals x))) ee)) --> (vec (map #(vec (vals %)) ee))
 ;(vec (map (fn [x] (name x)) (keys (first ee)))) -->(vec (map #(name %) (keys (first ee))))
 (defn- get-table-columns [sql columns]
-  (helpers/columns sql columns))
+  (apply helpers/columns sql columns))
 
 (defn write-rows
       "按行写数据库到db"
@@ -86,3 +86,8 @@
                             (sqlite/execute! to-db-ins insert-sql)))
               ))
         ))
+
+
+;注册节点
+(register/regist-node-fun const/DRN_NODE_NAME read-rows)
+(register/regist-node-fun const/DWN_NODE_NAME write-rows)
