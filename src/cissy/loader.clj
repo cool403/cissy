@@ -59,7 +59,7 @@
     (timbre/info "初始化数据源配置完成")
     (when (contains? (set (map #(:node-id %) (:all-node-id-set node-grpah))) const/DRN_NODE_NAME)
       (timbre/info "由于当前任务配置包含drn 节点，自动切换为ExecutionAlwaysSched 策略")
-      (reset! task-info (assoc @task-info :sched-info (sched/->ExecutionAlwaysSched))))))
+      (reset! task-info (assoc @task-info :sched-info (sched/->ExecutionAlwaysSched)))))))
 
 
 
