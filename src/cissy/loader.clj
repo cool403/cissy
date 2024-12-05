@@ -47,7 +47,7 @@
         (nil? to-node-id) (task/add-node-pair node-grpah (task/->TaskNodeInfo from-node-id nil) nil)
         :else (task/add-node-pair node-grpah (task/->TaskNodeInfo from-node-id nil) (task/->TaskNodeInfo to-node-id nil))))
     ;添加完成后构建tree
-    (prn node-grpah)
+    ;; (prn node-grpah)
     (task/build-node-tree node-grpah)
     (timbre/info "解析节点关系完成")
     ;注册数据源

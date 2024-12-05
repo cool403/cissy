@@ -52,15 +52,15 @@
     (loop [start-up-nodes (get-startup-nodes this)
            depth 0
            visited-nodes (atom #{})]
-      (prn start-up-nodes)
+      ;; (prn start-up-nodes)
       (let [next-nodes (ArrayList.)]
         (when (> (.size start-up-nodes) 0)
-          (prn "hello" start-up-nodes)
+          ;; (prn "hello" start-up-nodes)
           (doseq [tmp-node start-up-nodes]
             (let [tmp-node-id (:node-id tmp-node) ;获取node-id
                   ;获取父节点列表
                   parent-node-id-set (set (map #(:node-id %) (get-parent-nodes this tmp-node-id)))] 
-              (prn tmp-node-id visited-nodes parent-node-id-set)
+              ;; (prn tmp-node-id visited-nodes parent-node-id-set)
               ;已经被遍历过
               (cond
                 (contains? @visited-nodes tmp-node-id) nil
@@ -72,10 +72,11 @@
                   ;记录已访问节点
                   (reset! visited-nodes (conj @visited-nodes tmp-node-id))
                   ;记录下一层要访问的节点
-                  (prn "1121221")
-                  (prn (get-child-nodes this tmp-node-id))
+                  ;; (prn "1121221")
+                  ;; (prn (get-child-nodes this tmp-node-id))
                   (.addAll next-nodes (get-child-nodes this tmp-node-id))
-                  (prn "222222222")))))
+                  ;; (prn "222222222")
+                  ))))
                   
           ;递归
           (recur next-nodes (inc depth) visited-nodes)))))
