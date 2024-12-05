@@ -23,4 +23,4 @@
       ;初始化执行上下文
       (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
       ;; (prn (type sched-info))
-      (.sched-task-execution sched-info new-task-execution-info))))
+      (executions/sched-task-execution sched-info new-task-execution-info))))               ; 调用 MyProtocol 的 method2
