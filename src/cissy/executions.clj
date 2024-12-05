@@ -17,8 +17,8 @@
                                          (System/currentTimeMillis)
                                          nil
                                          "wait"
-                                         (atom #{})
-                                         (atom #{}))))
+                                         (atom {})
+                                         (atom {}))))
 
 ;任务节点执行中间变量
 (defrecord NodeExecutionInfo [node-execution-id
@@ -41,9 +41,9 @@
                              task-execution-info
                              node-id
                              "wait"
-                             (atom #{})
-                             (atom #{})
-                             (atom #{})
+                             (atom {})
+                             (atom {})
+                             (atom {})
                              (System/currentTimeMillis)
                              (System/currentTimeMillis))))
 

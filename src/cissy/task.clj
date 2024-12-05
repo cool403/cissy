@@ -5,16 +5,16 @@
   (:require [clojure.set :as set]))
 
 (defprotocol TaskNodeGraphDef
-  ;获取启动节点
-  (get-startup-nodes [this])
-  ;构造graph
-  (build-node-tree [this])
-  ;添加节点对
-  (add-node-pair [this from-node to-node])
-  ;获取子节点列表
-  (get-child-nodes [this node-id])
-  ;获取父节点列表
-  (get-parent-nodes [this node-id]))
+  (get-startup-nodes [this]
+    "获取启动节点")
+  (build-node-tree [this]
+    "构造graph")
+  (add-node-pair [this from-node to-node]
+    "添加节点对")
+  (get-child-nodes [this node-id]
+    "获取子节点列表")
+  (get-parent-nodes [this node-id]
+    "获取父节点列表"))
 
 ;定义一个节点类型
 (defrecord TaskNodeInfo [^String node-id ^String node-name])

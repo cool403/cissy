@@ -36,7 +36,7 @@
       (loop [round 1] 
         (when-not (= (:curr-task-status @task-execution-info) "done")
            ;打印日志
-          (timbre/info "开始执行 task=" (:task-name task-info) "in the " round "round")
+          (timbre/info "开始执行 task=" (:task-id task-info) "in the 【" round "】round")
            ;执行轮数塞到执行上下文中
           (reset! task-execution-dict (assoc @task-execution-dict :execution-round round))
           ;执行方法
