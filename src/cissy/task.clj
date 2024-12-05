@@ -31,7 +31,7 @@
                 (.put d from-node-id lst))))))
 
 ;定义一个任务执行依赖
-(deftype TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree]
+(defrecord TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree]
   TaskNodeGraphDef
   (get-startup-nodes [this]
     (let [res (ArrayList.)]
@@ -100,5 +100,5 @@
     (get parent-node-map node-id #{})))
 
 ;定义一个任务类型
-(deftype TaskInfo [^String task-id ^String task-name
+(defrecord TaskInfo [^String task-id ^String task-name
                      ^String task-exec-type sched-info ^TaskNodeGraph node-graph task-config])
