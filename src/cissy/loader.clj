@@ -65,5 +65,5 @@
 
 
 ;测试
-(def demo-json (slurp "/home/mawdx/Desktop/task_config.json"))
-(get-task-from-json demo-json)
+;; (def demo-json (slurp "/home/mawdx/Desktop/task_config.json"))
+;; (get-task-from-json demo-json)
