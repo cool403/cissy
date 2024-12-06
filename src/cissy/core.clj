@@ -28,7 +28,7 @@
         (timbre/info "node=" curr-node-id "依赖数据源配置:" db-ref-key "添加" db-ins)
         (-> (:node-param-dict @node-execution-info)
             (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins))))))
-    (merge (deref (:node-param-dict @node-execution-info)) node-rel-config)) 
+    (reset! (:node-param-dict @node-execution-info) (merge (deref (:node-param-dict @node-execution-info)) node-rel-config))) 
   node-execution-info)
 
 ;填充执行结果集
