@@ -21,6 +21,7 @@
           sched-info              (:sched-info @task-info)
           new-task-execution-info (executions/new-task-execution-info)]
       ;初始化执行上下文
+      ;; (prn task-info)
       (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
       ;; (prn new-task-execution-info)
       ;; (prn (type sched-info))

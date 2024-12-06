@@ -23,9 +23,10 @@
         db-keys (filter #(str/ends-with? % const/DB_SUFFIX_KEY) (keys node-rel-config))]
     (doseq [db-key db-keys]
       (let [db-ref-key (get node-rel-config db-key)
-            db-ins (register/get-datasource-ins db-ref-key)]  (timbre/info "node=" curr-node-id "依赖数据源配置:" db-ref-key "添加")
-           (-> (:node-param-dict node-execution-info)
-               (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins)))))))
+            db-ins (register/get-datasource-ins (keyword db-ref-key))]
+        (timbre/info "node=" curr-node-id "依赖数据源配置:" db-ref-key "添加" db-ins)
+        (-> (:node-param-dict @node-execution-info)
+            (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins))))))) 
   node-execution-info)
 
 ;填充执行结果集
@@ -72,7 +73,7 @@
                 (let [tmp-node-id (:node-id tmp-node)
                       node-func   (register/get-node-func (str tmp-node-id)) ;获取注册的方法
                       tmp-node-execution-info (-> (executions/new-node-execution-info tmp-node-id task-execution-info)
-                                                  (fill-node-param tmp-node-id (:task-config task-info))
+                                                  (fill-node-param tmp-node-id (:task-config @task-info))
                                                   (fill-node-result-cxt tmp-node-id node-graph may-used-node-res))
                                                    ;方法执行转换成future
                       node-future             (future (node-func tmp-node-execution-info))]
@@ -80,7 +81,7 @@
                   (reset! node-future-map (assoc @node-future-map (keyword tmp-node-id) node-future))))
               (timbre/info "当前depth=" depth "所有节点转换成future完成")
               ;通过future 获取结果集
-              (prn @node-future-map)
+              ;; (prn @node-future-map)
               (doseq [[k v] @node-future-map]
                 (let [v-res (deref v 60000 nil)]
                   (timbre/info "父节点node-id" k "执行完成")

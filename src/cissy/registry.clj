@@ -61,7 +61,7 @@
     ;不包含，首先实例化
     (if-let [_ (contains? const/SUPPORTED_DB_TYPE (:dbtype datasource-config))] 
       (cond 
-        (= (:dbtype datasource-config) "sqlite") (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) (:host datasource-config)))
+        (= (:dbtype datasource-config) "sqlite") (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) (:url datasource-config)))
         :else
         (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) datasource-config)))
       (do
