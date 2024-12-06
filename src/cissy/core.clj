@@ -53,8 +53,9 @@
   "docstring"
   [task-execution-info]
   (timbre/info "start to get startup nodes for task")
+  (prn (:node-graph (deref (:task-info @task-execution-info))))
   (let [{^task/->TaskInfo task-info :task-info}   @task-execution-info
-        {^task/->TaskNodeGraph node-graph :node-graph} task-info
+        {^task/->TaskNodeGraph node-graph :node-graph} @task-info
         startup-nodes            (task/get-startup-nodes node-graph)]
     (if (<= (count startup-nodes) 0) (timbre/warn "未匹配到启动节点")
         ;从深度遍历执行

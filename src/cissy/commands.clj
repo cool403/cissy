@@ -22,6 +22,7 @@
           new-task-execution-info (executions/new-task-execution-info)]
       ;初始化执行上下文
       (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
+      ;; (prn new-task-execution-info)
       ;; (prn (type sched-info))
       ;; (let [a (:task-execution-dict @new-task-execution-info)]
       ;;   (prn (type @a))
