@@ -55,7 +55,8 @@
 ;(vec (map (fn[x] (vec (vals x))) ee)) --> (vec (map #(vec (vals %)) ee))
 ;(vec (map (fn [x] (name x)) (keys (first ee)))) -->(vec (map #(name %) (keys (first ee))))
 (defn- get-table-columns [sql columns]
-  (apply helpers/columns sql columns))
+  ;columns 需要转成keyword,不然会被当成参数 
+  (apply helpers/columns sql (map keyword columns)))
 
 (defn write-rows
   "按行写数据库到db"
@@ -70,12 +71,12 @@
             ;获取db类型
         db-type (if (map? to-db-ins) (:dbtype to-db-ins) "sqlite")
         drn-res ((keyword const/DRN_NODE_NAME) @node-result-dict)
-        to-table (:to_table node-param-dict)]
+        to-table (:to_table @node-param-dict)]
         ;判断drn节点数据是否为空
     (if (or (nil? drn-res) (= (count drn-res) 0)) (do
                                                     (timbre/warn "drn节点未读取到数据，什么都不做")
                                                     (reset! task-execution-info (assoc @task-execution-info :curr-task-status "done")))
-            ;获取列信息
+            ;获取列信息 
         (let [columns (vec (map #(name %) (keys (first drn-res))))
               datas (vec (map #(vec (vals %)) drn-res))]
               ;根据db类型写入不同的数据库
