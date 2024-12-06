@@ -63,13 +63,13 @@
   (timbre/info "开始执行dwn节点")
   (let [{task-execution-info :task-execution-info
          node-param-dict     :node-param-dict
-         node-result-dict :node-result-dict} task-node-execution-info
-        {to-db :to_db} node-param-dict
+         node-result-dict :node-result-dict} @task-node-execution-info
+        {to-db :to_db} @node-param-dict
             ;获取关联数据源配置
         to-db-ins (register/get-datasource-ins to-db)
             ;获取db类型
         db-type (if (map? to-db-ins) (:dbtype to-db-ins) "sqlite")
-        drn-res ((keyword const/DRN_NODE_NAME) node-result-dict)
+        drn-res ((keyword const/DRN_NODE_NAME) @node-result-dict)
         to-table (:to_table node-param-dict)]
         ;判断drn节点数据是否为空
     (if (or (nil? drn-res) (= (count drn-res) 0)) (do

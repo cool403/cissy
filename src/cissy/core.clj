@@ -28,20 +28,21 @@
         (timbre/info "node=" curr-node-id "依赖数据源配置:" db-ref-key "添加" db-ins)
         (-> (:node-param-dict @node-execution-info)
             (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins))))))
-    (reset! (:node-param-dict @node-execution-info) (merge (deref (:node-param-dict @node-execution-info)) node-rel-config))) 
+    (reset! (:node-param-dict @node-execution-info) (merge (deref (:node-param-dict @node-execution-info)) node-rel-config)))
   node-execution-info)
 
 ;填充执行结果集
 (defn- fill-node-result-cxt [node-execution-info curr-node-id node-graph may-used-node-res]
   ;获取父节点列表
   #_{:clj-kondo/ignore [:missing-else-branch]}
-  (if-let [parent-node-list (task/get-parent-nodes node-graph curr-node-id)]
+  (when-let [parent-node-list (task/get-parent-nodes node-graph curr-node-id)]
     (doseq [parent-node parent-node-list]
       ;传入父节点的执行结果作为此次节点的执行依赖传入
       (let [parent-node-id (:node-id parent-node)
-            parent-node-res (get (keyword parent-node-id) may-used-node-res)
-            node-result-dict (:node-result-dict node-execution-info)] (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "执行结果" parent-node-res)
-           (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) parent-node-res)))))
+            parent-node-res (get @may-used-node-res (keyword parent-node-id))
+            node-result-dict (:node-result-dict @node-execution-info)]
+        (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "执行结果" parent-node-res)
+        (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) parent-node-res)))))
   node-execution-info)
 
 
@@ -83,7 +84,7 @@
                   (reset! node-future-map (assoc @node-future-map (keyword tmp-node-id) node-future))))
               (timbre/info "当前depth=" depth "所有节点转换成future完成")
               ;通过future 获取结果集
-              (prn @node-future-map)
+              ;; (prn @node-future-map)
               (doseq [[k v] @node-future-map]
                 (let [v-res (deref v 60000 nil)]
                   (timbre/info "父节点node-id" k "执行完成")
