@@ -21,12 +21,14 @@
 (defn- fill-node-param [node-execution-info curr-node-id task-config]
   (let [node-rel-config ((keyword curr-node-id) task-config)
         db-keys (filter #(str/ends-with? % const/DB_SUFFIX_KEY) (keys node-rel-config))]
+    ;把所有node-rel-config当做param传入到node-param-dict中
     (doseq [db-key db-keys]
       (let [db-ref-key (get node-rel-config db-key)
             db-ins (register/get-datasource-ins (keyword db-ref-key))]
         (timbre/info "node=" curr-node-id "依赖数据源配置:" db-ref-key "添加" db-ins)
         (-> (:node-param-dict @node-execution-info)
-            (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins))))))) 
+            (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins))))))
+    (merge (deref (:node-param-dict @node-execution-info)) node-rel-config)) 
   node-execution-info)
 
 ;填充执行结果集
@@ -81,7 +83,7 @@
                   (reset! node-future-map (assoc @node-future-map (keyword tmp-node-id) node-future))))
               (timbre/info "当前depth=" depth "所有节点转换成future完成")
               ;通过future 获取结果集
-              ;; (prn @node-future-map)
+              (prn @node-future-map)
               (doseq [[k v] @node-future-map]
                 (let [v-res (deref v 60000 nil)]
                   (timbre/info "父节点node-id" k "执行完成")

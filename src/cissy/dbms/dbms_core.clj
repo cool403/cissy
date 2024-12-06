@@ -16,7 +16,7 @@
 (defn- fill-page-params
   "填充分页参数"
   [task-execution-info node-param-dict]
-  (let [{task-execution-dict :task-execution-dict} task-execution-info
+  (let [{task-execution-dict :task-execution-dict} @task-execution-info
               ;默认1
         execution-round (get @task-execution-dict :execution-round 1)
               ;默认 1000
@@ -29,11 +29,10 @@
   "从数据库加载读取数据"
   [task-node-execution-info]
   (timbre/info "开始执行drn节点")
-  ;; (prn task-node-execution-info)
   (let [{task-execution-info :task-execution-info
          node-param-dict     :node-param-dict
-         node-execution-dict :node-execution-dict} task-node-execution-info
-        {from-db :from_db} @node-param-dict
+         node-execution-dict :node-execution-dict} @task-node-execution-info
+        {from-db :from_db} (:drn (:task-config (deref (:task-info @task-execution-info))))
             ;获取关联数据源配置
         from-db-ins (register/get-datasource-ins from-db)
             ;获取db类型
@@ -43,7 +42,7 @@
            ;塞入分页相关的参数
     (fill-page-params task-execution-info node-param-dict)
            ;获取加载数据的sql
-    (when-let [read-sql (dialect/read-data-sql node-param-dict)]
+    (when-let [read-sql (dialect/read-data-sql @node-param-dict)]
       (timbre/info "加载数据脚本:[" read-sql "]")
                      ;执行db读数据
       (case (keyword db-type)
