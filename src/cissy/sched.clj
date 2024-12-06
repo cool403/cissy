@@ -12,15 +12,15 @@
   (get-task-sched-name [this] "执行一次")
   (sched-task-execution [this ^executions/TaskExecutionInfo task-execution-info]
     (timbre/info "开始执行单次任务")
-    ((let [{task-info  :task-info} @task-execution-info]
-       (timbre/info "开始执行单次任务" (:task-exec-type task-info))
-      ;设置成ding
-       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
-       (run-task-in-local task-execution-info)
-       (timbre/info "任务执行完成")
-       (reset! task-execution-info 
-               (assoc @task-execution-info :stop-time (System/currentTimeMillis)
-                      :curr-task-status "done"))))))
+    (let [{task-info  :task-info} @task-execution-info]
+      (timbre/info "开始执行单次任务" (:task-exec-type task-info))
+          ;设置成ding
+      (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
+      (run-task-in-local task-execution-info)
+      (timbre/info "任务执行完成")
+      (reset! task-execution-info
+              (assoc @task-execution-info :stop-time (System/currentTimeMillis)
+                     :curr-task-status "done")))))
 ;while true一直执行
 (deftype ExecutionAlwaysSched []
   executions/TaskSched
