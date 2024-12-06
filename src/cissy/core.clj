@@ -69,6 +69,8 @@
                 iter-nodes      (get (:task-node-tree node-graph) depth)]
             ;; (prn (count iter-nodes))
             ;; (prn iter-nodes)
+            (when (= (count iter-nodes) 0)
+              (timbre/info (str "depth=" depth "没有需要执行的节点了")))
             (when (> (count iter-nodes) 0)
               #_{:clj-kondo/ignore [:unused-value]}
               (doseq [tmp-node    iter-nodes]
