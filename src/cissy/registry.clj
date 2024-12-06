@@ -28,6 +28,7 @@
 ;获取关联函数
 (defn get-node-func [node-id]
   ;不包含注册函数,报错
+  ;; (prn node-id)
   (if-not (contains? @task-node-register (keyword node-id))
     (throw (IllegalArgumentException. (str "没有发现node-id=" node-id "注册节点，请先注册节点")))
     (get @task-node-register (keyword node-id))))

@@ -1,7 +1,9 @@
 (ns cissy.app
   (:require [clojure.tools.cli :as cli]
             [clojure.string :as str]
-            [cissy.commands :as commands]))
+            [cissy.commands :as commands]
+            ;引入ns出发自动注册
+            [cissy.dbms.dbms-core :as dbms-core]))
 
 (def cli-options
   [["-c" "--config config" "任务配置描述,需要是json格式"

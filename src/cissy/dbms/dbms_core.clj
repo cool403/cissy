@@ -70,7 +70,9 @@
             drn-res ((keyword const/DRN_NODE_NAME) node-result-dict)
             to-table (:to_table node-param-dict)]
         ;判断drn节点数据是否为空
-        (if (or (nil? drn-res) (= (count drn-res) 0)) (timbre/warn "drn节点未读取到数据，什么都不做")
+        (if (or (nil? drn-res) (= (count drn-res) 0)) (do 
+                                                        (timbre/warn "drn节点未读取到数据，什么都不做")
+                                                        (reset! task-execution-info (assoc @task-execution-info :curr-task-status "done")))
             ;获取列信息
             (let [columns (vec (map #(name %) (keys (first drn-res))))
                   datas (vec (map #(vec (vals %)) drn-res))]

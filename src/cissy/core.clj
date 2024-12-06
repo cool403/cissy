@@ -1,12 +1,12 @@
 (ns cissy.core
   (:require
     ;; [cissy.executions :refer [TaskExecutionInfo]]
-    [cissy.task :as task]
-    [cissy.executions :as executions]
-    [cissy.registry :as register]
-    [clojure.string :as str]
-    [taoensso.timbre :as timbre]
-    [cissy.const :as const]))
+   [cissy.task :as task]
+   [cissy.executions :as executions]
+   [cissy.registry :as register]
+   [clojure.string :as str]
+   [taoensso.timbre :as timbre]
+   [cissy.const :as const]))
 
 ;; (comment
 ;;   (defprotocol Human
@@ -21,12 +21,11 @@
 (defn- fill-node-param [node-execution-info curr-node-id task-config]
   (let [node-rel-config ((keyword curr-node-id) task-config)
         db-keys (filter #(str/ends-with? % const/DB_SUFFIX_KEY) (keys node-rel-config))]
-    (doseq [db-key db-keys
-            db-ref-key (get node-rel-config db-key)
-            db-ins (register/get-datasource-ins db-ref-key)]
-      (timbre/info "node=" curr-node-id "依赖数据源配置:" db-ref-key "添加")
-      (-> (:node-param-dict node-execution-info)
-          (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins))))))
+    (doseq [db-key db-keys]
+      (let [db-ref-key (get node-rel-config db-key)
+            db-ins (register/get-datasource-ins db-ref-key)]  (timbre/info "node=" curr-node-id "依赖数据源配置:" db-ref-key "添加")
+           (-> (:node-param-dict node-execution-info)
+               (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins)))))))
   node-execution-info)
 
 ;填充执行结果集
@@ -34,13 +33,12 @@
   ;获取父节点列表
   #_{:clj-kondo/ignore [:missing-else-branch]}
   (if-let [parent-node-list (task/get-parent-nodes node-graph curr-node-id)]
-    (doseq [parent-node parent-node-list
-            parent-node-id (:node-id parent-node)
-            parent-node-res (get (keyword parent-node-id) may-used-node-res)
-            node-result-dict (:node-result-dict node-execution-info)]
+    (doseq [parent-node parent-node-list]
       ;传入父节点的执行结果作为此次节点的执行依赖传入
-      (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "执行结果" parent-node-res)
-      (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) parent-node-res))))
+      (let [parent-node-id (:node-id parent-node)
+            parent-node-res (get (keyword parent-node-id) may-used-node-res)
+            node-result-dict (:node-result-dict node-execution-info)] (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "执行结果" parent-node-res)
+           (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) parent-node-res)))))
   node-execution-info)
 
 
@@ -53,7 +51,7 @@
   "docstring"
   [task-execution-info]
   (timbre/info "start to get startup nodes for task")
-  (prn (:node-graph (deref (:task-info @task-execution-info))))
+  ;; (prn (:node-graph (deref (:task-info @task-execution-info))))
   (let [{^task/->TaskInfo task-info :task-info}   @task-execution-info
         {^task/->TaskNodeGraph node-graph :node-graph} @task-info
         startup-nodes            (task/get-startup-nodes node-graph)]
@@ -65,24 +63,27 @@
           ;future-list 采集所有的future,用于结果处理
           (let [node-future-map (atom {})
                 iter-nodes      (get (:task-node-tree node-graph) depth)]
+            ;; (prn (count iter-nodes))
+            ;; (prn iter-nodes)
             (when (> (count iter-nodes) 0)
               #_{:clj-kondo/ignore [:unused-value]}
-              (for [tmp-node    iter-nodes
-                    tmp-node-id (:node-id tmp-node)
-                    ;获取注册的方法
-                    node-func   (register/get-node-func tmp-node-id)]
-                (let [tmp-node-execution-info (-> (executions/new-node-execution-info tmp-node-id task-execution-info)
+              (doseq [tmp-node    iter-nodes]
+                ;; (prn node-func)
+                (let [tmp-node-id (:node-id tmp-node)
+                      node-func   (register/get-node-func (str tmp-node-id)) ;获取注册的方法
+                      tmp-node-execution-info (-> (executions/new-node-execution-info tmp-node-id task-execution-info)
                                                   (fill-node-param tmp-node-id (:task-config task-info))
                                                   (fill-node-result-cxt tmp-node-id node-graph may-used-node-res))
                                                    ;方法执行转换成future
-                      node-future             (future node-func tmp-node-execution-info)]
+                      node-future             (future (node-func tmp-node-execution-info))]
                   ;future 保存
                   (reset! node-future-map (assoc @node-future-map (keyword tmp-node-id) node-future))))
               (timbre/info "当前depth=" depth "所有节点转换成future完成")
               ;通过future 获取结果集
+              (prn @node-future-map)
               (doseq [[k v] @node-future-map]
                 (let [v-res (deref v 60000 nil)]
                   (timbre/info "父节点node-id" k "执行完成")
                   ;记录执行结果
-                  (reset! may-used-node-res (assoc @may-used-node-res k v-res))))))
-          (recur (inc depth) may-used-node-res)))))
+                  (reset! may-used-node-res (assoc @may-used-node-res k v-res))))
+              (recur (inc depth) may-used-node-res)))))))
