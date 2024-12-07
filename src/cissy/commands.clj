@@ -39,6 +39,7 @@
                  "      \"from_table\":\"users\","
                  "      \"incr_key\": \"updated_at\","
                  "      \"incr_key_value\": \"1900-01-01\","
+                 "      #pg下这个不能调的太大，会报莫名奇怪的错误还没研究"
                  "      \"page_size\": 1000,"
                  "      #自定义sql同步时可设置这个选项"
                  "      \"sql_template\":\"select * from users\""
