@@ -11,9 +11,9 @@
   (get-task-sched-type [this] "exec_once")
   (get-task-sched-name [this] "执行一次")
   (sched-task-execution [this ^executions/TaskExecutionInfo task-execution-info]
-    (timbre/info "开始执行单次任务")
+    ;; (timbre/info "开始执行单次任务")
     (let [{task-info  :task-info} @task-execution-info]
-      (timbre/info "开始执行单次任务" (:task-exec-type task-info))
+      (timbre/info "开始执行单次任务" (:task-name @task-info))
           ;设置成ding
       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
       (run-task-in-local task-execution-info)

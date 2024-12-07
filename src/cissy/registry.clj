@@ -21,7 +21,7 @@
 (defn regist-node-fun [node-id func]
   ;如果已经注册过,不再注册
   (when-not (contains? @task-node-register (keyword node-id))
-    (timbre/info "start to register node-id ", node-id)
+    (timbre/info (str "开始注册节点=" node-id "及执行函数=" func))
     (compare-and-set! task-node-register @task-node-register
                       (assoc @task-node-register (keyword node-id) func))))
 

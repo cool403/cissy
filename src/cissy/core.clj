@@ -54,7 +54,7 @@
 (defn run-task-in-local
   "docstring"
   [task-execution-info]
-  (timbre/info "start to get startup nodes for task")
+  (timbre/info "开始获取任务启动节点列表")
   ;; (prn (:node-graph (deref (:task-info @task-execution-info))))
   (let [{^task/->TaskInfo task-info :task-info}   @task-execution-info
         {^task/->TaskNodeGraph node-graph :node-graph} @task-info
