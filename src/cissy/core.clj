@@ -41,7 +41,9 @@
       (let [parent-node-id (:node-id parent-node)
             parent-node-res (get @may-used-node-res (keyword parent-node-id))
             node-result-dict (:node-result-dict @node-execution-info)]
-        (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "执行结果" parent-node-res)
+        (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "执行结果" (if (counted? parent-node-res)
+         (str (count parent-node-res) "条纪录")
+         parent-node-res))
         (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) parent-node-res)))))
   node-execution-info)
 
