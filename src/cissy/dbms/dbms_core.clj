@@ -64,7 +64,9 @@
   (timbre/info "开始执行dwn节点")
   (let [{task-execution-info :task-execution-info
          node-param-dict     :node-param-dict
+         node-execution-dict :node-execution-dict
          node-result-dict :node-result-dict} @task-node-execution-info
+        {task-execution-dict :task-execution-dict} @task-execution-info
         {to-db :to_db} @node-param-dict
             ;获取关联数据源配置
         to-db-ins (register/get-datasource-ins to-db)
@@ -88,7 +90,11 @@
                                          (get-table-columns columns)
                                          (helpers/values datas)
                                          sql/format)]
-                      (sqlite/execute! to-db-ins insert-sql)))))))
+                      (sqlite/execute! to-db-ins insert-sql)))
+          ;同步计数
+          ;打印日志
+          (swap! (:sync-count @task-execution-dict) #(+ % (count datas)))
+          (timbre/info (str "已插入" (deref (:sync-count @task-execution-dict)) "条记录到" to-table "表里"))))))
 
 
 ;注册节点

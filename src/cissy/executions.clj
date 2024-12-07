@@ -18,7 +18,7 @@
                                          nil
                                          "wait"
                                          (atom {})
-                                         (atom {}))))
+                                         (atom {:sync-count (atom 0)}))))
 
 ;任务节点执行中间变量
 (defrecord NodeExecutionInfo [node-execution-id
