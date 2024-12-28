@@ -1,6 +1,5 @@
 (ns cissy.task
-  #_{:clj-kondo/ignore [:syntax]}
-  (:import (java.lang.String)
+  (:import (java.lang String)
            (java.util ArrayList))
   (:require [clojure.set :as set]))
 

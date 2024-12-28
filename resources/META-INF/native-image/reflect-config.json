@@ -1,0 +1,12 @@
+[
+  {
+    "name": "java.sql.Date",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "java.sql.Timestamp",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  }
+] 

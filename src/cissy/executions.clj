@@ -25,7 +25,7 @@
                               task-execution-info
                               node-id
                               curr-node-status
-                              ;节点执行要的参数,初始化用
+                              ;节点执行要的参���,初始化用
                               node-param-dict
                               ;依赖节点的执行结果
                               node-result-dict
@@ -49,7 +49,7 @@
 
 (defprotocol TaskSched
   "任务执行调度接口定义"
-  (get-task-sched-type [])
-  (get-task-sched-name [])
-  (sched-task-execution [task-execution-info]))
+  (get-task-sched-type [this]      "获取调度类型")
+  (get-task-sched-name [this]      "获取调度名称")
+  (sched-task-execution [this task-execution-info] "调度任务执行"))
 

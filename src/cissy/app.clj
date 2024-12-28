@@ -1,31 +1,29 @@
 (ns cissy.app
+  (:gen-class)
   (:require [clojure.tools.cli :as cli]
             [clojure.string :as str]
-            [cissy.commands :as commands]))
+            [cissy.commands :as commands]
+            [taoensso.timbre :as timbre]))
 
 (def cli-options
-  [["-c" "--config config" "任务配置描述,需要是json格式"
-    ;; :default 80
-    ;; :parse-fn #(Integer/parseInt %)
-    ;; :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
-    ]
-   ["-h" "--help"]])
-
+  [["-c" "--config CONFIG" "任务配置描述文件路径(json格式)"]
+   ["-h" "--help" "显示帮助信息"]])
 
 (defn usage [options-summary]
-  (->> ["cissy是一个支持数据节点同步工具;支持数据同步"
+  (->> ["cissy - 数据同步工具"
         ""
-        "Usage: cissy [-h] {start,demo} ..."
+        "用法: cissy [选项] 命令"
         ""
-        "Options:"
+        "选项:"
         options-summary
         ""
-        "Actions:"
-        "  start  启动任务"
-        "  demo   获取任务json dmeo"
+        "命令:"
+        "  start    启动任务"
+        "  demo     获取配置文件示例"
         ""
-        "-h help 获取更多支持"
-        ]
+        "示例:"
+        "  cissy -c task.json start"
+        "  cissy demo > task.json"]
        (str/join \newline)))
 
 (defn error-msg [errors]
@@ -45,7 +43,7 @@
            (#{"start" "demo"} (first arguments)))
       {:action (first arguments) :options options}
       :else ; failed custom validation => exit with usage summary
-      {:exit-message (usage summary)})))
+      {:exit-message "Error: start 命令需要指定配置文件(-c)"})))
 
 (defn exit [status msg]
   (println msg)
