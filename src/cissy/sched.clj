@@ -10,7 +10,7 @@
   executions/TaskSched
   (get-task-sched-type [this] "exec_once")
   (get-task-sched-name [this] "执行一次")
-  (sched-task-execution [this ^executions/TaskExecutionInfo task-execution-info]
+  (sched-task-execution [this task-execution-info]
     ;; (timbre/info "开始执行单次任务")
     (let [{task-info  :task-info} @task-execution-info]
       (timbre/info "开始执行单次任务" (:task-name @task-info))
@@ -26,7 +26,7 @@
   executions/TaskSched
   (get-task-sched-type [this] "exec_always")
   (get-task-sched-name [this] "循环执行")
-  (sched-task-execution [this ^executions/TaskExecutionInfo task-execution-info]
+  (sched-task-execution [this task-execution-info]
     (timbre/info "开始以循环策略执行任务")
     (let [{task-info           :task-info
            task-execution-dict :task-execution-dict} @task-execution-info

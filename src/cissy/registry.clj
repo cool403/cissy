@@ -1,12 +1,12 @@
 (ns cissy.registry
   (:require
-   [clojure.core :as core]
+  ;;  [clojure.core :as core]
    [taoensso.timbre :as timbre]
    [cissy.const :as const])
   (:import java.lang.IllegalArgumentException))
 
 ;注册器
-(core/def task-node-register (atom {}))
+(def task-node-register (atom {}))
 ;注册atom listener
 ;; (add-watch )
 
@@ -43,7 +43,7 @@
 
 
 ;db register
-(core/def datasource-ins-register (atom {}))
+(def datasource-ins-register (atom {}))
 
 ;oracle, mysql, pg 都是这个格式;sqlite 特殊些
 ;约定sqlite文件还是host里，只是到时候特殊处理, dbtype枚举值: mysql,postgresql
