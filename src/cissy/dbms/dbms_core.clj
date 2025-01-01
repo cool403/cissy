@@ -12,7 +12,9 @@
             [honey.sql.helpers :as helpers]
             [honey.sql :as sql]
             [taoensso.timbre :as timbre]))
-
+; 不使用babashka pod的方式访问数据库，直接使用next.jdbc和honeysql 配合访问数据库
+;(jdbc/execute! db-spec ["select * from users limit 1"] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})
+; 上述执行返回结果和babashka pod的返回结果一样
 (defn- fill-page-params
   "填充分页参数"
   [task-execution-info node-param-dict]
