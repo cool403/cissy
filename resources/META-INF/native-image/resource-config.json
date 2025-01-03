@@ -1,0 +1,12 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": "\\QMETA-INF/services/java.sql.Driver\\E"},
+      {"pattern": "\\Qorg/sqlite/native/Linux/x86_64/libsqlitejdbc.so\\E"},
+      {"pattern": "\\Qorg/sqlite/native/Linux/aarch64/libsqlitejdbc.so\\E"},
+      {"pattern": "\\Qorg/sqlite/native/Mac/x86_64/libsqlitejdbc.dylib\\E"},
+      {"pattern": "\\Qorg/sqlite/native/Mac/aarch64/libsqlitejdbc.dylib\\E"},
+      {"pattern": "\\Qorg/sqlite/native/Windows/x86_64/sqlitejdbc.dll\\E"}
+    ]
+  }
+} 

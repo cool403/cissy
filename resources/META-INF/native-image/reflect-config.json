@@ -8,5 +8,17 @@
     "name": "java.sql.Timestamp",
     "allPublicMethods": true,
     "allPublicConstructors": true
+  },
+  {
+    "name": "org.sqlite.JDBC",
+    "methods": [{"name": "<init>", "parameterTypes": []}]
+  },
+  {
+    "name": "com.mysql.cj.jdbc.Driver",
+    "methods": [{"name": "<init>", "parameterTypes": []}]
+  },
+  {
+    "name": "org.postgresql.Driver",
+    "methods": [{"name": "<init>", "parameterTypes": []}]
   }
 ] 

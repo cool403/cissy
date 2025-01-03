@@ -2,18 +2,22 @@
 # 确保已安装 GraalVM 和 native-image
 
 # 设置 GRAALVM_HOME
-GRAALVM_HOME=$HOME/.sdkman/candidates/java/21.0.2-graal
+GRAALVM_HOME=$graal
 
 # 清理之前的构建
+echo '清理之前的制品'
 rm -rf target
 
 # 编译
-clj -T:build compile
+echo '编译'
+clojure -T:build compile
 
 # 创建 uberjar
-clj -T:build uber
+echo '创建 uberjar'
+clojure -T:build uber
 
 # 使用完整路径调用 native-image
+echo '构建 native-image'
 $GRAALVM_HOME/bin/native-image \
   --no-fallback \
   --initialize-at-build-time \
