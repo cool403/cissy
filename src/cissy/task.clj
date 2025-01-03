@@ -1,6 +1,6 @@
 (ns cissy.task
   (:import (java.lang String)
-           (java.util ArrayList))
+           (java.util ArrayList HashSet HashMap))
   (:require [clojure.set :as set]))
 
 (defprotocol TaskNodeGraphDef
@@ -18,16 +18,19 @@
 ;定义一个节点类型
 (defrecord TaskNodeInfo [^String node-id ^String node-name])
 
-
 (defn- _add-node-pair [from-node to-node d]
   (when (not (nil? from-node))
     (let [from-node-id (:node-id from-node)]
       (cond
         (nil? to-node) ()
-        (contains? (get d from-node-id) (:node-id to-node)) (.add (get d from-node-id) from-node)
-        :else (let [lst (ArrayList.)]
-                (.add lst to-node)
-                (.put d from-node-id lst))))))
+        (.containsKey d from-node-id)
+        (do
+          ;; (prn "11111" from-node-id to-node)
+          (.put d from-node-id (conj (get d from-node-id) to-node)))
+        :else
+        (do
+          ;; (prn "22222" from-node-id to-node)
+          (.put d from-node-id (conj #{} to-node)))))))
 
 ;定义一个任务执行依赖
 (defrecord TaskNodeGraph [child-node-map parent-node-map all-node-id-set task-node-tree]
@@ -38,11 +41,10 @@
         (let [parent-nodes (get parent-node-map (:node-id it))]
           (cond
             (nil? parent-nodes) (.add res it)
-            (= 0 (.size parent-nodes)) (.add res it))))
+            :else ())))
       res))
-  ;刷新树结构,必须要节点添加完毕,到时候可以研究下一定要调用这个方法才能访问属性
-  ;递归获取深度,思路：遍历所有节点判断每个节点的所有父节点是否都已经在depth<= tree_depth的树上，如果是，那么就绑定到当前深度上
-  ;其他继续遍历,直至所有节点都被访问过
+
+  ;刷新树结构
   (build-node-tree [this]
     ;初始化tree
     (dotimes [i 10]
@@ -51,53 +53,52 @@
     (loop [start-up-nodes (get-startup-nodes this)
            depth 0
            visited-nodes (atom #{})]
-      ;; (prn start-up-nodes)
       (let [next-nodes (ArrayList.)]
         (when (> (.size start-up-nodes) 0)
-          ;; (prn "hello" start-up-nodes)
           (doseq [tmp-node start-up-nodes]
-            (let [tmp-node-id (:node-id tmp-node) ;获取node-id
-                  ;获取父节点列表
-                  parent-node-id-set (set (map #(:node-id %) (get-parent-nodes this tmp-node-id)))] 
-              ;; (prn tmp-node-id visited-nodes parent-node-id-set)
-              ;已经被遍历过
+            (let [tmp-node-id (:node-id tmp-node)
+                  parent-node-id-set (set (map #(:node-id %) (get-parent-nodes this tmp-node-id)))]
               (cond
                 (contains? @visited-nodes tmp-node-id) nil
-                            ;(set/superset? #{} nil) 启动节点是空的话，这个语句也是 true 的
                 (or (= 0 (count parent-node-id-set)) (set/superset? @visited-nodes parent-node-id-set))
                 (do
-                  ;注册节点
                   (.add (.get task-node-tree depth) tmp-node)
-                  ;记录已访问节点
                   (reset! visited-nodes (conj @visited-nodes tmp-node-id))
-                  ;记录下一层要访问的节点
-                  ;; (prn "1121221")
-                  ;; (prn (get-child-nodes this tmp-node-id))
-                  (.addAll next-nodes (get-child-nodes this tmp-node-id))
-                  ;; (prn "222222222")
-                  ))))
-                  
-          ;递归
+                  (.addAll next-nodes (get-child-nodes this tmp-node-id))))))
           (recur next-nodes (inc depth) visited-nodes)))))
-      
+
+
       ;; (prn "Ok")
-      
+
+
+      ;; (prn "Ok")
+
   ;注册节点对
   (add-node-pair [this from-node to-node]
     (_add-node-pair from-node to-node child-node-map)
     (_add-node-pair to-node from-node parent-node-map)
-    (cond
-      (not (nil? from-node)) (.add all-node-id-set from-node)
-      (not (nil? to-node)) (.add all-node-id-set to-node)))
+    (when (some? from-node)
+      (.add ^HashSet all-node-id-set from-node))
+    (when (some? to-node)
+      (.add ^HashSet all-node-id-set to-node)))
+
   ;获取子节点列表
-  (get-child-nodes [this node-id] 
                   ;;  (prn child-node-map)
-                   (get child-node-map node-id #{}))
+  (get-child-nodes [this node-id]
+                  ;;  (prn child-node-map)
+    (get child-node-map node-id #{}))
+
   ;获取父节点列表
   (get-parent-nodes [this node-id]
-     ;要设置默认值，不然会抛出空指针
     (get parent-node-map node-id #{})))
 
 ;定义一个任务类型
 (defrecord TaskInfo [^String task-id ^String task-name
                      ^String task-exec-type sched-info ^TaskNodeGraph node-graph task-config])
+
+;创建 TaskNodeGraph 的工厂函数
+(defn create-task-node-graph []
+  (->TaskNodeGraph (HashMap.)
+                   (HashMap.)
+                   (HashSet.)  ;; 使用 HashSet 替代 ArrayList
+                   (HashMap.)))
