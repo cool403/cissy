@@ -1,17 +1,20 @@
 (ns cissy.dbms.dbms-core
   (:require [cissy.registry :as register]
             [cissy.dbms.dialect :as dialect]
-            [pod.babashka.mysql :as mysql]
-            [pod.babashka.oracle :as oracle]
-            [pod.babashka.postgresql :as pg]
-            [pod.babashka.mysql.sql :as mysql-sql]
-            [pod.babashka.oracle.sql :as oracle-sql]
-            [pod.babashka.postgresql.sql :as pg-sql]
-            [pod.babashka.go-sqlite3 :as sqlite]
+            ;; [pod.babashka.mysql :as mysql]
+            ;; [pod.babashka.oracle :as oracle]
+            ;; [pod.babashka.postgresql :as pg]
+            ;; [pod.babashka.mysql.sql :as mysql-sql]
+            ;; [pod.babashka.oracle.sql :as oracle-sql]
+            ;; [pod.babashka.postgresql.sql :as pg-sql]
+            ;; [pod.babashka.go-sqlite3 :as sqlite]
             [cissy.const :as const]
             [honey.sql.helpers :as helpers]
             [honey.sql :as sql]
-            [taoensso.timbre :as timbre]))
+            [taoensso.timbre :as timbre]
+            [next.jdbc :as jdbc]
+            [next.jdbc.result-set :as rs]
+            [next.jdbc.sql :as jdbc-sql]))
 ; 不使用babashka pod的方式访问数据库，直接使用next.jdbc和honeysql 配合访问数据库
 ;(jdbc/execute! db-spec ["select * from users limit 1"] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})
 ; 上述执行返回结果和babashka pod的返回结果一样
@@ -32,8 +35,7 @@
   [task-node-execution-info]
   (timbre/info "开始执行drn节点")
   (let [{task-execution-info :task-execution-info
-         node-param-dict     :node-param-dict
-         node-execution-dict :node-execution-dict} @task-node-execution-info
+         node-param-dict     :node-param-dict} @task-node-execution-info
         {from-db :from_db} (:drn (:task-config (deref (:task-info @task-execution-info))))
             ;获取关联数据源配置
         from-db-ins (register/get-datasource-ins from-db)
@@ -47,11 +49,7 @@
     (when-let [read-sql (dialect/read-data-sql @node-param-dict)]
       (timbre/info "加载数据脚本:[" read-sql "]")
                      ;执行db读数据
-      (case (keyword db-type)
-        :oracle (oracle/execute! from-db-ins [read-sql])
-        :mysql (mysql/execute! from-db-ins [read-sql])
-        :sqlite (sqlite/query from-db-ins [read-sql])
-        :postgresql (pg/execute! from-db-ins [read-sql])))))
+      (jdbc/execute! from-db-ins [read-sql] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps}))))
 
 ;(mysql-sql/insert-multi! aa :users ["id" "username","email"] [[22222222 "njones" "2332"]])
 ;(vec (map (fn[x] (vec (vals x))) ee)) --> (vec (map #(vec (vals %)) ee))
@@ -66,7 +64,6 @@
   (timbre/info "开始执行dwn节点")
   (let [{task-execution-info :task-execution-info
          node-param-dict     :node-param-dict
-         node-execution-dict :node-execution-dict
          node-result-dict :node-result-dict} @task-node-execution-info
         {task-execution-dict :task-execution-dict} @task-execution-info
         {to-db :to_db} @node-param-dict
@@ -84,15 +81,16 @@
         (let [columns (vec (map #(name %) (keys (first drn-res))))
               datas (vec (map #(vec (vals %)) drn-res))]
               ;根据db类型写入不同的数据库
-          (case (keyword db-type)
-            :oralce (oracle-sql/insert-multi! to-db-ins to-table  columns datas)
-            :mysql (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
-            :postgresql (pg-sql/insert-multi! to-db-ins to-table  columns datas)
-            :sqlite (let [insert-sql (-> (helpers/insert-into to-table)
-                                         (get-table-columns columns)
-                                         (helpers/values datas)
-                                         sql/format)]
-                      (sqlite/execute! to-db-ins insert-sql)))
+          (jdbc-sql/insert-multi! to-db-ins to-table columns datas)
+          ;; (case (keyword db-type)
+          ;;   :oralce (oracle-sql/insert-multi! to-db-ins to-table  columns datas)
+          ;;   :mysql (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
+          ;;   :postgresql (pg-sql/insert-multi! to-db-ins to-table  columns datas)
+          ;;   :sqlite (let [insert-sql (-> (helpers/insert-into to-table)
+          ;;                                (get-table-columns columns)
+          ;;                                (helpers/values datas)
+          ;;                                sql/format)]
+          ;;             (sqlite/execute! to-db-ins insert-sql)))
           ;同步计数
           ;打印日志
           (swap! (:sync-count @task-execution-dict) #(+ % (count datas)))
