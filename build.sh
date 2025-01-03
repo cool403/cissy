@@ -20,9 +20,6 @@ clojure -T:build uber
 echo '构建 native-image'
 $GRAALVM_HOME/bin/native-image \
   --no-fallback \
-  --initialize-at-build-time \
-  --report-unsupported-elements-at-runtime \
-  -H:+ReportExceptionStackTraces \
   -H:IncludeResources='.*/.*' \
   -H:ConfigurationFileDirectories=resources/META-INF/native-image \
   -jar target/cissy.jar \

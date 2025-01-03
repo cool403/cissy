@@ -10,6 +10,11 @@
     "allPublicConstructors": true
   },
   {
+    "name": "java.sql.DriverManager",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
     "name": "org.sqlite.JDBC",
     "methods": [{"name": "<init>", "parameterTypes": []}]
   },
@@ -19,6 +24,14 @@
   },
   {
     "name": "org.postgresql.Driver",
+    "methods": [{"name": "<init>", "parameterTypes": []}]
+  },
+  {
+    "name": "oracle.jdbc.OracleDriver",
+    "methods": [{"name": "<init>", "parameterTypes": []}]
+  },
+  {
+    "name": "oracle.jdbc.driver.OracleDriver",
     "methods": [{"name": "<init>", "parameterTypes": []}]
   }
 ] 
