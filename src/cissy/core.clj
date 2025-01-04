@@ -116,29 +116,38 @@
         node-chan (get @node-channels node-id)
         child-nodes (get (:child-node-map node-graph) node-id)
         child-chans (map #(get @node-channels (:node-id %)) child-nodes)
-        thread-count (or (get-in @task-info [:task-config (keyword node-id) :threads]) 1)]
+        thread-count (or (get-in @task-info [:task-config (keyword node-id) :threads]) 1)
+        node-execution-info (-> (executions/new-node-execution-info node-id task-execution-info)
+                                (fill-node-param node-id (:task-config @task-info)))]
 
     ;; 创建指定数量的工作线程
     (dotimes [thread-idx thread-count]
-      ;; (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程"))
       (go
         (loop [round 1]
-          (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程，执行轮次" round))
-          (let [node-execution-info (-> (executions/new-node-execution-info node-id task-execution-info)
-                                                         ;; 填充节点参数
-                                            (fill-node-param node-id (:task-config @task-info))
-                                                           ;填充执行线程信息
-                                            (fill-thread-info thread-idx round))]
-            (if node-chan 
-              (when-let [parent-result (<! node-chan)]
-                (timbre/info (str "节点" node-id "获取到父节点结果"))
-                (let [node-execution-info (fill-node-result-cxt node-execution-info node-id node-graph parent-result)
-                      result (node-func node-execution-info)]
-                  (doseq [ch child-nodes]
-                    (>! ch result))))
-              (do 
-                (timbre/info (str "开始启动root节点" node-id))
-                (let [result (node-func (fill-thread-info node-execution-info thread-idx round))]
-                  (doseq [ch child-chans]
-                    (>! ch result))))))
-          (recur (inc round)))))))
+          (when-not (= (:curr-task-status @task-execution-info) "done")  ; 检查任务状态
+            (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程，执行轮次" round))
+            (let [node-execution-info-tmp (-> node-execution-info
+                                              (fill-thread-info thread-idx round))
+                  curr-node-status (:curr-node-status @node-execution-info-tmp)]
+              (if node-chan
+                ;; 非root节点等待输入
+                (when-let [parent-result (<! node-chan)]
+                  ; 再次检查状态
+                  (when-not (= curr-node-status "done")
+                    (timbre/info (str "节点" node-id "获取到父节点结果"))
+                    (let [result (-> node-execution-info-tmp
+                                     (fill-node-result-cxt node-id node-graph parent-result)
+                                     node-func)]
+                      (doseq [ch child-chans]
+                        (>! ch result)))
+                    ;clojure中，是通过recur来实现递归的，没有办法显式的退出递归
+                    (recur (inc round))))
+                ;; root节点执行
+                (do
+                  (timbre/info (str "开始启动root节点" node-id))
+                    ; 检查root节点状态
+                  (when-not (= curr-node-status "done")
+                    (let [result (node-func node-execution-info-tmp)]
+                      (doseq [ch child-chans]
+                        (>! ch result)))
+                    (recur (inc round))))))))))))

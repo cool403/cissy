@@ -49,7 +49,11 @@
     (when-let [read-sql (dialect/read-data-sql @node-param-dict)]
       (timbre/info "加载数据脚本:[" read-sql "]")
                      ;执行db读数据
-      (jdbc/execute! from-db-ins [read-sql] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps}))))
+      (let [result-list (jdbc/execute! from-db-ins [read-sql] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})]
+        (when (or (nil? result-list) (empty? result-list))
+          (timbre/info "当前reader数据加载完毕，设置节点状态为done")
+          (reset! task-node-execution-info (assoc @task-node-execution-info :curr-node-status "done")))
+        result-list))))
 
 ;(mysql-sql/insert-multi! aa :users ["id" "username","email"] [[22222222 "njones" "2332"]])
 ;(vec (map (fn[x] (vec (vals x))) ee)) --> (vec (map #(vec (vals %)) ee))
@@ -74,14 +78,16 @@
         drn-res ((keyword const/DRN_NODE_NAME) @node-result-dict)
         to-table (:to_table @node-param-dict)]
         ;判断drn节点数据是否为空
-    (if (or (nil? drn-res) (= (count drn-res) 0)) (do
-                                                    (timbre/warn "drn节点未读取到数据，什么都不做")
-                                                    (reset! task-execution-info (assoc @task-execution-info :curr-task-status "done")))
+    (if (or (nil? drn-res) (= (count drn-res) 0))
+      (do
+        (timbre/warn "drn节点未读取到数据，什么都不做")
+        ;这里只能重置当前节点，不能重置任务状态，因为任务状态是任务级别的，不能因为一个节点的终止而终止任务
+        (reset! task-node-execution-info (assoc @task-node-execution-info :curr-node-status "done")))
             ;获取列信息 
-        (let [columns (vec (map #(name %) (keys (first drn-res))))
-              datas (vec (map #(vec (vals %)) drn-res))]
+      (let [columns (vec (map #(name %) (keys (first drn-res))))
+            datas (vec (map #(vec (vals %)) drn-res))]
               ;根据db类型写入不同的数据库
-          (jdbc-sql/insert-multi! to-db-ins to-table columns datas)
+        (jdbc-sql/insert-multi! to-db-ins to-table columns datas)
           ;; (case (keyword db-type)
           ;;   :oralce (oracle-sql/insert-multi! to-db-ins to-table  columns datas)
           ;;   :mysql (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
@@ -93,8 +99,8 @@
           ;;             (sqlite/execute! to-db-ins insert-sql)))
           ;同步计数
           ;打印日志
-          (swap! (:sync-count @task-execution-dict) #(+ % (count datas)))
-          (timbre/info (str "已插入" (deref (:sync-count @task-execution-dict)) "条记录到" to-table "表里"))))))
+        (swap! (:sync-count @task-execution-dict) #(+ % (count datas)))
+        (timbre/info (str "已插入" (deref (:sync-count @task-execution-dict)) "条记录到" to-table "表里"))))))
 
 
 ;注册节点
