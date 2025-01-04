@@ -3,7 +3,8 @@
   (:require [clojure.tools.cli :as cli]
             [clojure.string :as str]
             [cissy.commands :as commands]
-            [taoensso.timbre :as timbre]))
+            [taoensso.timbre :as timbre]
+            [cissy.log :as log]))
 
 (def cli-options
   [["-c" "--config CONFIG" "任务配置描述文件路径(json格式)"]
@@ -50,6 +51,7 @@
   (System/exit status))
 
 (defn -main [& args]
+  (log/init-logging!)
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
