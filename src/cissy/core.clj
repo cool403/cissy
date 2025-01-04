@@ -120,30 +120,25 @@
 
     ;; 创建指定数量的工作线程
     (dotimes [thread-idx thread-count]
-      (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程"))
+      ;; (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程"))
       (go
         (loop [round 1]
-          (if node-chan
-            ;; 非root节点等待输入
-            (when-let [parent-result (<! node-chan)]
-              (let [node-execution-info (-> (executions/new-node-execution-info node-id task-execution-info)
-                                          ;; 填充节点参数
+          (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程，执行轮次" round))
+          (let [node-execution-info (-> (executions/new-node-execution-info node-id task-execution-info)
+                                                         ;; 填充节点参数
                                             (fill-node-param node-id (:task-config @task-info))
-                                          ;; 填充父节点结果
-                                            (fill-node-result-cxt node-id node-graph parent-result)
-                                            ;填充执行线程信息
-                                            (fill-thread-info thread-idx round))
-                    result (node-func node-execution-info)]
-                ;; 广播结果给所有子节点
-                (doseq [ch child-chans]
-                  (>! ch result)))
-              (recur (inc round)))
-            ;; root节点持续执行
-            (do
-              (let [node-execution-info (-> (executions/new-node-execution-info node-id task-execution-info)
-                                            (fill-node-param node-id (:task-config @task-info)))
-                    result (node-func node-execution-info)]
-                ;; 广播结果给所有子节点
-                (doseq [ch child-chans]
-                  (>! ch result))
-                (recur (inc round))))))))))
+                                                           ;填充执行线程信息
+                                            (fill-thread-info thread-idx round))]
+            (if node-chan 
+              (when-let [parent-result (<! node-chan)]
+                (timbre/info (str "节点" node-id "获取到父节点结果"))
+                (fill-node-result-cxt node-execution-info node-id node-graph parent-result)
+                (let [result (node-func node-execution-info)]
+                  (doseq [ch child-nodes]
+                    (>! ch result))))
+              (do 
+                (timbre/info (str "开始启动root节点" node-id))
+                (let [result (node-func node-execution-info)]
+                  (doseq [ch child-chans]
+                    (>! ch result))))))
+          (recur (inc round)))))))
