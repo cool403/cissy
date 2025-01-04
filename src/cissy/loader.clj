@@ -84,7 +84,7 @@
          nodes      :nodes
          datasource :datasource} task-map
         node-graph                                                   (task/create-task-node-graph)
-        task-info                                                    (atom (task/->TaskInfo nil task-name nil (sched/->ExecutionOnceSched) node-graph task-map))]
+        task-info                                                    (atom (task/->TaskInfo nil task-name nil (sched/->ChanBasedSched) node-graph task-map))]
     ;解析节点配置nodes(a->b;)为节点对
     (doseq [[from-node-id to-node-id] (parse-node-rel-str nodes)]
       (cond

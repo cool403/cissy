@@ -61,48 +61,48 @@
 ; ----->C---->D------
 ;|            |
 ; ----->E------
-(defn run-task-in-local
-  "docstring"
-  [task-execution-info]
-  (timbre/info "开始获取任务启动节点列表")
-  ;; (prn (:node-graph (deref (:task-info @task-execution-info))))
-  (let [{^task/->TaskInfo task-info :task-info}   @task-execution-info
-        {^task/->TaskNodeGraph node-graph :node-graph} @task-info
-        startup-nodes            (task/get-startup-nodes node-graph)]
-    (if (<= (count startup-nodes) 0) (timbre/warn "未匹配到启动节点")
-        ;从深度遍历执行
-        (loop [depth             0
-               may-used-node-res (atom {})]
-          (timbre/info "开始迭代执行depth=" depth "节点列表")
-          ;future-list 采集所有的future,用于结果处理
-          (let [node-future-map (atom {})
-                iter-nodes      (get (:task-node-tree node-graph) depth)]
-            ;; (prn (count iter-nodes))
-            ;; (prn iter-nodes)
-            (when (= (count iter-nodes) 0)
-              (timbre/info (str "depth=" depth "没有需要执行的节点了")))
-            (when (> (count iter-nodes) 0)
-              #_{:clj-kondo/ignore [:unused-value]}
-              (doseq [tmp-node    iter-nodes]
-                ;; (prn node-func)
-                (let [tmp-node-id (:node-id tmp-node)
-                      node-func   (register/get-node-func (str tmp-node-id)) ;获取注册的方法
-                      tmp-node-execution-info (-> (executions/new-node-execution-info tmp-node-id task-execution-info)
-                                                  (fill-node-param tmp-node-id (:task-config @task-info))
-                                                  (fill-node-result-cxt tmp-node-id node-graph may-used-node-res))
-                                                   ;方法执行转换成future
-                      node-future             (future (node-func tmp-node-execution-info))]
-                  ;future 保存
-                  (reset! node-future-map (assoc @node-future-map (keyword tmp-node-id) node-future))))
-              (timbre/info "当前depth=" depth "所有节点转换成future完成")
-              ;通过future 获取结果集
-              ;; (prn @node-future-map)
-              (doseq [[k v] @node-future-map]
-                (let [v-res (deref v 60000 nil)]
-                  (timbre/info "父节点node-id" k "执行完成")
-                  ;记录执行结果
-                  (reset! may-used-node-res (assoc @may-used-node-res k v-res))))
-              (recur (inc depth) may-used-node-res)))))))
+;; (defn run-task-in-local
+;;   "docstring"
+;;   [task-execution-info]
+;;   (timbre/info "开始获取任务启动节点列表")
+;;   ;; (prn (:node-graph (deref (:task-info @task-execution-info))))
+;;   (let [{^task/->TaskInfo task-info :task-info}   @task-execution-info
+;;         {^task/->TaskNodeGraph node-graph :node-graph} @task-info
+;;         startup-nodes            (task/get-startup-nodes node-graph)]
+;;     (if (<= (count startup-nodes) 0) (timbre/warn "未匹配到启动节点")
+;;         ;从深度遍历执行
+;;         (loop [depth             0
+;;                may-used-node-res (atom {})]
+;;           (timbre/info "开始迭代执行depth=" depth "节点列表")
+;;           ;future-list 采集所有的future,用于结果处理
+;;           (let [node-future-map (atom {})
+;;                 iter-nodes      (get (:task-node-tree node-graph) depth)]
+;;             ;; (prn (count iter-nodes))
+;;             ;; (prn iter-nodes)
+;;             (when (= (count iter-nodes) 0)
+;;               (timbre/info (str "depth=" depth "没有需要执行的节点了")))
+;;             (when (> (count iter-nodes) 0)
+;;               #_{:clj-kondo/ignore [:unused-value]}
+;;               (doseq [tmp-node    iter-nodes]
+;;                 ;; (prn node-func)
+;;                 (let [tmp-node-id (:node-id tmp-node)
+;;                       node-func   (register/get-node-func (str tmp-node-id)) ;获取注册的方法
+;;                       tmp-node-execution-info (-> (executions/new-node-execution-info tmp-node-id task-execution-info)
+;;                                                   (fill-node-param tmp-node-id (:task-config @task-info))
+;;                                                   (fill-node-result-cxt tmp-node-id node-graph may-used-node-res))
+;;                                                    ;方法执行转换成future
+;;                       node-future             (future (node-func tmp-node-execution-info))]
+;;                   ;future 保存
+;;                   (reset! node-future-map (assoc @node-future-map (keyword tmp-node-id) node-future))))
+;;               (timbre/info "当前depth=" depth "所有节点转换成future完成")
+;;               ;通过future 获取结果集
+;;               ;; (prn @node-future-map)
+;;               (doseq [[k v] @node-future-map]
+;;                 (let [v-res (deref v 60000 nil)]
+;;                   (timbre/info "父节点node-id" k "执行完成")
+;;                   ;记录执行结果
+;;                   (reset! may-used-node-res (assoc @may-used-node-res k v-res))))
+;;               (recur (inc depth) may-used-node-res)))))))
 
 (defn process-node-chan-based
   "处理基于Channel的节点执行
