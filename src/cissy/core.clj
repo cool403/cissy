@@ -6,7 +6,8 @@
    [cissy.registry :as register]
    [clojure.string :as str]
    [taoensso.timbre :as timbre]
-   [cissy.const :as const]))
+   [cissy.const :as const]
+   [clojure.core.async :refer [>! <! go chan]]))
 
 ;; (comment
 ;;   (defprotocol Human
@@ -42,10 +43,17 @@
             parent-node-res (get @may-used-node-res (keyword parent-node-id))
             node-result-dict (:node-result-dict @node-execution-info)]
         (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "返回" (if (counted? parent-node-res)
-         (str (count parent-node-res) "条纪录")
-         parent-node-res))
+                                                                        (str (count parent-node-res) "条纪录")
+                                                                        parent-node-res))
         (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) parent-node-res)))))
   node-execution-info)
+
+(defn- fill-thread-info [node-execution-info thread-idx round]
+  ;; 填充线程信息
+  ;; thread-idx: 线程索引
+  ;; round: 执行轮次
+  (let [node-execution-dict (:node-execution-dict @node-execution-info)]
+    (reset! node-execution-dict (assoc @node-execution-dict :thread-idx thread-idx :execution-round round))))
 
 
 ;A----->B---------->F
@@ -95,3 +103,47 @@
                   ;记录执行结果
                   (reset! may-used-node-res (assoc @may-used-node-res k v-res))))
               (recur (inc depth) may-used-node-res)))))))
+
+(defn process-node-chan-based
+  "处理基于Channel的节点执行
+   node-id: 节点ID
+   task-execution-info: 任务执行信息
+   node-channels: 节点channel映射
+   node-graph: 节点图"
+  [node-id task-execution-info node-channels node-graph]
+  (let [{task-info :task-info} @task-execution-info
+        node-func (register/get-node-func node-id)
+        node-chan (get @node-channels node-id)
+        child-nodes (get (:child-node-map node-graph) node-id)
+        child-chans (map #(get @node-channels (:node-id %)) child-nodes)
+        thread-count (or (get-in @task-info [:task-config (keyword node-id) :threads]) 1)]
+
+    ;; 创建指定数量的工作线程
+    (dotimes [thread-idx thread-count]
+      (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程"))
+      (go
+        (loop [round 1]
+          (if node-chan
+            ;; 非root节点等待输入
+            (when-let [parent-result (<! node-chan)]
+              (let [node-execution-info (-> (executions/new-node-execution-info node-id task-execution-info)
+                                          ;; 填充节点参数
+                                            (fill-node-param node-id (:task-config @task-info))
+                                          ;; 填充父节点结果
+                                            (fill-node-result-cxt node-id node-graph parent-result)
+                                            ;填充执行线程信息
+                                            (fill-thread-info thread-idx round))
+                    result (node-func node-execution-info)]
+                ;; 广播结果给所有子节点
+                (doseq [ch child-chans]
+                  (>! ch result)))
+              (recur (inc round)))
+            ;; root节点持续执行
+            (do
+              (let [node-execution-info (-> (executions/new-node-execution-info node-id task-execution-info)
+                                            (fill-node-param node-id (:task-config @task-info)))
+                    result (node-func node-execution-info)]
+                ;; 广播结果给所有子节点
+                (doseq [ch child-chans]
+                  (>! ch result))
+                (recur (inc round))))))))))
