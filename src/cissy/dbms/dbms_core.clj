@@ -22,12 +22,13 @@
   "填充分页参数"
   [task-execution-info node-param-dict]
   (let [{node-execution-dict :node-execution-dict} @task-execution-info
-              ;默认1
+        ;默认1
         execution-round (get @node-execution-dict :execution-round 1)
-              ;默认 1000
+        thread-idx (get @node-execution-dict :thread-idx 0)
+        ;默认 1000
         page-size (get @node-param-dict :page_size 1000)
-        page-offset (* page-size (- execution-round 1))]
-    (reset! node-param-dict (assoc @node-param-dict :page_offset page-offset))))
+        page-offset (get @node-param-dict :page_offset 0)]
+    (reset! node-param-dict (assoc @node-param-dict :page_offset (- page-offset page-size)))))
 
 ;从数据库读取数据
 (defn read-rows
