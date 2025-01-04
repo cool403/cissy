@@ -40,12 +40,11 @@
     (doseq [parent-node parent-node-list]
       ;传入父节点的执行结果作为此次节点的执行依赖传入
       (let [parent-node-id (:node-id parent-node)
-            parent-node-res (get @may-used-node-res (keyword parent-node-id))
             node-result-dict (:node-result-dict @node-execution-info)]
-        (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "返回" (if (counted? parent-node-res)
-                                                                        (str (count parent-node-res) "条纪录")
-                                                                        parent-node-res))
-        (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) parent-node-res)))))
+        (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "返回" (if (counted? may-used-node-res)
+                                                                        (str (count may-used-node-res) "条纪录")
+                                                                        may-used-node-res))
+        (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) may-used-node-res)))))
   node-execution-info)
 
 (defn- fill-thread-info [node-execution-info thread-idx round]
