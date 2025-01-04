@@ -21,9 +21,9 @@
 (defn- fill-page-params
   "填充分页参数"
   [task-execution-info node-param-dict]
-  (let [{task-execution-dict :task-execution-dict} @task-execution-info
+  (let [{node-execution-dict :node-execution-dict} @task-execution-info
               ;默认1
-        execution-round (get @task-execution-dict :execution-round 1)
+        execution-round (get @node-execution-dict :execution-round 1)
               ;默认 1000
         page-size (get @node-param-dict :page_size 1000)
         page-offset (* page-size (- execution-round 1))]
@@ -44,7 +44,7 @@
            ;塞入db类型,sqlite的时候，塞入的不是json，而是字符串
     (reset! node-param-dict (assoc @node-param-dict :dbtype db-type))
            ;塞入分页相关的参数
-    (fill-page-params task-execution-info node-param-dict)
+    (fill-page-params task-node-execution-info node-param-dict)
            ;获取加载数据的sql
     (when-let [read-sql (dialect/read-data-sql @node-param-dict)]
       (timbre/info "加载数据脚本:[" read-sql "]")

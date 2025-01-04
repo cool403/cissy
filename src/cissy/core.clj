@@ -53,7 +53,8 @@
   ;; thread-idx: 线程索引
   ;; round: 执行轮次
   (let [node-execution-dict (:node-execution-dict @node-execution-info)]
-    (reset! node-execution-dict (assoc @node-execution-dict :thread-idx thread-idx :execution-round round))))
+    (reset! node-execution-dict (assoc @node-execution-dict :thread-idx thread-idx :execution-round round)))
+  node-execution-info)
 
 
 ;A----->B---------->F
@@ -132,13 +133,13 @@
             (if node-chan 
               (when-let [parent-result (<! node-chan)]
                 (timbre/info (str "节点" node-id "获取到父节点结果"))
-                (fill-node-result-cxt node-execution-info node-id node-graph parent-result)
-                (let [result (node-func node-execution-info)]
+                (let [node-execution-info (fill-node-result-cxt node-execution-info node-id node-graph parent-result)
+                      result (node-func node-execution-info)]
                   (doseq [ch child-nodes]
                     (>! ch result))))
               (do 
                 (timbre/info (str "开始启动root节点" node-id))
-                (let [result (node-func node-execution-info)]
+                (let [result (node-func (fill-thread-info node-execution-info thread-idx round))]
                   (doseq [ch child-chans]
                     (>! ch result))))))
           (recur (inc round)))))))
