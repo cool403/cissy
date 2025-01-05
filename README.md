@@ -42,5 +42,9 @@ java -jar cissy.jar start -c path/to/config.json
 java -jar cissy.jar demo
 ```
 
+### 开发日志
+- [x] 2025-01-05 修复解决多线程执行下，select 数据错序导致插入冲突而导致失败，配置上order by 后，可以解决这个问题
+- [ ] 支持断点继续执行
+- [ ] 监控channel的执行情况
 
 
