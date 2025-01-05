@@ -56,19 +56,14 @@
   node-execution-info)
 
 (defn process-node-chan-based
-  "处理基于Channel的节点执行
-   node-id: 节点ID
-   task-execution-info: 任务执行信息
-   node-channels: 节点channel映射
-   node-graph: 节点图"
-  [node-id task-execution-info node-channels node-graph]
+  "处理基于Channel的节点执行"
+  [node-id task-execution-info node-channels node-graph node-monitor-channel]
   (let [{task-info :task-info} @task-execution-info
         node-func (register/get-node-func node-id)
         node-chan (get @node-channels node-id)
         child-nodes (get (:child-node-map node-graph) node-id)
         child-chans (map #(get @node-channels (:node-id %)) child-nodes)
         thread-count (or (get-in @task-info [:task-config (keyword node-id) :threads]) 1)
-
         curr-offset (atom 0)]
 
     ;; 创建指定数量的工作线程
@@ -85,6 +80,7 @@
                     curr-node-status (:curr-node-status @curr-node-execution)
                             ;; 如果存在calc-page-offset函数，计算新的offset
                     node-param-dict (:node-param-dict @curr-node-execution)]
+                (>! node-monitor-channel {:node-id node-id :node-status curr-node-status})
                         ;; 如果有offset计算函数，更新page_offset
                 (when (contains? @node-param-dict :page_size)
                   (let [page-size (get @node-param-dict :page_size 1000)]

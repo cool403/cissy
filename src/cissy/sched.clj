@@ -16,7 +16,8 @@
     (timbre/info "开始以Channel策略执行任务")
     (let [{task-info :task-info} @task-execution-info
           {node-graph :node-graph} @task-info
-          node-channels (atom {})]  ; 存储节点ID -> channel的映射
+          node-channels (atom {}); 存储节点ID -> channel的映射
+          node-monitor-channel (chan)]
 
       ;; 设置任务状态为运行中
       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
@@ -27,13 +28,30 @@
           (swap! node-channels assoc (:node-id node)
                  (chan (dropping-buffer 1024)))))
 
+      ;; 启动监控线程
+      (go
+        (timbre/info "启动一个监控线程，监控节点状态")
+        (let [node-status-map (zipmap (vec (map :node-id (:all-node-id-set node-graph))) (repeat "ding"))]
+          (loop [x node-status-map]
+            (let [node-status (<! node-monitor-channel)
+                  {node-id :node-id node-status :node-status} node-status]
+              (timbre/info (str "收到节点状态:" node-id "状态:" node-status))
+              ;合并状态
+              (let [y (assoc x node-id node-status)]
+                ;如果所有节点状态都为done，则任务完成
+                (when (every? #(= % "done") (vals y))
+                  (timbre/info "所有节点状态都为done，任务完成")
+                  (reset! task-execution-info (assoc @task-execution-info :curr-task-status "done")))
+                (recur y))))))
+
       ;; 启动所有节点的处理
       (doseq [node (:all-node-id-set node-graph)]
         (let [node-id (:node-id node)]
           (process-node-chan-based node-id
                                    task-execution-info
                                    node-channels
-                                   node-graph)))
+                                   node-graph
+                                   node-monitor-channel)))
       ;; 等待任务完成或被中断
       (loop []
         (let [status (:curr-task-status @task-execution-info)]
