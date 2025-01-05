@@ -23,10 +23,7 @@
   (let [thread (Thread/currentThread)
         thread-id (.getId thread)
         thread-name (.getName thread)]
-    (cond
-      (= thread-name "main") "main"
-      (.startsWith thread-name "async") (format "async-%d" thread-id)
-      :else (format "t-%d" thread-id))))
+    (format thread-name)))
 
 (defn- format-msg 
   "格式化消息，处理特殊对象"
@@ -49,7 +46,7 @@
 (def ^:private log-format
   "自定义日志格式"
   (fn [{:keys [level thread msg_ ?file ?line] :as data}]
-    (let [thread-name (truncate-str (get-thread-name) 10)
+    (let [thread-name (truncate-str (get-thread-name) 17)
           level-str (truncate-str (-> level name str/upper-case) 5)
           location (format-location ?file ?line)
           formatted-msg (format-msg msg_)]
