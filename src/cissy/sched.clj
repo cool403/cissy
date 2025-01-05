@@ -7,49 +7,6 @@
    [clojure.core.async :as async :refer [>! <! go chan buffer dropping-buffer]]))
 
 
-;单次执行
-;; (deftype ExecutionOnceSched []
-;;   executions/TaskSched
-;;   (get-task-sched-type [this] "exec_once")
-;;   (get-task-sched-name [this] "执行一次")
-;;   (sched-task-execution [this task-execution-info]
-;;     ;; (timbre/info "开始执行单次任务")
-;;     (let [{task-info  :task-info} @task-execution-info]
-;;       (timbre/info "开始执行单次任务" (:task-name @task-info))
-;;           ;设置成ding
-;;       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
-;;       (run-task-in-local task-execution-info)
-;;       (timbre/info "任务执行完成")
-;;       (reset! task-execution-info
-;;               (assoc @task-execution-info :stop-time (System/currentTimeMillis)
-;;                      :curr-task-status "done")))))
-;while true一直执行
-;; (deftype ExecutionAlwaysSched []
-;;   executions/TaskSched
-;;   (get-task-sched-type [this] "exec_always")
-;;   (get-task-sched-name [this] "循环执行")
-;;   (sched-task-execution [this task-execution-info]
-;;     (timbre/info "开始以循环策略执行任务")
-;;     (let [{task-info           :task-info
-;;            task-execution-dict :task-execution-dict} @task-execution-info
-;;           task-name (:task-name @task-info)]
-;;       (timbre/info "获取任务启动节点: " task-name)
-;;        ;设置成ding
-;;       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
-;;       (loop [round 1]
-;;         (when-not (= (:curr-task-status @task-execution-info) "done")
-;;            ;打印日志
-;;           (timbre/info "开始执行 task=" (:task-name @task-info) "in the 【" round "】round")
-;;            ;执行轮数塞到执行上下文中
-;;           (reset! task-execution-dict (assoc @task-execution-dict :execution-round round))
-;;           ;执行方法
-;;           (run-task-in-local task-execution-info)
-;;           ;随机sleep避免空转
-;;           ;; (Thread/sleep (rand-int 200))
-;;           (recur (inc round))))
-;;       ;纪录执行结束时间
-;;       (reset! task-execution-info (assoc @task-execution-info :stop-time (System/currentTimeMillis)))
-;;       (timbre/info (str "任务" task-name " 执行完成耗时:" (- (:stop-time @task-execution-info) (:start-time @task-execution-info)) "毫秒")))))
 
 (deftype ChanBasedSched []
   executions/TaskSched
@@ -60,23 +17,23 @@
     (let [{task-info :task-info} @task-execution-info
           {node-graph :node-graph} @task-info
           node-channels (atom {})]  ; 存储节点ID -> channel的映射
-      
+
       ;; 设置任务状态为运行中
       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
-      
+
       ;; 为每个非root节点创建channel
       (doseq [node (:all-node-id-set node-graph)]
         (when-not (empty? (get (:parent-node-map node-graph) (:node-id node)))
-          (swap! node-channels assoc (:node-id node) 
+          (swap! node-channels assoc (:node-id node)
                  (chan (dropping-buffer 1024)))))
-      
+
       ;; 启动所有节点的处理
       (doseq [node (:all-node-id-set node-graph)]
         (let [node-id (:node-id node)]
-          (process-node-chan-based node-id 
-                                 task-execution-info 
-                                 node-channels 
-                                 node-graph)))
+          (process-node-chan-based node-id
+                                   task-execution-info
+                                   node-channels
+                                   node-graph)))
       ;; 等待任务完成或被中断
       (loop []
         (let [status (:curr-task-status @task-execution-info)]
@@ -88,20 +45,20 @@
             (= status "interrupted")
             (do
               (timbre/info "任务被外部中断")
-              (reset! task-execution-info 
+              (reset! task-execution-info
                       (assoc @task-execution-info :curr-task-status "done")))
             ;; 继续等待
             :else
             (do
               (Thread/sleep 1000)
               (recur)))))
-      
+
       ;; 记录执行结束时间
-      (reset! task-execution-info 
-              (assoc @task-execution-info 
-                    :stop-time (System/currentTimeMillis)))
-      
-      (timbre/info (str "任务执行完成，耗时:" 
-                       (- (:stop-time @task-execution-info) 
-                          (:start-time @task-execution-info)) 
-                       "毫秒")))))
+      (reset! task-execution-info
+              (assoc @task-execution-info
+                     :stop-time (System/currentTimeMillis)))
+
+      (timbre/info (str "任务执行完成，耗时:"
+                        (- (:stop-time @task-execution-info)
+                           (:start-time @task-execution-info))
+                        "毫秒")))))
