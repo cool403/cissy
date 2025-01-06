@@ -92,7 +92,7 @@
                             (assoc @node-param-dict :page_offset @curr-offset))
                     (timbre/info "当前thread-index=" thread-idx "的取到的offset=" (get @node-param-dict :page_offset))))
                 (if node-chan
-                  ;; 非root节点等待输入
+                  ;; 非root节点等待输入或者父节点是done状态也不执行,当前节点标记done状态
                   (when-let [parent-result (<! node-chan)]
                     (when-not (= curr-node-status "done")
                       (timbre/info (str "节点" node-id "获取到父节点结果"))
@@ -102,9 +102,10 @@
                         (doseq [ch child-chans]
                           (>! ch result)))
                       (recur (inc round))))
-                          ;; root节点执行
+                  ;; root节点执行
                   (do
                     (timbre/info (str "开始启动root节点" node-id))
+                    ;;如果root节点的直接子节点状态都为done，则root节点状态为done，不执行
                     (when-not (= curr-node-status "done")
                       (let [result (node-func curr-node-execution)]
                         (doseq [ch child-chans]
