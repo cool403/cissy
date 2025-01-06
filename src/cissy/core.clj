@@ -69,7 +69,8 @@
     ;; 创建指定数量的工作线程
     (dotimes [thread-idx thread-count]
       (let [thread-node-execution (-> (executions/new-node-execution-info node-id task-execution-info)
-                                      (fill-node-param node-id (:task-config @task-info)))]
+                                      (fill-node-param node-id (:task-config @task-info)))
+            task-execution-dict (:task-execution-dict @task-execution-info)]
         (go
           ;设置节点状态为ding
           (reset! thread-node-execution (assoc @thread-node-execution :curr-node-status "ding"))
@@ -93,21 +94,33 @@
                     (timbre/info "当前thread-index=" thread-idx "的取到的offset=" (get @node-param-dict :page_offset))))
                 (if node-chan
                   ;; 非root节点等待输入或者父节点是done状态也不执行,当前节点标记done状态
-                  (when-let [parent-result (<! node-chan)]
-                    (when-not (= curr-node-status "done")
-                      (timbre/info (str "节点" node-id "获取到父节点结果"))
-                      (let [result (-> curr-node-execution
-                                       (fill-node-result-cxt node-id node-graph parent-result)
-                                       node-func)]
-                        (doseq [ch child-chans]
-                          (>! ch result)))
-                      (recur (inc round))))
+                  (let [parent-nodes-list (task/get-parent-nodes node-graph node-id)
+                        parent-node-id-set (set (map :node-id parent-nodes-list))]
+                    (if (and (not-empty parent-node-id-set) (every? #(= "done" (get @task-execution-dict (keyword %))) parent-node-id-set))
+                      (do
+                        (timbre/info (str "工作节点" node-id "所有父节点都为done状态，节点状态标记为done"))
+                        (reset! thread-node-execution (assoc @thread-node-execution :curr-node-status "done")))
+                    (when-let [parent-result (<! node-chan)]
+                      (when-not (= curr-node-status "done")
+                        (timbre/info (str "节点" node-id "获取到父节点结果"))
+                        (let [result (-> curr-node-execution
+                                         (fill-node-result-cxt node-id node-graph parent-result)
+                                         node-func)]
+                          (doseq [ch child-chans]
+                            (>! ch result)))
+                        (recur (inc round))))))
                   ;; root节点执行
                   (do
                     (timbre/info (str "开始启动root节点" node-id))
                     ;;如果root节点的直接子节点状态都为done，则root节点状态为done，不执行
-                    (when-not (= curr-node-status "done")
-                      (let [result (node-func curr-node-execution)]
-                        (doseq [ch child-chans]
-                          (>! ch result)))
-                      (recur (inc round)))))))))))))
+                    (let [child-nodes-list (task/get-child-nodes node-graph node-id)
+                          child-node-id-set (set (map :node-id child-nodes-list))]
+                      (if (and (not-empty child-node-id-set) (every? #(= "done" (get @task-execution-dict (keyword %))) child-node-id-set))
+                        (do
+                          (timbre/info (str "启动节点" node-id "所有子节点都为done状态，节点状态标记为done"))
+                          (reset! thread-node-execution (assoc @thread-node-execution :curr-node-status "done")))
+                      (when-not (= curr-node-status "done")
+                        (let [result (node-func curr-node-execution)]
+                          (doseq [ch child-chans]
+                            (>! ch result)))
+                        (recur (inc round)))))))))))))))

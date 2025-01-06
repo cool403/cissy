@@ -14,7 +14,7 @@
   (get-task-sched-name [this] "Channel基础执行")
   (sched-task-execution [this task-execution-info]
     (timbre/info "开始以Channel策略执行任务")
-    (let [{task-info :task-info} @task-execution-info
+    (let [{task-info :task-info task-execution-dict :task-execution-dict} @task-execution-info
           {node-graph :node-graph} @task-info
           all-node-id-set (:all-node-id-set node-graph)
           node-channels (atom {}); 存储节点ID -> channel的映射
@@ -40,6 +40,10 @@
               (timbre/info (str "收到" node-id "第" thread-idx "个线程处理状态:" node-status))
               ;合并状态
               (let [y (assoc x (str node-id "_" thread-idx) node-status)]
+                ;如果所有节点的线程任务状态为done，则这个节点标记为done
+                (when (every? #(= % "done") (vals (filter #(re-matches (re-pattern (str node-id "_")) (key %)) y)))
+                  (timbre/info (str "节点" node-id "所有线程任务状态都为done，节点状态标记为done"))
+                  (reset! task-execution-dict (assoc @task-execution-dict (keyword node-id) "done")))
                 ;如果所有节点状态都为done，则任务完成
                 ;; (prn y)
                 (when (every? #(= % "done") (vals y))
