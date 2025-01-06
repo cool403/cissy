@@ -16,36 +16,39 @@
     (timbre/info "开始以Channel策略执行任务")
     (let [{task-info :task-info} @task-execution-info
           {node-graph :node-graph} @task-info
+          all-node-id-set (:all-node-id-set node-graph)
           node-channels (atom {}); 存储节点ID -> channel的映射
-          node-monitor-channel (chan)]
-
+          node-monitor-channel (chan)
+          get-threads-fn (fn [node-id] (get-in @task-info [:task-config (keyword node-id) :threads] 1))
+          node-thread-fn (fn [node-id] (vec (map #(str node-id "_" %) (range (get-threads-fn node-id)))))]
       ;; 设置任务状态为运行中
       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
 
       ;; 为每个非root节点创建channel
-      (doseq [node (:all-node-id-set node-graph)]
+      (doseq [node all-node-id-set]
         (when-not (empty? (get (:parent-node-map node-graph) (:node-id node)))
           (swap! node-channels assoc (:node-id node)
                  (chan (dropping-buffer 1024)))))
-
       ;; 启动监控线程
       (go
         (timbre/info "启动一个监控线程，监控节点状态")
-        (let [node-status-map (zipmap (vec (map :node-id (:all-node-id-set node-graph))) (repeat "ding"))]
+        ;comp函数从右到左执行的
+        (let [node-status-map (zipmap (vec (flatten (map (comp node-thread-fn #(:node-id %)) all-node-id-set))) (repeat "ding"))]
           (loop [x node-status-map]
             (let [node-status (<! node-monitor-channel)
-                  {node-id :node-id node-status :node-status} node-status]
-              (timbre/info (str "收到节点状态:" node-id "状态:" node-status))
+                  {node-id :node-id node-status :node-status thread-idx :thread-idx} node-status]
+              (timbre/info (str "收到" node-id "第" thread-idx "个线程处理状态:" node-status))
               ;合并状态
-              (let [y (assoc x node-id node-status)]
+              (let [y (assoc x (str node-id "_" thread-idx) node-status)]
                 ;如果所有节点状态都为done，则任务完成
+                ;; (prn y)
                 (when (every? #(= % "done") (vals y))
                   (timbre/info "所有节点状态都为done，任务完成")
                   (reset! task-execution-info (assoc @task-execution-info :curr-task-status "done")))
                 (recur y))))))
 
       ;; 启动所有节点的处理
-      (doseq [node (:all-node-id-set node-graph)]
+      (doseq [node all-node-id-set]
         (let [node-id (:node-id node)]
           (process-node-chan-based node-id
                                    task-execution-info

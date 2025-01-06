@@ -84,7 +84,7 @@
         (timbre/warn "drn节点未读取到数据，什么都不做")
         ;这里只能重置当前节点，不能重置任务状态，因为任务状态是任务级别的，不能因为一个节点的终止而终止任务
         (reset! task-node-execution-info (assoc @task-node-execution-info :curr-node-status "done")))
-            ;获取列信息 
+      ;获取列信息 
       (let [columns (vec (map #(name %) (keys (first drn-res))))
             datas (vec (map #(vec (vals %)) drn-res))]
               ;根据db类型写入不同的数据库

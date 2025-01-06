@@ -69,18 +69,21 @@
     ;; 创建指定数量的工作线程
     (dotimes [thread-idx thread-count]
       (let [thread-node-execution (-> (executions/new-node-execution-info node-id task-execution-info)
-                                         (fill-node-param node-id (:task-config @task-info)))]
+                                      (fill-node-param node-id (:task-config @task-info)))]
         (go
+          ;设置节点状态为ding
+          (reset! thread-node-execution (assoc @thread-node-execution :curr-node-status "ding"))
           (loop [round 1]
             (when-not (= (:curr-task-status @task-execution-info) "done")
               (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程，执行轮次" round))
                       ;; 更新执行信息
               (let [curr-node-execution (-> thread-node-execution
-                                                 (fill-thread-info thread-idx round))
+                                            (fill-thread-info thread-idx round))
                     curr-node-status (:curr-node-status @curr-node-execution)
                             ;; 如果存在calc-page-offset函数，计算新的offset
                     node-param-dict (:node-param-dict @curr-node-execution)]
-                (>! node-monitor-channel {:node-id node-id :node-status curr-node-status})
+                (>! node-monitor-channel {:node-id node-id :node-status curr-node-status
+                                          :thread-idx thread-idx})
                         ;; 如果有offset计算函数，更新page_offset
                 (when (contains? @node-param-dict :page_size)
                   (let [page-size (get @node-param-dict :page_size 1000)]
@@ -89,7 +92,7 @@
                             (assoc @node-param-dict :page_offset @curr-offset))
                     (timbre/info "当前thread-index=" thread-idx "的取到的offset=" (get @node-param-dict :page_offset))))
                 (if node-chan
-                          ;; 非root节点等待输入
+                  ;; 非root节点等待输入
                   (when-let [parent-result (<! node-chan)]
                     (when-not (= curr-node-status "done")
                       (timbre/info (str "节点" node-id "获取到父节点结果"))
