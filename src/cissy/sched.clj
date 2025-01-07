@@ -4,7 +4,8 @@
    [taoensso.timbre :as timbre]
    [cissy.executions :as executions]
    [cissy.registry :as register]
-   [clojure.core.async :as async :refer [>! <! go chan buffer dropping-buffer]]))
+   [clojure.core.async :as async :refer [>! <! go chan buffer dropping-buffer]]
+   [clojure.string :as str]))
 
 
 
@@ -39,9 +40,10 @@
                   {node-id :node-id node-status :node-status thread-idx :thread-idx} node-status]
               (timbre/info (str "收到" node-id "第" thread-idx "个线程处理状态:" node-status))
               ;合并状态
-              (let [y (assoc x (str node-id "_" thread-idx) node-status)]
+              (let [y (assoc x (str node-id "_" thread-idx) node-status)
+                    z (vals (filter #(str/starts-with? (key %) (str node-id "_")) y))]
                 ;如果所有节点的线程任务状态为done，则这个节点标记为done
-                (when (every? #(= % "done") (vals (filter #(re-matches (re-pattern (str node-id "_")) (key %)) y)))
+                (when (every? #(= % "done") z)
                   (timbre/info (str "节点" node-id "所有线程任务状态都为done，节点状态标记为done"))
                   (reset! task-execution-dict (assoc @task-execution-dict (keyword node-id) "done")))
                 ;如果所有节点状态都为done，则任务完成
