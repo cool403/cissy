@@ -20,7 +20,7 @@
 }}"))
 
 (test/deftest simple-task-test
-  (test/testing "Context of the test assertions"
+  (test/testing "最简单的ding dong任务测试"
     (let [task-info (loader/get-task-from-json simple-task-json)
           sched-info              (:sched-info @task-info)
           new-task-execution-info (executions/new-task-execution-info)]

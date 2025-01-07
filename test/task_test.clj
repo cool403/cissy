@@ -4,5 +4,5 @@
 
 
 (test/deftest name-test
-      (test/testing "Context of the test assertions"
+      (test/testing "试验测试配置是否ok"
         (test/is (= 2 2)))) 
