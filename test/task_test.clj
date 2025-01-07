@@ -1,4 +1,4 @@
-(ns cissy.task_test
+(ns task-test
     (:require [clojure.test  :as test]
               [cissy.task :as task]))
 
