@@ -13,14 +13,15 @@
 \"datasources\":{
 },
 \"ding\":{
-    \"threads\":\"3\"
+    \"threads\":3
 },
 \"dong\":{
-    \"threads\":\"2\"
+    \"threads\":2
 }}"))
 
 (test/deftest simple-task-test
   (test/testing "最简单的ding dong任务测试"
+    (prn simple-task-json)
     (let [task-info (loader/get-task-from-json simple-task-json)
           sched-info              (:sched-info @task-info)
           new-task-execution-info (executions/new-task-execution-info)]
