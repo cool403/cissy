@@ -114,7 +114,9 @@
                   ;; 非root节点等待输入或者父节点是done状态也不执行,当前节点标记done状态
                   ;; 等待3s 
                   (let [time-out (timeout 3000)
-                        [curr-result ch] (alts! [node-chan time-out])]
+                        ;{:priority true}如果多个通道同时有数据到时，有限按照顺序来
+                        ;保证不会出现数据丢失什么的
+                        [curr-result ch] (alts! [node-chan time-out] {:priority true})]
                     (if (= ch time-out)
                       ;超时判断父节点是否已经是done状态
                       (if (check-parent-nodes-done? node-id node-graph task-execution-dict)
