@@ -76,8 +76,15 @@
 (defn- execute-node-fn [thread-node-execution node-func node-monitor-channel thread-idx]
   ;;执行node-func,执行失败打印日志，停止当前thread,发送channel
   (try
-    (let [r (node-func thread-node-execution)]
-      [:ok r])
+    (let [r (node-func thread-node-execution)
+          node-execution-dict (:node-execution-dict @thread-node-execution)
+          node-id (:node-id @thread-node-execution)]
+      ;有可能子任务已执行结束，比如返回空,这里还要处理
+      (if (= (get @node-execution-dict (keyword (str thread-idx))) "done")
+        (go
+                ;;发送信息到chan一定要在go语句块里
+          (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
+        [:ok r]))
     (catch Exception e
       (timbre/error "执行节点nodeId=" (:node-id @thread-node-execution) "thread-idx=" thread-idx
                     "出现异常，异常信息:" (.getMessage e) e)

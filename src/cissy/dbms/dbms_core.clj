@@ -23,8 +23,8 @@
   [task-execution-info node-param-dict]
   (let [{node-execution-dict :node-execution-dict} @task-execution-info
         ;默认1
-        execution-round (get @node-execution-dict :execution-round 1)
-        thread-idx (get @node-execution-dict :thread-idx 0)
+        ;; execution-round (get @node-execution-dict :execution-round 1)
+        ;; thread-idx (get @node-execution-dict :thread-idx 0)
         ;默认 1000
         page-size (get @node-param-dict :page_size 1000)
         page-offset (get @node-param-dict :page_offset 0)]
@@ -36,7 +36,9 @@
   [task-node-execution-info]
   (timbre/info "开始执行drn节点")
   (let [{task-execution-info :task-execution-info
-         node-param-dict     :node-param-dict} @task-node-execution-info
+         node-param-dict     :node-param-dict
+         node-execution-dict :node-execution-dict} @task-node-execution-info
+         thread-idx (get @node-execution-dict :thread-idx 0)
         {from-db :from_db} (:drn (:task-config (deref (:task-info @task-execution-info))))
             ;获取关联数据源配置
         from-db-ins (register/get-datasource-ins from-db)
@@ -52,8 +54,9 @@
                      ;执行db读数据
       (let [result-list (jdbc/execute! from-db-ins [read-sql] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})]
         (when (or (nil? result-list) (empty? result-list))
-          (timbre/info "当前reader数据加载完毕，设置节点状态为done")
-          (reset! task-node-execution-info (assoc @task-node-execution-info :curr-node-status "done")))
+          (timbre/warn (str "当前drn节点 thread-idx=" thread-idx "未读取到数据,节点状态变成done"))
+          ;重置当前节点也不行，可能一个节点有多个线程共享一个execution
+          (reset! node-execution-dict (assoc @node-execution-dict (keyword (str thread-idx)) "done")))
         result-list))))
 
 ;(mysql-sql/insert-multi! aa :users ["id" "username","email"] [[22222222 "njones" "2332"]])
