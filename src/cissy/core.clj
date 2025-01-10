@@ -81,9 +81,11 @@
           node-id (:node-id @thread-node-execution)]
       ;有可能子任务已执行结束，比如返回空,这里还要处理
       (if (= (get @node-execution-dict (keyword (str thread-idx))) "done")
-        (go
+        (do
+          (go
                 ;;发送信息到chan一定要在go语句块里
-          (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
+            (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
+          [:fail nil])
         [:ok r]))
     (catch Exception e
       (timbre/error "执行节点nodeId=" (:node-id @thread-node-execution) "thread-idx=" thread-idx
@@ -166,6 +168,6 @@
                           (doseq [ch child-chans]
                             (>! ch result))
                           (recur (inc round))))
-                      (do 
+                      (do
                         (timbre/info (str "根节点nodeId=" node-id " 所有子任务都是done状态"))
                         (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx})))))))))))))
