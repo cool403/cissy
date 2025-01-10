@@ -50,7 +50,7 @@
     (fill-page-params task-node-execution-info node-param-dict)
            ;获取加载数据的sql
     (when-let [read-sql (dialect/read-data-sql @node-param-dict)]
-      (timbre/info "加载数据脚本:[" read-sql "]")
+      (timbre/info "执行sql脚本:[" read-sql "]")
                      ;执行db读数据
       (let [result-list (jdbc/execute! from-db-ins [read-sql] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})]
         (when (or (nil? result-list) (empty? result-list))
