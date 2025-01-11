@@ -1,13 +1,14 @@
 (ns cissy.core
   (:require
-    ;; [cissy.executions :refer [TaskExecutionInfo]]
-   [cissy.task :as task]
+   [cissy.const :as const]
    [cissy.executions :as executions]
    [cissy.registry :as register]
+   [cissy.task :as task]
+   [clojure.core.async :refer [>! alts! go timeout]]
    [clojure.string :as str]
-   [taoensso.timbre :as timbre]
-   [cissy.const :as const]
-   [clojure.core.async :refer [>! <! go chan timeout alts!]]))
+   [taoensso.timbre :as timbre])
+  (:import
+   [java.util.concurrent.locks ReentrantLock]))
 
 ;; (comment
 ;;   (defprotocol Human
@@ -96,6 +97,7 @@
                                   :thread-idx thread-idx}))
       [:fail nil])))
 
+
 (defn process-node-chan-based
   "处理基于Channel的节点执行"
   [node-id task-execution-info node-channels node-graph node-monitor-channel]
@@ -105,7 +107,13 @@
         child-nodes (get (:child-node-map node-graph) node-id)
         child-chans (map #(get @node-channels (:node-id %)) child-nodes)
         thread-count (or (get-in @task-info [:task-config (keyword node-id) :threads]) 1)
-        curr-offset (atom 0)]
+        curr-offset (ref 0)
+        ;; 只用atom 无法保证多线程情况下获取到的offset不重复;;stm
+        ;; lock (ReentrantLock.)
+        get-offset-fn (fn [page-size]
+                        (dosync
+                         (alter curr-offset + page-size)
+                         @curr-offset))]
 
     ;; 创建指定数量的工作线程
     (dotimes [thread-idx thread-count]
@@ -129,9 +137,8 @@
                         ;; 如果有offset计算函数，更新page_offset
                 (when (contains? @node-param-dict :page_size)
                   (let [page-size (get @node-param-dict :page_size 1000)]
-                    (swap! curr-offset + page-size)
                     (reset! node-param-dict
-                            (assoc @node-param-dict :page_offset @curr-offset))
+                            (assoc @node-param-dict :page_offset (get-offset-fn page-size)))
                     (timbre/info "当前thread-index=" thread-idx "的取到的offset=" (get @node-param-dict :page_offset))))
                 (if (and node-chan (not= curr-node-status "done"))
                   ;; 非root节点等待输入或者父节点是done状态也不执行,当前节点标记done状态
