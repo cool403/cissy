@@ -79,8 +79,8 @@
           future-vec (map to-future-fn task-info-vec)]
       (doseq [fut future-vec]
         (try
-          (deref fut)
-          (timbre/info (str "当前任务组全部执行完成"))
+          (deref fut) 
           (catch Exception ex
             (timbre/error "执行任务出错" (.getMessage ex) ex))))
+      ((timbre/info (str "当前任务组全部执行完成")))
       )))
