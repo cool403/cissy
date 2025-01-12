@@ -61,16 +61,17 @@
   (timbre/info "执行任务启动命令" options)
   (when-let [{config-path :config} options]
     ;解析任务配置
-    (let [task-info               (-> (slurp config-path)
-                                      (loader/get-task-from-json))
-          sched-info              (:sched-info @task-info)
-          new-task-execution-info (executions/new-task-execution-info)]
-      ;初始化执行上下文
-      ;; (prn task-info)
-      (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
-      ;; (prn new-task-execution-info)
-      ;; (prn (type sched-info))
-      ;; (let [a (:task-execution-dict @new-task-execution-info)]
-      ;;   (prn (type @a))
-      ;;   (prn new-task-execution-info))
-      (executions/sched-task-execution sched-info new-task-execution-info))))               ; 调用 MyProtocol 的 method2
+    (let [task-info-vec (-> (slurp config-path) loader/get-task-from-json)
+          to-future-fn (fn [task-info]
+                         (let [sched-info (:sched-info @task-info)
+                               new-task-execution-info (executions/new-task-execution-info)]
+                           (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
+                           (future (executions/sched-task-execution sched-info new-task-execution-info))))
+          future-vec (map to-future-fn task-info-vec)]
+      (doseq [fut future-vec]
+        (try
+          (deref fut)
+          (timbre/info (str "当前任务组全部执行完成"))
+          (catch Exception ex
+            (timbre/error "执行任务出错" (.getMessage ex) ex))))
+      )))
