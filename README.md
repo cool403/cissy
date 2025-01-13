@@ -28,6 +28,10 @@ clojure -T:build uber
 ```sh
 java -jar cissy.jar start -c path/to/config.json
 ```
+clojure环境下可以使用如下命令启动
+```sh
+clojure -m cissy.app start -c /home/xxx/Desktop/group_tasks.json
+```
 
 ### 配置文件
 可以通过如下命令生成一个示例配置文件

@@ -61,6 +61,21 @@
                  ""]
             (str/join \newline))))
   
+(defn start-with-json [config-json]
+  ;解析任务配置
+  (let [task-info-vec (loader/get-task-from-json config-json)
+        to-future-fn (fn [task-info]
+                       (let [sched-info (:sched-info @task-info)
+                             new-task-execution-info (executions/new-task-execution-info)]
+                         (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
+                         (future (executions/sched-task-execution sched-info new-task-execution-info))))
+        future-vec (map to-future-fn task-info-vec)]
+    (doseq [fut future-vec]
+      (try
+        (deref fut)
+        (catch Exception ex
+          (timbre/error "执行任务出错" (.getMessage ex) ex))))
+    (timbre/info (str "当前任务组全部执行完成"))))
 
 (defn start
   "通过配置文件启动任务"
@@ -69,18 +84,5 @@
   (require '[cissy.dbms.dbms-core :as dbms-core])
   (timbre/info "执行任务启动命令" options)
   (when-let [{config-path :config} options]
-    ;解析任务配置
-    (let [task-info-vec (-> (slurp config-path) loader/get-task-from-json)
-          to-future-fn (fn [task-info]
-                         (let [sched-info (:sched-info @task-info)
-                               new-task-execution-info (executions/new-task-execution-info)]
-                           (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
-                           (future (executions/sched-task-execution sched-info new-task-execution-info))))
-          future-vec (map to-future-fn task-info-vec)]
-      (doseq [fut future-vec]
-        (try
-          (deref fut) 
-          (catch Exception ex
-            (timbre/error "执行任务出错" (.getMessage ex) ex))))
-      ((timbre/info (str "当前任务组全部执行完成")))
-      )))
+    (start-with-json (slurp config-path))
+    ))
