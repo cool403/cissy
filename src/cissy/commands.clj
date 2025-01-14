@@ -83,6 +83,7 @@
   ;加载注册节点drn和dwn
   (require '[cissy.dbms.dbms-core :as dbms-core])
   (timbre/info "执行任务启动命令" options)
-  (when-let [{config-path :config} options]
-    (start-with-json (slurp config-path))
-    ))
+  (let [config-path (:config options)]
+    (if (nil? config-path)
+      (timbre/error "Error: start 命令需要指定配置文件(-c)")
+      (start-with-json (slurp config-path)))))
