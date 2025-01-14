@@ -10,3 +10,7 @@
 
 ;支持的数据库类型
 (def SUPPORTED_DB_TYPE #{"mysql" "postgresql","oracle","sqlite"})
+
+
+;默认脚本存放目录
+(def DEFAULT_SCRIPT_DIR "/tmp/scripts")
