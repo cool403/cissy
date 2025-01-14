@@ -36,9 +36,9 @@
 
 (defn load-main-entry
   "加载脚本"
-  [entry]
-  (if (file-exists? entry)
+  [main-entry]
+  (if (file-exists? main-entry)
     ;相关的注册以及加载声明都需要放entry-script脚本里
-    (load-file entry)
-    (timbre/error (str "脚本文件不存在:" entry))))
+    (load-file main-entry)
+    (timbre/error (str "脚本文件不存在:" main-entry))))
 
