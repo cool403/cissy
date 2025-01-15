@@ -50,7 +50,7 @@
 
 (s/def ::uni-node-config (s/nilable ::nodes-config))
 
-(s/def ::task_group
+(s/def ::tg
   (s/keys :req-un [::task_group_name ::nodes ::entry_script ::tasks]
           :opt-un [::uni-node-config]))
 
@@ -66,12 +66,11 @@
             :else true)))
 
 ;; 定义任务组数组spec
-(s/def ::task-group-vec (s/coll-of ::task_group))
+(s/def ::task_group (s/coll-of ::tg))
 
 ;; 定义整个数据结构spec
 (s/def ::data
-  (s/keys :req-un [::datasource]
-          :req [::task-group-vec]))
+  (s/keys :req-un [::datasource ::task_group]))
 
 
 (def data
