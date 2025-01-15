@@ -1,6 +1,8 @@
 (ns cissy.checker 
   (:require
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [clojure.spec.alpha :as s]
+   [clojure.spec.gen.alpha :as gen]))
 
 
 (defn validate-node-graph
@@ -47,3 +49,31 @@
       ;; 从根节点开始检测环
       (detect-cycle (:node-id (first root-nodes)))))
   true)
+
+(s/def ::host string?)
+(s/def ::dbname string?)
+(s/def ::password string?)
+(s/def ::port int?)
+(s/def ::user string?)
+(s/def ::dbtype #{"sqlite" "mysql" "oracle" "postgresql"})
+(s/def ::datasource (s/keys :req-un [::host ::dbname ::password ::port ::user ::dbtype]))
+(s/def ::threads int?)
+(s/def ::from_db string?)
+(s/def ::page_size int?)
+(s/def ::to_db string?)
+(s/def ::from_table string?)
+(s/def ::sql_template string?)
+(s/def ::to_table string?)
+(s/def ::drn (s/keys :req-un [::threads ::from_db ::page_size]))
+(s/def ::dwn (s/keys :req-un [::to_db ::threads]))
+(s/def ::task (s/keys :req-un [::drn ::dwn]))
+(s/def ::task_group (s/keys :req-un [::task]))
+(s/def ::config (s/keys :req-un [::datasource ::task_group]))
+
+(defn valid-config-json
+  "校验任务json格式"
+   [config-json]
+  (when-not (s/valid? ::config config-json)
+      (s/explain ::config config-json)
+    1
+    ))

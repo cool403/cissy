@@ -4,7 +4,8 @@
    [cissy.loader :as loader]
    [cissy.sched :as sched]
    [cissy.executions :as executions]
-   [clojure.string :as str])
+   [clojure.string :as str]
+   [cissy.checker :as checker])
   (:gen-class 
    :name cissy.commands
    :methods [#^{:static true} [startj [java.lang.String] void]
@@ -85,9 +86,13 @@
   "通过配置文件启动任务"
   [options]
   ;加载注册节点drn和dwn
-  (require '[cissy.dbms.dbms-core :as dbms-core])
-  (timbre/info "执行任务启动命令" options)
   (let [config-path (:config options)]
     (if (nil? config-path)
       (timbre/error "Error: start 命令需要指定配置文件(-c)")
-      (-startj (slurp config-path)))))
+      (do 
+        (require '[cissy.dbms.dbms-core :as dbms-core])
+        (timbre/info "执行任务启动命令" options)
+        (when-not (nil? (checker/valid-config-json (slurp config-path)))
+          (timbre/error "任务配置json格式错误, 请检查配置文件")
+          (System/exit 1))
+        (-startj (slurp config-path))))))
