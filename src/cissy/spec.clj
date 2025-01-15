@@ -30,12 +30,12 @@
 (s/def ::incr_key_value string?)
 
 (s/def ::drn
-  (s/keys :opt-un [::threads ::sql_template ::order_by ::from_table ::incr_key ::incr_key_value]
-          :req-un [::from_db ::page_size]))
+  (s/keys :opt-un [::threads ::sql_template ::order_by ::from_table ::incr_key ::incr_key_value ::page_size
+                   ::from_db]))
 
 
 (s/def ::dwn
-  (s/keys :req-un [::to_table ::to_db]))
+  (s/keys :opt-un [::to_db ::to_table]))
 
 ;; 定义任务组配置spec
 (s/def ::task_group_name string?)
@@ -51,7 +51,8 @@
 (s/def ::uni-node-config (s/nilable ::nodes-config))
 
 (s/def ::task_group
-  (s/keys :req-un [::task_group_name ::nodes ::entry_script ::tasks ::uni-node-config]))
+  (s/keys :req-un [::task_group_name ::nodes ::entry_script ::tasks]
+          :opt-un [::uni-node-config]))
 
 (s/def ::tasks 
   (s/coll-of ::task))
