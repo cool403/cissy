@@ -59,8 +59,11 @@
 
 ;; 定义任务配置spec
 (s/def ::task
-  (s/map-of keyword?
-            (s/keys :req-un [::nodes-config])))
+  (s/and (s/map-of keyword? ::node-config)
+         #(cond
+            (contains? % :drn) (s/valid? ::drn (get % :drn))
+            (contains? % :drn) (s/valid? ::dwn (get % :dwn))
+            :else true)))
 
 ;; 定义任务组数组spec
 (s/def ::task-group-vec (s/coll-of ::task_group))
