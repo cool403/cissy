@@ -19,32 +19,39 @@
 
 ;; 定义节点配置spec
 (s/def ::threads (s/nilable int?))
-(s/def ::from-db keyword?)
-(s/def ::page-size int?)
-(s/def ::to-db keyword?)
-(s/def ::sql-template string?)
-(s/def ::to-table string?)
-(s/def ::order-by string?)
-(s/def ::incr-key string?)
-(s/def ::from-table string?)
-(s/def ::incr-key-value string?)
+(s/def ::from_db keyword?)
+(s/def ::page_size int?)
+(s/def ::to_db keyword?)
+(s/def ::sql_template string?)
+(s/def ::to_table string?)
+(s/def ::order_by string?)
+(s/def ::incr_key string?)
+(s/def ::from_table string?)
+(s/def ::incr_key_value string?)
 
 (s/def ::drn
-  (s/nilable (s/keys :opt-un [::threads ::sql-template ::order-by ::from-table ::incr-key ::incr-key-value]
-          :req-un [::from-db ::page-size])))
+  (s/keys :opt-un [::threads ::sql_template ::order_by ::from_table ::incr_key ::incr_key_value]
+          :req-un [::from_db ::page_size]))
 
 
 (s/def ::dwn
-  (s/nilable (s/keys :req-un [::to-table ::to-db])))
+  (s/keys :req-un [::to_table ::to_db]))
 
 ;; 定义任务组配置spec
-(s/def ::task-group-name string?)
+(s/def ::task_group_name string?)
 (s/def ::nodes string?)
-(s/def ::entry-script (s/nilable string?))
-(s/def ::nodes-config (s/map-of keyword? ::node-config))
+(s/def ::entry_script (s/nilable string?))
+(s/def ::node-config (s/keys :opt-un [::threads]))
+(s/def ::nodes-config (s/and (s/map-of keyword? ::node-config)
+                             #(cond 
+                                (contains? % :drn) (s/valid? ::drn (get % :drn))
+                                (contains? % :drn) (s/valid? ::dwn (get % :dwn))
+                                :else true)))
 
-(s/def ::task-group
-  (s/keys :req-un [::task-group-name ::nodes ::entry-script ::tasks]))
+(s/def ::uni-node-config (s/nilable ::nodes-config))
+
+(s/def ::task_group
+  (s/keys :req-un [::task_group_name ::nodes ::entry_script ::tasks ::uni-node-config]))
 
 (s/def ::tasks 
   (s/coll-of ::task))
@@ -52,10 +59,10 @@
 ;; 定义任务配置spec
 (s/def ::task
   (s/map-of keyword?
-            (s/keys :req-un [::from-db ::sql-template ::to-table ::threads])))
+            (s/keys :req-un [::nodes-config])))
 
 ;; 定义任务组数组spec
-(s/def ::task-group-vec (s/coll-of ::task-group))
+(s/def ::task-group-vec (s/coll-of ::task_group))
 
 ;; 定义整个数据结构spec
 (s/def ::data
@@ -79,18 +86,17 @@
      :port 4000
      :user "root"
      :dbtype "mysql"}}
-   :task-group
+   :task_group
    [{:task_group_name "mysql同步测试"
      :nodes "drn->dwn;"
-     :entry_script "/home/mawdx/Desktop/hello.clj"
-     :nodes-config
-     {:drn
+     :entry_script "/home/mawdx/Desktop/hello.clj" 
+     :drn
       {:threads 20
        :from_db "db1"
        :page_size 2000}
       :dwn
       {:to_db "db2"
-       :threads 40}}
+       :threads 40}
      :tasks
      [{:drn
        {:from_table "users"
