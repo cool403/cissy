@@ -57,4 +57,4 @@
       (exit (if ok? 0 1) exit-message)
       (case action
         "start"  (commands/start options)
-        "demo" (commands/demo options)))))
+        "demo" (commands/-demo options)))))

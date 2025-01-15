@@ -4,9 +4,13 @@
    [cissy.loader :as loader]
    [cissy.sched :as sched]
    [cissy.executions :as executions]
-   [clojure.string :as str]))
+   [clojure.string :as str])
+  (:gen-class 
+   :name cissy.commands
+   :methods [#^{:static true} [startj [java.lang.String] void]
+             #^{:static true} [demo [java.util.Map] void]]))
 
-(defn demo
+(defn -demo
   "任务配置json样例"
   [options]
   (println "#这是一个mysql同步demo 配置，仅供参考")
@@ -61,7 +65,7 @@
                  ""]
             (str/join \newline))))
   
-(defn start-with-json [config-json]
+(defn -startj [config-json]
   ;解析任务配置
   (let [task-info-vec (loader/get-task-from-json config-json)
         to-future-fn (fn [task-info]
@@ -86,4 +90,4 @@
   (let [config-path (:config options)]
     (if (nil? config-path)
       (timbre/error "Error: start 命令需要指定配置文件(-c)")
-      (start-with-json (slurp config-path)))))
+      (-startj (slurp config-path)))))
