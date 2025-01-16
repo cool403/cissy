@@ -1,6 +1,7 @@
 (ns cissy.spec
-  (:require [clojure.spec.alpha :as s]
-            [clojure.string :as string]))
+  (:require
+   [cheshire.core :as json]
+   [clojure.spec.alpha :as s]))
 
 ;; 定义数据库配置spec
 (s/def ::host string?)
@@ -43,7 +44,7 @@
 (s/def ::entry_script (s/nilable string?))
 (s/def ::node-config (s/keys :opt-un [::threads]))
 (s/def ::nodes-config (s/and (s/map-of keyword? ::node-config)
-                             #(cond 
+                             #(cond
                                 (contains? % :drn) (s/valid? ::drn (get % :drn))
                                 (contains? % :drn) (s/valid? ::dwn (get % :dwn))
                                 :else true)))
@@ -54,7 +55,7 @@
   (s/keys :req-un [::task_group_name ::nodes ::entry_script ::tasks]
           :opt-un [::uni-node-config]))
 
-(s/def ::tasks 
+(s/def ::tasks
   (s/coll-of ::task))
 
 ;; 定义任务配置spec
@@ -69,5 +70,15 @@
 (s/def ::task_group (s/coll-of ::tg))
 
 ;; 定义整个数据结构spec
-(s/def ::data
+(s/def ::task-json
   (s/keys :req-un [::datasource ::task_group]))
+
+(defn valid-config-json
+  "docstring"
+  [config-json]
+  (let [config-map (json/parse-string config-json #(keyword %))]
+    (if-not (s/valid? ::task-json config-map)
+      (do
+        (println (s/explain ::task-json config-map))
+        :fail)
+      :ok)))

@@ -5,7 +5,9 @@
    [cissy.sched :as sched]
    [cissy.executions :as executions]
    [clojure.string :as str]
-   [cissy.checker :as checker])
+   [cissy.checker :as checker]
+   [cissy.spec :as spec]
+   [clojure.spec.alpha :as s])
   (:gen-class 
    :name cissy.commands
    :methods [#^{:static true} [startj [java.lang.String] void]
@@ -92,7 +94,7 @@
       (do 
         (require '[cissy.dbms.dbms-core :as dbms-core])
         (timbre/info "执行任务启动命令" options)
-        ;; (when-not (= (checker/valid-config-json (slurp config-path)) :ok)
-        ;;   (timbre/error "任务配置json格式错误, 请检查配置文件")
-        ;;   (System/exit 1))
+        (when-not (= (spec/valid-config-json (slurp config-path)) :ok)
+          (timbre/error "任务配置json格式错误, 请检查配置文件")
+          (System/exit 1))
         (-startj (slurp config-path))))))
