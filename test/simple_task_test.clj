@@ -1,11 +1,11 @@
 (ns simple-task-test
   (:require
-   [cissy.executions :as executions]
-   [cissy.loader :as loader]
-   [clojure.string :as str]
-   [clojure.test :as test]
-   [ding]
-   [dong]))
+    [cissy.executions :as executions]
+    [cissy.loader :as loader]
+    [clojure.string :as str]
+    [clojure.test :as test]
+    [ding]
+    [dong]))
 
 (def simple-task-json
   (str (->> ["{"
@@ -38,7 +38,7 @@
     (prn simple-task-json)
     (let [task-info-lst (loader/get-task-from-json simple-task-json)
           task-info (first task-info-lst)
-          sched-info              (:sched-info @task-info)
+          sched-info (:sched-info @task-info)
           new-task-execution-info (executions/new-task-execution-info)]
       (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
       (executions/sched-task-execution sched-info new-task-execution-info)

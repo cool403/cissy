@@ -1,7 +1,7 @@
 (ns cissy.spec
   (:require
-   [cheshire.core :as json]
-   [clojure.spec.alpha :as s]))
+    [cheshire.core :as json]
+    [clojure.spec.alpha :as s]))
 
 ;; 定义数据库配置spec
 (s/def ::host string?)

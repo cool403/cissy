@@ -58,27 +58,27 @@
   (let [{task-name  :task_name
          nodes      :nodes
          datasource :datasource} task-map
-        node-graph                                                   (task/create-task-node-graph)
-        task-info                                                    (atom (task/->TaskInfo nil task-name nil (sched/->ChanBasedSched) node-graph task-map))]
-      ;解析节点配置nodes(a->b;)为节点对
+        node-graph (task/create-task-node-graph)
+        task-info (atom (task/->TaskInfo nil task-name nil (sched/->ChanBasedSched) node-graph task-map))]
+    ;解析节点配置nodes(a->b;)为节点对
     (doseq [[from-node-id to-node-id] (parse-node-rel-str nodes)]
       (cond
         (nil? to-node-id) (task/add-node-pair node-graph (task/->TaskNodeInfo from-node-id nil) nil)
         :else (task/add-node-pair node-graph (task/->TaskNodeInfo from-node-id nil) (task/->TaskNodeInfo to-node-id nil))))
-      ;验证节点图结构
+    ;验证节点图结构
     (timbre/info "开始验证节点图结构")
-      ;; (prn node-graph)
+    ;; (prn node-graph)
     (checker/validate-node-graph node-graph)
     (timbre/info "节点图结构验证通过")
-      ;添加完成后构建tree
-      ;; (prn node-grpah)
+    ;添加完成后构建tree
+    ;; (prn node-grpah)
     (task/build-node-tree node-graph)
     (timbre/info "解析节点关系完成")
-      ;注册数据源
+    ;注册数据源
     (timbre/info "开始初始化数据源配置")
     (doseq [[db-sign db-config-map] datasource]
       (timbre/info "开始初始化db-sign的" db-sign "数据源")
-        ;直接调用注册数据源，由register完成实例化和注册
+      ;直接调用注册数据源，由register完成实例化和注册
       (registry/register-datasource db-sign db-config-map)
       (timbre/info "初始化数据源配置完成")
       (when (contains? (set (map #(:node-id %) (:all-node-id-set node-graph))) const/DRN_NODE_NAME)

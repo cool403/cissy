@@ -1,17 +1,17 @@
-(ns cissy.commands 
+(ns cissy.commands
   (:require
-   [taoensso.timbre :as timbre]
-   [cissy.loader :as loader]
-   [cissy.sched :as sched]
-   [cissy.executions :as executions]
-   [clojure.string :as str]
-   [cissy.checker :as checker]
-   [cissy.spec :as spec]
-   [clojure.spec.alpha :as s])
-  (:gen-class 
-   :name cissy.commands
-   :methods [#^{:static true} [startj [java.lang.String] void]
-             #^{:static true} [demo [java.util.Map] void]]))
+    [taoensso.timbre :as timbre]
+    [cissy.loader :as loader]
+    [cissy.sched :as sched]
+    [cissy.executions :as executions]
+    [clojure.string :as str]
+    [cissy.checker :as checker]
+    [cissy.spec :as spec]
+    [clojure.spec.alpha :as s])
+  (:gen-class
+    :name cissy.commands
+    :methods [#^{:static true} [startj [java.lang.String] void]
+              #^{:static true} [demo [java.util.Map] void]]))
 
 (defn -demo
   "任务配置json样例"
@@ -66,8 +66,8 @@
                  "	}]"
                  "}"
                  ""]
-            (str/join \newline))))
-  
+                (str/join \newline))))
+
 (defn -startj [config-json]
   ;解析任务配置
   (let [task-info-vec (loader/get-task-from-json config-json)
@@ -91,7 +91,7 @@
   (let [config-path (:config options)]
     (if (nil? config-path)
       (timbre/error "Error: start 命令需要指定配置文件(-c)")
-      (do 
+      (do
         (require '[cissy.dbms.dbms-core :as dbms-core])
         (timbre/info "执行任务启动命令" options)
         (when-not (= (spec/valid-config-json (slurp config-path)) :ok)

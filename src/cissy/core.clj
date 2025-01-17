@@ -1,14 +1,14 @@
 (ns cissy.core
   (:require
-   [cissy.const :as const]
-   [cissy.executions :as executions]
-   [cissy.registry :as register]
-   [cissy.task :as task]
-   [clojure.core.async :refer [>! alts! go timeout]]
-   [clojure.string :as str]
-   [taoensso.timbre :as timbre])
+    [cissy.const :as const]
+    [cissy.executions :as executions]
+    [cissy.registry :as register]
+    [cissy.task :as task]
+    [clojure.core.async :refer [>! alts! go timeout]]
+    [clojure.string :as str]
+    [taoensso.timbre :as timbre])
   (:import
-   [java.util.concurrent.locks ReentrantLock]))
+    [java.util.concurrent.locks ReentrantLock]))
 
 ;; (comment
 ;;   (defprotocol Human
@@ -43,8 +43,8 @@
       (let [parent-node-id (:node-id parent-node)
             node-result-dict (:node-result-dict @node-execution-info)]
         (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "返回" (if (counted? may-used-node-res)
-                                                                        (str (count may-used-node-res) "条纪录")
-                                                                        may-used-node-res))
+                                                                                    (str (count may-used-node-res) "条纪录")
+                                                                                    may-used-node-res))
         (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) may-used-node-res)))))
   node-execution-info)
 
@@ -84,7 +84,7 @@
       (if (= (get @node-execution-dict (keyword (str thread-idx))) "done")
         (do
           (go
-                ;;发送信息到chan一定要在go语句块里
+            ;;发送信息到chan一定要在go语句块里
             (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
           [:fail nil])
         [:ok r]))
@@ -93,7 +93,7 @@
                     "出现异常，异常信息:" (.getMessage e) e)
       (go
         ;;发送信息到chan一定要在go语句块里
-        (>! node-monitor-channel {:node-id (:node-id @thread-node-execution) :node-status "done"
+        (>! node-monitor-channel {:node-id    (:node-id @thread-node-execution) :node-status "done"
                                   :thread-idx thread-idx}))
       [:fail nil])))
 
@@ -112,8 +112,8 @@
         ;; lock (ReentrantLock.)
         get-offset-fn (fn [page-size]
                         (dosync
-                         (alter curr-offset + page-size)
-                         @curr-offset))]
+                          (alter curr-offset + page-size)
+                          @curr-offset))]
 
     ;; 创建指定数量的工作线程
     (dotimes [thread-idx thread-count]
@@ -126,15 +126,15 @@
           (loop [round 1]
             (when-not (= (:curr-task-status @task-execution-info) "done")
               (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程，执行轮次" round))
-                      ;; 更新执行信息
+              ;; 更新执行信息
               (let [curr-node-execution (-> thread-node-execution
                                             (fill-thread-info thread-idx round))
                     curr-node-status (:curr-node-status @curr-node-execution)
-                            ;; 如果存在calc-page-offset函数，计算新的offset
+                    ;; 如果存在calc-page-offset函数，计算新的offset
                     node-param-dict (:node-param-dict @curr-node-execution)]
-                (>! node-monitor-channel {:node-id node-id :node-status curr-node-status
+                (>! node-monitor-channel {:node-id    node-id :node-status curr-node-status
                                           :thread-idx thread-idx})
-                        ;; 如果有offset计算函数，更新page_offset
+                ;; 如果有offset计算函数，更新page_offset
                 (when (contains? @node-param-dict :page_size)
                   (let [page-size (get @node-param-dict :page_size 1000)]
                     (reset! node-param-dict

@@ -68,10 +68,10 @@
           (recur next-nodes (inc depth) visited-nodes)))))
 
 
-      ;; (prn "Ok")
+  ;; (prn "Ok")
 
 
-      ;; (prn "Ok")
+  ;; (prn "Ok")
 
   ;注册节点对
   (add-node-pair [this from-node to-node]
@@ -83,9 +83,9 @@
       (.add ^HashSet all-node-id-set to-node)))
 
   ;获取子节点列表
-                  ;;  (prn child-node-map)
+  ;;  (prn child-node-map)
   (get-child-nodes [this node-id]
-                  ;;  (prn child-node-map)
+    ;;  (prn child-node-map)
     (get child-node-map node-id #{}))
 
   ;获取父节点列表
@@ -100,5 +100,5 @@
 (defn create-task-node-graph []
   (->TaskNodeGraph (HashMap.)
                    (HashMap.)
-                   (HashSet.)  ;; 使用 HashSet 替代 ArrayList
+                   (HashSet.)                               ;; 使用 HashSet 替代 ArrayList
                    (HashMap.)))

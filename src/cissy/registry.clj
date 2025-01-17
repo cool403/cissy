@@ -1,8 +1,8 @@
 (ns cissy.registry
   (:require
-  ;;  [clojure.core :as core]
-   [taoensso.timbre :as timbre]
-   [cissy.const :as const])
+    ;;  [clojure.core :as core]
+    [taoensso.timbre :as timbre]
+    [cissy.const :as const])
   (:import java.lang.IllegalArgumentException))
 
 ;注册器
@@ -35,7 +35,7 @@
 
 
 
-(comment 
+(comment
   (defn test-node []
     (prn "test node"))
   (regist-node-fun "test" test-node)
@@ -49,18 +49,18 @@
 ;约定sqlite文件还是host里，只是到时候特殊处理, dbtype枚举值: mysql,postgresql
 ;oracle
 (comment (def db {:dbtype   "postgresql"
-         :host     "your-db-host-name"
-         :dbname   "your-db"
-         :user     "develop"
-         :password "develop"
-         :port     5432}))
-(defn register-datasource 
+                  :host     "your-db-host-name"
+                  :dbname   "your-db"
+                  :user     "develop"
+                  :password "develop"
+                  :port     5432}))
+(defn register-datasource
   "注册一个数据源"
   [^String db-sign datasource-config]
   (when-not (contains? @datasource-ins-register (keyword db-sign))
     ;不包含，首先实例化
-    (if-let [_ (contains? const/SUPPORTED_DB_TYPE (:dbtype datasource-config))] 
-      (cond 
+    (if-let [_ (contains? const/SUPPORTED_DB_TYPE (:dbtype datasource-config))]
+      (cond
         (= (:dbtype datasource-config) "sqlite") (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) (:host datasource-config)))
         :else
         (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) datasource-config)))
@@ -72,7 +72,7 @@
 (defn get-datasource-ins [db-sign]
   ;获取注册数据源
   (if-not (contains? @datasource-ins-register (keyword db-sign)) (throw (IllegalArgumentException. (str "未发现db-sign" db-sign "注册数据源")))
-          (get @datasource-ins-register (keyword db-sign)))
+                                                                 (get @datasource-ins-register (keyword db-sign)))
   )
 
 (comment (get-datasource-ins "21"))

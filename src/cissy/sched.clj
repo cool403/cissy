@@ -1,11 +1,11 @@
 (ns cissy.sched
   (:require
-   [cissy.core :refer [process-node-chan-based]]
-   [taoensso.timbre :as timbre]
-   [cissy.executions :as executions]
-   [cissy.registry :as register]
-   [clojure.core.async :as async :refer [>! <! go chan buffer dropping-buffer]]
-   [clojure.string :as str]))
+    [cissy.core :refer [process-node-chan-based]]
+    [taoensso.timbre :as timbre]
+    [cissy.executions :as executions]
+    [cissy.registry :as register]
+    [clojure.core.async :as async :refer [>! <! go chan buffer dropping-buffer]]
+    [clojure.string :as str]))
 
 
 
@@ -18,7 +18,7 @@
     (let [{task-info :task-info task-execution-dict :task-execution-dict} @task-execution-info
           {node-graph :node-graph} @task-info
           all-node-id-set (:all-node-id-set node-graph)
-          node-channels (atom {}); 存储节点ID -> channel的映射
+          node-channels (atom {})                           ; 存储节点ID -> channel的映射
           node-monitor-channel (chan)
           get-threads-fn (fn [node-id] (get-in @task-info [:task-config (keyword node-id) :threads] 1))
           node-thread-fn (fn [node-id] (vec (map #(str node-id "_" %) (range (get-threads-fn node-id)))))]
@@ -83,7 +83,7 @@
       ;; 记录执行结束时间
       (reset! task-execution-info
               (assoc @task-execution-info
-                     :stop-time (System/currentTimeMillis)))
+                :stop-time (System/currentTimeMillis)))
 
       (timbre/info (str "任务执行完成，耗时:"
                         (- (:stop-time @task-execution-info)

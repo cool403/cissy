@@ -1,7 +1,7 @@
-(ns ding 
+(ns ding
   (:require
-   [cissy.registry :as register]
-   [taoensso.timbre :as timbre]))
+    [cissy.registry :as register]
+    [taoensso.timbre :as timbre]))
 
 (defn ding [task-node-execution-info]
   (Thread/sleep 2000)

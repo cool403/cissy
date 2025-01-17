@@ -49,7 +49,7 @@
 
 (defprotocol TaskSched
   "任务执行调度接口定义"
-  (get-task-sched-type [this]      "获取调度类型")
-  (get-task-sched-name [this]      "获取调度名称")
+  (get-task-sched-type [this] "获取调度类型")
+  (get-task-sched-name [this] "获取调度名称")
   (sched-task-execution [this task-execution-info] "调度任务执行"))
 

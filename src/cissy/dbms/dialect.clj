@@ -44,18 +44,18 @@
     (-> (:sql_template sql-params-map)
         (build-page-cond sql-params-map))
     (-> "select * from "
-         (str (:from_table sql-params-map))
-         (build-where-cond sql-params-map)
-         (build-orderby-cond sql-params-map)
-         (build-page-cond sql-params-map))))
+        (str (:from_table sql-params-map))
+        (build-where-cond sql-params-map)
+        (build-orderby-cond sql-params-map)
+        (build-page-cond sql-params-map))))
 
-(def aa {:from_db "db1"
-         :dbtype "mysql"
-         :from_table "es_task_info"
-         :incr_key "lastmodify_time"
+(def aa {:from_db        "db1"
+         :dbtype         "mysql"
+         :from_table     "es_task_info"
+         :incr_key       "lastmodify_time"
          :incr_key_value "2024-10-25"
-         :page_size  2,
-         :sql_template ""})
+         :page_size      2,
+         :sql_template   ""})
 (read-data-sql aa)
 
 (defmulti write-data-sql :dbtype)

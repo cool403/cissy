@@ -1,8 +1,8 @@
 (ns cissy.ext.entry-loader
   (:require
-   [clojure.java.io :as io]
-   [clojure.string :as str]
-   [taoensso.timbre :as timbre]))
+    [clojure.java.io :as io]
+    [clojure.string :as str]
+    [taoensso.timbre :as timbre]))
 
 ;; #_{:clj-kondo/ignore [:earmuffed-var-not-dynamic]}
 ;; (def ^:private *loaded-files* (atom #{}))

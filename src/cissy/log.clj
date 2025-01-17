@@ -6,14 +6,14 @@
            (java.time LocalDateTime ZoneId)
            (java.lang Thread)))
 
-(defn- truncate-str 
+(defn- truncate-str
   "截断字符串到指定长度，超出部分用...替代"
   [s max-len]
   (if (<= (count s) max-len)
     (str s (apply str (repeat (- max-len (count s)) " ")))
     (str (subs s 0 (- max-len 3)) "...")))
 
-(def ^:private datetime-formatter 
+(def ^:private datetime-formatter
   (DateTimeFormatter/ofPattern "yyyy-MM-dd HH:mm:ss.SSS"))
 
 (defn- format-timestamp []
@@ -25,12 +25,12 @@
         thread-name (.getName thread)]
     (format thread-name)))
 
-(defn- format-msg 
+(defn- format-msg
   "格式化消息，处理特殊对象"
   [msg]
   (cond
     (delay? msg) (format-msg @msg)
-    (map? msg) (-> msg 
+    (map? msg) (-> msg
                    (dissoc :password)
                    pr-str)
     :else (str msg)))
@@ -38,9 +38,9 @@
 (defn- format-location
   "格式化文件位置信息"
   [?file ?line]
-  (let [file-name (if ?file 
-                   (last (str/split ?file #"/"))
-                   "unknown")]
+  (let [file-name (if ?file
+                    (last (str/split ?file #"/"))
+                    "unknown")]
     (format "%-20s:%-4d" file-name (or ?line 0))))
 
 (def ^:private log-format
@@ -61,5 +61,5 @@
   "初始化日志配置"
   []
   (timbre/merge-config!
-   {:output-fn log-format
-    :appenders {:println (appenders/println-appender {:stream :auto})}}))
+    {:output-fn log-format
+     :appenders {:println (appenders/println-appender {:stream :auto})}}))
