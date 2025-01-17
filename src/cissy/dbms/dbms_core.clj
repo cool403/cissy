@@ -14,7 +14,8 @@
             [taoensso.timbre :as timbre]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]
-            [next.jdbc.sql :as jdbc-sql]))
+            [next.jdbc.sql :as jdbc-sql]
+            [cissy.helpers :as helpers]))
 ; 不使用babashka pod的方式访问数据库，直接使用next.jdbc和honeysql 配合访问数据库
 ;(jdbc/execute! db-spec ["select * from users limit 1"] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})
 ; 上述执行返回结果和babashka pod的返回结果一样
@@ -86,7 +87,7 @@
       (do
         (timbre/warn "drn节点未读取到数据，什么都不做")
         ;这里只能重置当前节点，不能重置任务状态，因为任务状态是任务级别的，不能因为一个节点的终止而终止任务
-        (reset! task-node-execution-info (assoc @task-node-execution-info :curr-node-status "done")))
+        (helpers/curr-node-done task-node-execution-info))
       ;获取列信息 
       (let [columns (vec (map #(name %) (keys (first drn-res))))
             datas (vec (map #(vec (vals %)) drn-res))]
