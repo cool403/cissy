@@ -81,7 +81,7 @@
       ;直接调用注册数据源，由register完成实例化和注册
       (registry/register-datasource db-sign db-config-map)
       (timbre/info "初始化数据源配置完成")
-      (when (contains? (set (map #(:node-id %) (:all-node-id-set node-graph))) const/DRN_NODE_NAME)
+      (when (contains? (set (map #(:node-id %) (:all-node-id-set node-graph))) const/drn)
         (timbre/info "由于当前任务配置包含drn 节点，自动切换为ExecutionAlwaysSched 策略")
         (reset! task-info (assoc @task-info :sched-info (sched/->ChanBasedSched)))))
     task-info))

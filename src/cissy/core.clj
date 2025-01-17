@@ -22,7 +22,7 @@
 ;填充执行参数
 (defn- fill-node-param [node-execution-info curr-node-id task-config]
   (let [node-rel-config ((keyword curr-node-id) task-config)
-        db-keys (filter #(str/ends-with? % const/DB_SUFFIX_KEY) (keys node-rel-config))]
+        db-keys (filter #(str/ends-with? % const/db-suffix) (keys node-rel-config))]
     ;把所有node-rel-config当做param传入到node-param-dict中
     (doseq [db-key db-keys]
       (let [db-ref-key (get node-rel-config db-key)

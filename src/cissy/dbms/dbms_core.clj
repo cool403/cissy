@@ -79,7 +79,7 @@
         to-db-ins (register/get-datasource-ins to-db)
         ;获取db类型
         db-type (if (map? to-db-ins) (:dbtype to-db-ins) "sqlite")
-        drn-res ((keyword const/DRN_NODE_NAME) @node-result-dict)
+        drn-res ((keyword const/drn) @node-result-dict)
         to-table (:to_table @node-param-dict)]
     ;判断drn节点数据是否为空
     (if (or (nil? drn-res) (= (count drn-res) 0))
@@ -108,5 +108,5 @@
 
 
 ;注册节点
-(register/regist-node-fun const/DRN_NODE_NAME read-rows)
-(register/regist-node-fun const/DWN_NODE_NAME write-rows)
+(register/regist-node-fun const/drn read-rows)
+(register/regist-node-fun const/dwn write-rows)
