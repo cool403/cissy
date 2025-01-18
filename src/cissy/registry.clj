@@ -6,7 +6,7 @@
   (:import java.lang.IllegalArgumentException))
 
 ;注册器
-(def task-node-register (atom {}))
+(def ^:private task-node-register (atom {}))
 ;注册atom listener
 ;; (add-watch )
 
@@ -15,6 +15,18 @@
   (defn a [x] (inc x))
   (reset! task-node-register (assoc @task-node-register :12 a))
   ((:12 @task-node-register) 12))
+
+;限定第一个参数必须为节点名称,可为空
+(defmacro defnode [name params & body]
+  `(do
+     ;;定义方法
+     (defn ~name ~params ~@body)
+     ;;注册方法
+     (reset! task-node-register (assoc @task-node-register ~(keyword `~name) ~name))
+     ;;返回方法符号
+     ~name
+     )
+  )
 
 
 ;注册task-node
@@ -43,7 +55,7 @@
 
 
 ;db register
-(def datasource-ins-register (atom {}))
+(def ^:private datasource-ins-register (atom {}))
 
 ;oracle, mysql, pg 都是这个格式;sqlite 特殊些
 ;约定sqlite文件还是host里，只是到时候特殊处理, dbtype枚举值: mysql,postgresql
