@@ -23,7 +23,6 @@
 
 ;统一默认参数名就是方法名keyword
 (defmacro defnode [name params & body]
-  (prn params)
   (when-not (= 1 (count params) 1)
     (throw (IllegalArgumentException. (str "节点方法" name "只能有一个参数"))))
   (let [[param1] params
