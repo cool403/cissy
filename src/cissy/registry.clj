@@ -1,41 +1,54 @@
 (ns cissy.registry
   (:require
     ;;  [clojure.core :as core]
-    [taoensso.timbre :as timbre]
-    [cissy.const :as const])
-  (:import java.lang.IllegalArgumentException))
+    [cissy.const :as const]
+    [taoensso.timbre :as timbre])
+  (:import (cissy.executions NodeExecutionInfo)
+           java.lang.IllegalArgumentException))
 
 ;注册器
-(def ^:private task-node-register (atom {}))
+(def task-node-register (atom {}))
 ;注册atom listener
 ;; (add-watch )
 
+
+(def param-nei? (fn [param]
+                  (when-not (instance? NodeExecutionInfo @param)
+                    (throw (IllegalArgumentException. "参数必须是NodeExecutionInfo类型,定义可见cissy.executions 命名空间")))))
 
 (comment
   (defn a [x] (inc x))
   (reset! task-node-register (assoc @task-node-register :12 a))
   ((:12 @task-node-register) 12))
 
-;限定第一个参数必须为节点名称,可为空
+;统一默认参数名就是方法名keyword
 (defmacro defnode [name params & body]
-  `(do
-     ;;定义方法
-     (defn ~name ~params ~@body)
-     ;;注册方法
-     (reset! task-node-register (assoc @task-node-register ~(keyword `~name) ~name))
-     ;;返回方法符号
-     ~name
-     )
-  )
+  (prn params)
+  (when-not (= 1 (count params) 1)
+    (throw (IllegalArgumentException. (str "节点方法" name "只能有一个参数"))))
+  (let [[param1] params
+        type-checks `(param-nei? ~param1)]
+    `(do
+       ;;定义方法
+       (defn ~name ~params
+         ;~@(when docstring [docstring])
+         ;校验
+         ~type-checks
+         ~@body)
+       ;;注册方法
+       (reset! task-node-register (assoc @task-node-register ~(keyword `~name) ~name))
+       ;;返回方法符号
+       ~name
+       )))
 
 
 ;注册task-node
-(defn regist-node-fun [node-id func]
-  ;如果已经注册过,不再注册
-  (when-not (contains? @task-node-register (keyword node-id))
-    (timbre/info (str "开始注册节点=" node-id "及执行函数=" func))
-    (compare-and-set! task-node-register @task-node-register
-                      (assoc @task-node-register (keyword node-id) func))))
+;(defn regist-node-fun [node-id func]
+;  ;如果已经注册过,不再注册
+;  (when-not (contains? @task-node-register (keyword node-id))
+;    (timbre/info (str "开始注册节点=" node-id "及执行函数=" func))
+;    (compare-and-set! task-node-register @task-node-register
+;                      (assoc @task-node-register (keyword node-id) func))))
 
 ;获取关联函数
 (defn get-node-func [node-id]
@@ -47,15 +60,15 @@
 
 
 
-(comment
-  (defn test-node []
-    (prn "test node"))
-  (regist-node-fun "test" test-node)
-  ((get-node-func "test")))
+;(comment
+;  (defn test-node []
+;    (prn "test node"))
+;  (regist-node-fun "test" test-node)
+;  ((get-node-func "test")))
 
 
 ;db register
-(def ^:private datasource-ins-register (atom {}))
+(def datasource-ins-register (atom {}))
 
 ;oracle, mysql, pg 都是这个格式;sqlite 特殊些
 ;约定sqlite文件还是host里，只是到时候特殊处理, dbtype枚举值: mysql,postgresql

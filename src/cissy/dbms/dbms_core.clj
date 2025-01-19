@@ -9,7 +9,7 @@
     ;; [pod.babashka.postgresql.sql :as pg-sql]
     ;; [pod.babashka.go-sqlite3 :as sqlite]
             [cissy.const :as const]
-            [honey.sql.helpers :as helpers]
+    ;[honey.sql.helpers :as helpers]
             [honey.sql :as sql]
             [taoensso.timbre :as timbre]
             [next.jdbc :as jdbc]
@@ -32,8 +32,7 @@
     (reset! node-param-dict (assoc @node-param-dict :page_offset (- page-offset page-size)))))
 
 ;从数据库读取数据
-(defn read-rows
-  "从数据库加载读取数据"
+(register/defnode drn
   [task-node-execution-info]
   (timbre/info "开始执行drn节点")
   (let [{task-execution-info :task-execution-info
@@ -63,12 +62,12 @@
 ;(mysql-sql/insert-multi! aa :users ["id" "username","email"] [[22222222 "njones" "2332"]])
 ;(vec (map (fn[x] (vec (vals x))) ee)) --> (vec (map #(vec (vals %)) ee))
 ;(vec (map (fn [x] (name x)) (keys (first ee)))) -->(vec (map #(name %) (keys (first ee))))
-(defn- get-table-columns [sql columns]
-  ;columns 需要转成keyword,不然会被当成参数 
-  (apply helpers/columns sql (map keyword columns)))
+;(defn- get-table-columns [sql columns]
+;  ;columns 需要转成keyword,不然会被当成参数
+;  (apply helpers/columns sql (map keyword columns)))
 
-(defn write-rows
-  "按行写数据库到db"
+;按行写数据库到db
+(register/defnode dwn
   [task-node-execution-info]
   (timbre/info "开始执行dwn节点")
   (let [{task-execution-info :task-execution-info
@@ -109,5 +108,6 @@
 
 
 ;注册节点
-(register/regist-node-fun const/drn read-rows)
-(register/regist-node-fun const/dwn write-rows)
+;(register/regist-node-fun const/drn read-rows)
+;(register/regist-node-fun const/dwn write-rows)
+
