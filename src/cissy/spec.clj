@@ -41,7 +41,7 @@
 ;; 定义任务组配置spec
 (s/def ::task_group_name string?)
 (s/def ::nodes string?)
-(s/def ::entry_script (s/nilable string?))
+(s/def ::entry_script (s/nilable (s/coll-of string?)))
 (s/def ::node-config (s/keys :opt-un [::threads]))
 (s/def ::nodes-config (s/and (s/map-of keyword? ::node-config)
                              #(cond

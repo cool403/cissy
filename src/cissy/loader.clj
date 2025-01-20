@@ -40,10 +40,11 @@
         {task-group :task_group datasource :datasource} config-map
         task-map-vec (atom [])]
     (doseq [tasks-map task-group]
-      (let [{task-group-name :task_group_name tasks :tasks entry-script :entry_script} tasks-map]
-        (when-not (str/blank? entry-script)
+      (let [{task-group-name :task_group_name tasks :tasks entry-scripts :entry_script} tasks-map]
+        (when (not-empty entry-scripts)
           (timbre/info "检测到此次使用脚本任务")
-          (el/load-main-entry entry-script))
+          (doseq [entry-script entry-scripts]
+            (el/load-main-entry entry-script)))
         (doseq [task tasks idx (range 0 (count tasks))]
           (reset! task-map-vec (conj @task-map-vec (-> task
                                                        (comp-new-task-fn tasks-map)
