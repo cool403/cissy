@@ -10,5 +10,7 @@
   (test/testing "测试edn格式配置加载"
     (let [cfg (edn/read-string (slurp (io/resource config-path)))]
       (println cfg)
+      (println (type cfg))
+      (println (first (:tasks cfg)))
       (println (prn-str cfg))
       (test/is (not (nil? cfg))))))
