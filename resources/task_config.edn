@@ -1,0 +1,44 @@
+{
+ :task_group_name "mysql同步测试"
+ :nodes           "drn->dwn;"
+ :datasource      {
+                   :db1 {
+                         :host     "localhost"
+                         :dbname   "test1"
+                         :password "123456"
+                         :port     4002
+                         :user     "root"
+                         :dbtype   "mysql"
+                         }
+                   :db2 {
+                         :host     "localhost"
+                         :dbname   "test2"
+                         :password "123456"
+                         :port     4000
+                         :user     "root"
+                         :dbtype   "mysql"
+                         }
+                   }
+
+ ;;测试
+ :drn             {
+                   :from_db   "db1"
+                   :page_size 1000
+                   :threads   20
+                   }
+ :dwn             {
+                   :from_db   "db1"
+                   :page_size 1000
+                   :threads   20
+                   }
+ :tasks           [{
+                    :drn {
+                          :from_table   "users"
+                          :sql_template "select * from users1 order by id"
+                          }
+                    :dwn {
+                          :to_table "users"
+                          :threads  2
+                          }
+                    }]
+ }
