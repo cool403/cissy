@@ -1,10 +1,12 @@
 (ns task-config-edn-test
   (:require [clojure.test :as test]
             [clojure.edn :as edn]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.spec.alpha :as s]
+            [cissy.spec :as spec]))
 
 
-(def config-path "task_config.edn" )
+(def config-path "task_config.edn")
 
 (test/deftest task-config-edn-test
   (test/testing "测试edn格式配置加载"
@@ -14,3 +16,54 @@
       (println (first (:tasks cfg)))
       (println (prn-str cfg))
       (test/is (not (nil? cfg))))))
+
+
+(def aa {
+         :task_group_name "mysql同步测试"
+         :nodes           "drn->dwn;"
+         :datasource      {
+                           :db1 {
+                                 :host     "localhost"
+                                 :dbname   "test1"
+                                 :password "123456"
+                                 :port     4002
+                                 :user     "root"
+                                 ;;dbtype 目前支持sqlite,mysql,oracle,postgresql
+                                 :dbtype   "mysql"
+                                 }
+                           :db2 {
+                                 :host     "localhost"
+                                 :dbname   "test2"
+                                 :password "123456"
+                                 :port     4000
+                                 :user     "root"
+                                 :dbtype   "mysql"
+                                 }
+                           }
+
+         ;;测试
+         :drn             {
+                           :from_db   "db1"
+                           :page_size 1000
+                           :threads   20
+                           }
+         :dwn             {
+                           :from_db   "db1"
+                           :page_size 1000
+                           :threads   20
+                           }
+         :tasks           [{
+                            :drn {
+                                  :from_table   "users"
+                                  :sql_template "select * from users1 order by id"
+                                  }
+                            :dwn {
+                                  :to_table "users"
+                                  :threads  2
+                                  }
+                            }]
+         })
+
+(test/deftest test-valid-config
+  (test/testing "测试任务配置是否符号格式要求"
+    (test/is (= :ok (spec/valid-config-json (prn-str aa))))))

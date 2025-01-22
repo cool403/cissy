@@ -1,6 +1,6 @@
 (ns cissy.spec
   (:require
-    [cheshire.core :as json]
+    [clojure.edn :as edn]
     [clojure.spec.alpha :as s]))
 
 ;; 定义数据库配置spec
@@ -42,41 +42,40 @@
 (s/def ::task_group_name string?)
 (s/def ::nodes string?)
 (s/def ::entry_script (s/nilable (s/coll-of string?)))
-(s/def ::node-config (s/keys :opt-un [::threads]))
-(s/def ::nodes-config (s/and (s/map-of keyword? ::node-config)
-                             #(cond
-                                (contains? % :drn) (s/valid? ::drn (get % :drn))
-                                (contains? % :drn) (s/valid? ::dwn (get % :dwn))
-                                :else true)))
+;(s/def ::node-config (s/keys :opt-un [::threads]))
+(s/def ::node-config (s/and (s/map-of keyword? (s/keys :opt-un [::threads]))
+                            #(cond
+                               (contains? % :drn) (s/valid? ::drn (get % :drn))
+                               (contains? % :drn) (s/valid? ::dwn (get % :dwn))
+                               :else true)))
 
-(s/def ::uni-node-config (s/nilable ::nodes-config))
+;(s/def ::uni-node-config (s/nilable ::nodes-config))
 
-(s/def ::tg
-  (s/keys :req-un [::task_group_name ::nodes ::entry_script ::tasks]
-          :opt-un [::uni-node-config]))
-
-(s/def ::tasks
-  (s/coll-of ::task))
+;(s/def ::tg
+;  (s/keys :req-un [::task_group_name ::nodes ::entry_script ::tasks]
+;          :opt-un [::uni-node-config]))
 
 ;; 定义任务配置spec
-(s/def ::task
-  (s/and (s/map-of keyword? ::node-config)
-         #(cond
-            (contains? % :drn) (s/valid? ::drn (get % :drn))
-            (contains? % :drn) (s/valid? ::dwn (get % :dwn))
-            :else true)))
+;(s/def ::task
+;  (s/and (s/map-of keyword? ::node-config)
+;         #(cond
+;            (contains? % :drn) (s/valid? ::drn (get % :drn))
+;            (contains? % :drn) (s/valid? ::dwn (get % :dwn))
+;            :else true)))
 
-;; 定义任务组数组spec
-(s/def ::task_group (s/coll-of ::tg))
+(s/def ::tasks
+  (s/coll-of ::node-config))
 
 ;; 定义整个数据结构spec
 (s/def ::task-json
-  (s/keys :req-un [::datasource ::task_group]))
+  (s/keys :req-un [::datasource ::tasks ::nodes ::task_group_name]
+          :opt-un [::entry_script ::node-config]))
 
 (defn valid-config-json
   "docstring"
   [config-json]
-  (let [config-map (json/parse-string config-json #(keyword %))]
+  ;(let [config-map (json/parse-string config-json #(keyword %))]
+  (let [config-map (edn/read-string config-json)]
     (if-not (s/valid? ::task-json config-map)
       (do
         (println (s/explain ::task-json config-map))

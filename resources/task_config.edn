@@ -1,5 +1,6 @@
 {
  :task_group_name "mysql同步测试"
+ ;;数据库节点目前支持drn和dwn,drn负责加载数据,dwn负责写数据
  :nodes           "drn->dwn;"
  :datasource      {
                    :db1 {
@@ -8,6 +9,7 @@
                          :password "123456"
                          :port     4002
                          :user     "root"
+                         ;;dbtype 目前支持sqlite,mysql,oracle,postgresql
                          :dbtype   "mysql"
                          }
                    :db2 {
@@ -19,11 +21,13 @@
                          :dbtype   "mysql"
                          }
                    }
-
+ ;;自定义任务脚本时,需要这里显式声明,注意这里要写绝对路径
+ :entry_script ["xx.clj"]
  ;;测试
  :drn             {
                    :from_db   "db1"
                    :page_size 1000
+                   ;;一次启动多少个线程
                    :threads   20
                    }
  :dwn             {
@@ -32,8 +36,10 @@
                    :threads   20
                    }
  :tasks           [{
+                    ;;drn中的配置和外层的drn配置存在覆盖关系，优先使用子任务的配置
                     :drn {
                           :from_table   "users"
+                          ;;自定义sql同步时可设置这个选项
                           :sql_template "select * from users1 order by id"
                           }
                     :dwn {

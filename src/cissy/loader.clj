@@ -9,7 +9,8 @@
             [clojure.string :as str]
             [cissy.ext.entry-loader :as el]
             [cissy.checker :as checker]
-            [cissy.helpers :as helpers])
+            [cissy.helpers :as helpers]
+            [clojure.edn :as edn])
   (:import (java.util ArrayList HashMap)))
 
 ;; (def demo-json "{\n    \"task_name\":\"demo\",\n    \"nodes\":\"demo->\",\n    \"demo\":{\n        \n    }\n}")
@@ -32,25 +33,26 @@
 
 (defn- comp-new-task-fn [task tasks-map]
   ;组合新的task
-  (merge-with (fn [v1 v2] (helpers/my-merge-fn v1 v2)) task (dissoc tasks-map :tasks :task_group_name :entry_script)))
+  (merge-with (fn [v1 v2] (helpers/my-merge-fn v1 v2)) task (dissoc tasks-map :tasks :task_group_name :entry_script :datasource)))
 
 (defn- get-tasks-map-fn [config-json]
   ;解析任务组
-  (let [config-map (json/parse-string config-json #(keyword %))
-        {task-group :task_group datasource :datasource} config-map
+  (let [config-map (edn/read-string config-json)
+        {datasource      :datasource
+         task-group-name :task_group_name
+         tasks           :tasks
+         entry-scripts   :entry_script} config-map
         task-map-vec (atom [])]
-    (doseq [tasks-map task-group]
-      (let [{task-group-name :task_group_name tasks :tasks entry-scripts :entry_script} tasks-map]
-        (when (not-empty entry-scripts)
-          (timbre/info "检测到此次使用脚本任务")
-          (doseq [entry-script entry-scripts]
-            (el/load-main-entry entry-script)))
-        (doseq [task tasks idx (range 0 (count tasks))]
-          (reset! task-map-vec (conj @task-map-vec (-> task
-                                                       (comp-new-task-fn tasks-map)
-                                                       (assoc :datasource datasource)
-                                                       ;子任务名称先用一个简单的名称加任务序号替代吧，后续再优化
-                                                       (assoc :task_name (str task-group-name "_" idx))))))))
+    (when (not-empty entry-scripts)
+      (timbre/info "检测到此次使用脚本任务")
+      (doseq [entry-script entry-scripts]
+        (el/load-main-entry entry-script)))
+    (doseq [task tasks idx (range 0 (count tasks))]
+      (reset! task-map-vec (conj @task-map-vec (-> task
+                                                   (comp-new-task-fn config-map)
+                                                   (assoc :datasource datasource)
+                                                   ;子任务名称先用一个简单的名称加任务序号替代吧，后续再优化
+                                                   (assoc :task_name (str task-group-name "_" idx))))))
     @task-map-vec))
 
 

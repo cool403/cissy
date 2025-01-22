@@ -1,13 +1,12 @@
 (ns cissy.commands
   (:require
-    [taoensso.timbre :as timbre]
-    [cissy.loader :as loader]
-    [cissy.sched :as sched]
     [cissy.executions :as executions]
-    [clojure.string :as str]
-    [cissy.checker :as checker]
+    [cissy.loader :as loader]
     [cissy.spec :as spec]
-    [clojure.spec.alpha :as s])
+    [clojure.spec.alpha :as s]
+    [clojure.string :as str]
+    [clojure.string :as str]
+    [taoensso.timbre :as timbre])
   (:gen-class
     :name cissy.commands
     :methods [#^{:static true} [startj [java.lang.String] void]
@@ -84,17 +83,23 @@
           (timbre/error "执行任务出错" (.getMessage ex) ex))))
     (timbre/info (str "当前任务组全部执行完成"))))
 
+(defn valid-path?
+  "docstring"
+  [path]
+  (not (str/blank? path)))
+
 (defn start
   "通过配置文件启动任务"
   [options]
   ;加载注册节点drn和dwn
-  (let [config-path (:config options)]
-    (if (nil? config-path)
-      (timbre/error "Error: start 命令需要指定配置文件(-c)")
-      (do
-        (require '[cissy.dbms.dbms-core :as dbms-core])
-        (timbre/info "执行任务启动命令" options)
-        (when-not (= (spec/valid-config-json (slurp config-path)) :ok)
-          (timbre/error "任务配置json格式错误, 请检查配置文件")
-          (System/exit 1))
-        (-startj (slurp config-path))))))
+  (when-not s/valid? (valid-path? (:config options))
+    (timbre/error "Error: start 命令需要指定配置文件(-c)")
+    (System/exit 1))
+  (let [config-path (:config options)
+        config-edn (slurp config-path)]
+    (require '[cissy.dbms.dbms-core :as dbms-core])
+    (timbre/info "执行任务启动命令" options)
+    (when-not (= (spec/valid-config-json config-edn) :ok)
+      (timbre/error "任务配置json格式错误, 请检查配置文件")
+      (System/exit 1))
+    (-startj config-edn)))
