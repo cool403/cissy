@@ -7,7 +7,7 @@
             [cissy.registry :as registry]
             [cissy.const :as const]
             [clojure.string :as str]
-            [cissy.ext.entry-loader :as el]
+            [cissy.scripts-loader :as sl]
             [cissy.checker :as checker]
             [cissy.helpers :as helpers]
             [clojure.edn :as edn])
@@ -46,7 +46,7 @@
     (when (not-empty entry-scripts)
       (timbre/info "检测到此次使用脚本任务")
       (doseq [entry-script entry-scripts]
-        (el/load-main-entry entry-script)))
+        (sl/load-main-entry entry-script)))
     (doseq [task tasks idx (range 0 (count tasks))]
       (reset! task-map-vec (conj @task-map-vec (-> task
                                                    (comp-new-task-fn config-map)
