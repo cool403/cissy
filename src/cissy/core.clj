@@ -140,7 +140,7 @@
                     (reset! node-param-dict
                             (assoc @node-param-dict :page_offset (get-offset-fn page-size)))
                     (timbre/info "当前thread-index=" thread-idx "的取到的offset=" (get @node-param-dict :page_offset))))
-                (prn curr-node-status)
+                ;(prn curr-node-status)
                 (when (not= curr-node-status "done")
                   (if node-chan
                     ;; 非root节点等待输入或者父节点是done状态也不执行,当前节点标记done状态
