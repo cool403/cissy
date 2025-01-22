@@ -6,7 +6,8 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [clojure.string :as str]
-    [taoensso.timbre :as timbre])
+    [taoensso.timbre :as timbre]
+    [clojure.java.io :as io])
   (:gen-class
     :name cissy.commands
     :methods [#^{:static true} [startj [java.lang.String] void]
@@ -16,56 +17,7 @@
   "任务配置json样例"
   [options]
   (println "#这是一个mysql同步demo 配置，仅供参考")
-  (println (->> ["{"
-                 "    \"datasource\": {"
-                 "      \"db1\": {"
-                 "        \"host\":  \"localhost\","
-                 "        \"dbname\": \"test1\","
-                 "        \"password\": \"123456\","
-                 "        \"port\": 4002,"
-                 "        \"user\": \"root\","
-                 "		#dbtype 目前支持sqlite,mysql,oracle,postgresql"
-                 "        \"dbtype\": \"mysql\""
-                 "      },"
-                 "      \"db2\": {"
-                 "        \"host\": \"localhost\","
-                 "        \"dbname\":\"test2\","
-                 "        \"password\":\"123456\","
-                 "        \"port\":4000,"
-                 "        \"user\":\"root\","
-                 "        \"dbtype\":\"mysql\""
-                 "      }"
-                 "    },"
-                 "	\"task_group\":[{"
-                 "	  \"task_group_name\":\"mysql同步测试\","
-                 "	  #数据库节点目前支持drn和dwn,drn负责加载数据,dwn负责写数据"
-                 "	  \"nodes\": \"drn->dwn;\","
-                 "	  \"drn\": {"
-                 "		#一次启动多少个线程"
-                 "		\"threads\":20,"
-                 "		\"from_db\":\"db1\","
-                 "		\"page_size\": 2000"
-                 "	  },"
-                 "	  \"dwn\": {"
-                 "		\"to_db\":\"db2\","
-                 "		\"threads\":20"
-                 "	  },"
-                 "	  \"tasks\":[{"
-                 "		#drn中的配置和外层的drn配置存在覆盖关系，有限使用内部的配置"
-                 "		\"drn\": {"
-                 "		  \"from_table\":\"users\","
-                 "		  #自定义sql同步时可设置这个选项"
-                 "		  \"sql_template\":\"select * from users1 order by id\""
-                 "		},"
-                 "		\"dwn\": {"
-                 "		  \"to_table\":\"users\","
-                 "		  \"threads\": 2"
-                 "		}"
-                 "	   }]"
-                 "	}]"
-                 "}"
-                 ""]
-                (str/join \newline))))
+  (println (slurp (io/resource "task_config.edn"))))
 
 (defn -startj [config-json]
   ;解析任务配置
@@ -93,8 +45,8 @@
   [options]
   ;加载注册节点drn和dwn
   (when-not s/valid? (valid-path? (:config options))
-    (timbre/error "Error: start 命令需要指定配置文件(-c)")
-    (System/exit 1))
+                     (timbre/error "Error: start 命令需要指定配置文件(-c)")
+                     (System/exit 1))
   (let [config-path (:config options)
         config-edn (slurp config-path)]
     (require '[cissy.dbms.dbms-core :as dbms-core])

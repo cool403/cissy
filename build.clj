@@ -8,18 +8,20 @@
 (def uber-file "target/cissy.jar")
 
 (defn clean [_]
-      (b/delete {:path "target"}))
+  (b/delete {:path "target"}))
 
 (defn compile [_]
-      (b/compile-clj {:basis     basis
-                      :src-dirs  ["src"]
-                      :class-dir class-dir}))
+  (b/compile-clj {:basis     basis
+                  :src-dirs  ["src" "resources"]
+                  :class-dir class-dir}))
 
 (defn uber [_]
-      (b/compile-clj {:basis     basis
-                      :src-dirs  ["src"]
-                      :class-dir class-dir})
-      (b/uber {:class-dir class-dir
-               :uber-file uber-file
-               :basis     basis
-               :main      'cissy.app}))
+  (b/copy-dir {:src-dirs   ["src" "resources"]
+               :target-dir class-dir})
+  (b/compile-clj {:basis     basis
+                  :src-dirs  ["src"]
+                  :class-dir class-dir})
+  (b/uber {:class-dir class-dir
+           :uber-file uber-file
+           :basis     basis
+           :main      'cissy.app}))
