@@ -1,34 +1,40 @@
 (ns cissy.scripts-loader
   (:require
     [clojure.java.io :as io]
-    [clojure.string :as str]
-    [taoensso.timbre :as timbre]))
+    [taoensso.timbre :as timbre]
+    [clojure.tools.deps :as deps])
+  (:import (java.util.zip ZipEntry ZipFile)))
 
-;; #_{:clj-kondo/ignore [:earmuffed-var-not-dynamic]}
-;; (def ^:private *loaded-files* (atom #{}))
+;加载deps,一个zip包正常应该只有一个deps.edn
+(defn load-deps-edn!
+  "自动加载deps"
+  [^String dep-file]
 
-;; (defn- extract-dependencies [file-content]
-;;   (let [require-pattern #"\(:require \[([^\]]+)\]\)"
-;;         matches (re-seq require-pattern file-content)]
-;;     (map second matches)))
+  )
 
-;; (defn- resolve-file-path [ns-sym]
-;;   (-> (str/replace (name ns-sym) "." "/")
-;;       (str ".clj")))
+(defn load-clj-file!
+  "加载脚本文件"
+  [^String clj-file]
+  )
 
-;; (defn load-file-with-deps [file-path]
-;;   (when-not (contains? @*loaded-files* file-path)
-;;     (println "Loading file:" file-path)
-;;     (let [file-content (slurp file-path)
-;;           dependencies (extract-dependencies file-content)]
-;;       (doseq [dep-ns dependencies]
-;;         (let [dep-file-path (resolve-file-path dep-ns)]
-;;           (load-file-with-deps dep-file-path)))
-;;       (load-file file-path)
-;;       (swap! *loaded-files* conj file-path))))
+;不支持嵌套脚本目录
+;支持a.clj,b.clj,deps.clj一层目录的不支持;d/a.clj,d/d1/a.clj这种
+(defn load-zip!
+  "加载zip格式的任务"
+  [^String zip-file-path]
+  (let [zip-file (ZipFile. zip-file-path)
+        entries (.entries zip-file)]
+    ;加载deps.edn
+    (when-let [deps-entry (.getEntry zip-file "deps.edn")]
+      (load-deps-edn! (slurp (.getInputStream zip-file deps-entry))))
+    (while (.hasMoreElements entries)
+      (let [^ZipEntry entry (.nextElement entries)
+            entry-name (.getName entry)]
+        (when (.endsWith entry-name ".clj")
+          (load-file (slurp (.getInputStream zip-file entry)))
+          (timbre/info (str "加载脚本文件:" entry-name "成功.")))))))
 
-;; ;; 使用示例
-;; (load-file-with-deps "a.clj")
+
 
 (defn file-exists? [path]
   (.exists (io/file path)))
