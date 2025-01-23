@@ -1,9 +1,31 @@
 (ns cissy.scripts-loader
   (:require
     [clojure.java.io :as io]
-    [taoensso.timbre :as timbre]
-    [clojure.tools.deps :as deps])
-  (:import (java.util.zip ZipEntry ZipFile)))
+    [clojure.tools.deps :as deps]
+    [clojure.tools.deps.util.maven :as maven]
+    [taoensso.timbre :as timbre])
+  (:import (clojure.lang RT)
+           (java.io File)
+           (java.util.zip ZipEntry ZipFile)))
+
+
+;从maven repo中加载lib
+(defn load-dependency [lib version]
+  (let [deps-map {:deps {lib {:mvn/version version}}}
+        resolve-args {:deps      deps-map
+                      :mvn/repos maven/standard-repos}
+        {:keys [libs paths]} (deps/resolve-deps resolve-args {})]
+    (doseq [^String path paths]
+      (RT/addURL (File. path)))))
+
+;;从自定义目录中加载lib
+(defn load-dependency-from-custom-lib [lib version custom-lib-path]
+  (let [deps-map {:deps {lib {:mvn/version version}}}
+        resolve-args {:deps      deps-map
+                      :mvn/repos (assoc maven/standard-repos :custom-lib {:url custom-lib-path})}
+        {:keys [libs paths]} (deps/resolve-deps resolve-args {})]
+    (doseq [^String path paths]
+      (RT/addURL (File. path)))))
 
 ;加载deps,一个zip包正常应该只有一个deps.edn
 (defn load-deps-edn!
