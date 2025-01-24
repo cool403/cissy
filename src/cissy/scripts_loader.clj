@@ -10,18 +10,18 @@
            (java.util.zip ZipEntry ZipFile)))
 
 
-;从maven repo中加载lib
-(defn load-dependency [lib version]
-  (let [deps-map {:deps {lib version}}
-        resolve-args {:deps      deps-map
-                      :mvn/repos maven/standard-repos}
+; 加载依赖项
+(defn load-dependency [lib coord]
+  (let [deps-map {:deps {lib coord}}
+        resolve-args {:mvn/repos maven/standard-repos}
         {:keys [libs paths]} (deps/resolve-deps deps-map resolve-args)]
+    (println "Resolved paths:" paths) ;; 打印所有依赖路径（包括传递依赖）
     (doseq [^String path paths]
       (RT/addURL (File. path)))))
 
 ;;从自定义目录中加载lib
-(defn load-dependency-from-custom-lib [lib version custom-lib-path]
-  (let [deps-map {:deps {lib version}}
+(defn load-dependency-from-custom-lib [lib coord custom-lib-path]
+  (let [deps-map {:deps {lib coord}}
         resolve-args {:deps      deps-map
                       :mvn/repos (assoc maven/standard-repos :custom-lib {:url custom-lib-path})}
         {:keys [libs paths]} (deps/resolve-deps deps-map resolve-args)]
@@ -33,8 +33,8 @@
   "自动加载deps"
   [^String dep-file]
   (let [deps-map (:deps (edn/read-string dep-file))]
-    (doseq [[lib-name version-map] deps-map]
-      (load-dependency lib-name version-map)))
+    (doseq [[lib-name coord] deps-map]
+      (load-dependency lib-name coord)))
   )
 
 (defn load-clj-file!
