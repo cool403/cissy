@@ -1,6 +1,7 @@
 (ns cissy.scripts-loader
   (:require
     [clojure.java.io :as io]
+    [clojure.edn :as edn]
     [clojure.tools.deps :as deps]
     [clojure.tools.deps.util.maven :as maven]
     [taoensso.timbre :as timbre])
@@ -11,19 +12,19 @@
 
 ;从maven repo中加载lib
 (defn load-dependency [lib version]
-  (let [deps-map {:deps {lib {:mvn/version version}}}
+  (let [deps-map {:deps {lib version}}
         resolve-args {:deps      deps-map
                       :mvn/repos maven/standard-repos}
-        {:keys [libs paths]} (deps/resolve-deps resolve-args {})]
+        {:keys [libs paths]} (deps/resolve-deps deps-map resolve-args)]
     (doseq [^String path paths]
       (RT/addURL (File. path)))))
 
 ;;从自定义目录中加载lib
 (defn load-dependency-from-custom-lib [lib version custom-lib-path]
-  (let [deps-map {:deps {lib {:mvn/version version}}}
+  (let [deps-map {:deps {lib version}}
         resolve-args {:deps      deps-map
                       :mvn/repos (assoc maven/standard-repos :custom-lib {:url custom-lib-path})}
-        {:keys [libs paths]} (deps/resolve-deps resolve-args {})]
+        {:keys [libs paths]} (deps/resolve-deps deps-map resolve-args)]
     (doseq [^String path paths]
       (RT/addURL (File. path)))))
 
@@ -31,12 +32,15 @@
 (defn load-deps-edn!
   "自动加载deps"
   [^String dep-file]
-
+  (let [deps-map (:deps (edn/read-string dep-file))]
+    (doseq [[lib-name version-map] deps-map]
+      (load-dependency lib-name version-map)))
   )
 
 (defn load-clj-file!
   "加载脚本文件"
   [^String clj-file]
+  (load-string clj-file)
   )
 
 ;不支持嵌套脚本目录
