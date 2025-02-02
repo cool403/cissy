@@ -4,27 +4,31 @@
     [clojure.edn :as edn]
     [clojure.tools.deps :as deps]
     [clojure.tools.deps.util.maven :as maven]
-    [taoensso.timbre :as timbre])
+    [taoensso.timbre :as timbre]
+    [cissy.helpers :as helpers])
   (:import (clojure.lang RT)
            (java.io File)
            (java.util.zip ZipEntry ZipFile)))
 
 
 ; 加载依赖项
-(defn load-dependency [lib coord]
-  (let [deps-map {:deps {lib coord}}
-        resolve-args {:mvn/repos maven/standard-repos}
-        {:keys [libs paths]} (deps/resolve-deps deps-map resolve-args)]
-    (println "Resolved paths:" paths) ;; 打印所有依赖路径（包括传递依赖）
+(defn load-dependency [deps-map]
+  (let [repo-config {:mvn/repos maven/standard-repos}
+        ;添加repo配置不加会无法解析deps
+        deps-tree (deps/resolve-deps (helpers/my-merge-fn deps-map repo-config) nil)
+        ;解析paths
+        paths (flatten (map :paths (vals deps-tree)))]
+    ;; 打印所有依赖路径（包括传递依赖）
+    (println "Resolved paths:" paths)
     (doseq [^String path paths]
       (RT/addURL (File. path)))))
 
 ;;从自定义目录中加载lib
-(defn load-dependency-from-custom-lib [lib coord custom-lib-path]
-  (let [deps-map {:deps {lib coord}}
-        resolve-args {:deps      deps-map
-                      :mvn/repos (assoc maven/standard-repos :custom-lib {:url custom-lib-path})}
-        {:keys [libs paths]} (deps/resolve-deps deps-map resolve-args)]
+(defn load-dependency-from-custom-lib [deps-map custom-lib-path]
+  (let [repo-config {:mvn/repos (assoc maven/standard-repos :custom-lib {:url custom-lib-path})}
+        deps-tree (deps/resolve-deps (helpers/my-merge-fn deps-map repo-config) nil)
+        ;解析paths
+        paths (flatten (map :paths (vals deps-tree)))]
     (doseq [^String path paths]
       (RT/addURL (File. path)))))
 
@@ -32,9 +36,8 @@
 (defn load-deps-edn!
   "自动加载deps"
   [^String dep-file]
-  (let [deps-map (:deps (edn/read-string dep-file))]
-    (doseq [[lib-name coord] deps-map]
-      (load-dependency lib-name coord)))
+  (let [deps-map (edn/read-string dep-file)]
+    (load-dependency deps-map))
   )
 
 (defn load-clj-file!
@@ -57,7 +60,7 @@
       (let [^ZipEntry entry (.nextElement entries)
             entry-name (.getName entry)]
         (when (.endsWith entry-name ".clj")
-          (load-file (slurp (.getInputStream zip-file entry)))
+          (load-string (slurp (.getInputStream zip-file entry)))
           (timbre/info (str "加载脚本文件:" entry-name "成功.")))))))
 
 

@@ -1,6 +1,4 @@
 (ns cissy.helpers
-  (:import (cissy.executions NodeExecutionInfo)
-           (clojure.lang Atom))
   (:require [cissy.executions :as executions]))
 
 
@@ -17,8 +15,8 @@
 (defn curr-node-done
   "当前节点标记完成"
   [task-node-execution-info]
-  (if (or (nil? task-node-execution-info) (not (instance? Atom task-node-execution-info)))
+  (if (or (nil? task-node-execution-info) (not (instance? clojure.lang.Atom task-node-execution-info)))
     (throw (IllegalArgumentException. "类型必须是atom类型，且不能为nil"))
-    (cond (instance? NodeExecutionInfo @task-node-execution-info)
+    (cond (instance? cissy.executions.NodeExecutionInfo @task-node-execution-info)
           (reset! task-node-execution-info (assoc @task-node-execution-info :curr-node-status "done"))))
   )

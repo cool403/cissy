@@ -54,6 +54,7 @@ clojure -M:test
 - [x] 修复simple_task_test测试一直无法停止;`202501117`
 - [x] `20250119` 新增宏`defnode`,可实现自动注册节点方法,避免手工调用节点注册方法
 - [x] `20250122` 配置文件格式替换使用`edn`格式,`json`解析先保留
+- [x] `20250202` 解决使用`deps/resolve-deps`因为`deps-map`参数中没有传递`mvn/repo`参数导致每次加载都提示`Caused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find artifact org.apache:apache:pom:21`
 - [ ] 基于`cissy`封装一个爬虫`demo`
 
 
