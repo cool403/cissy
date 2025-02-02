@@ -5,4 +5,4 @@
 
 (deftest load-deps
   (testing "测试deps加载"
-    (is (csl/load-zip! "/home/mawdx/Desktop/hello.zip"))))
+    (is (csl/load-zip! "/home/mawdx/桌面/hello.zip"))))
