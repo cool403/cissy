@@ -6,9 +6,13 @@
     [clojure.tools.deps.util.maven :as maven]
     [taoensso.timbre :as timbre]
     [cissy.helpers :as helpers])
-  (:import (clojure.lang RT)
+  (:import (clojure.lang DynamicClassLoader RT)
            (java.io File)
            (java.util.zip ZipEntry ZipFile)))
+
+;; 设置上下文类加载器为 DynamicClassLoader
+(let [current-thread (Thread/currentThread)]
+  (.setContextClassLoader current-thread (DynamicClassLoader. (.getContextClassLoader current-thread))))
 
 
 ; 加载依赖项
@@ -17,11 +21,12 @@
         ;添加repo配置不加会无法解析deps
         deps-tree (deps/resolve-deps (helpers/my-merge-fn deps-map repo-config) nil)
         ;解析paths
-        paths (flatten (map :paths (vals deps-tree)))]
+        paths (vec (flatten (map :paths (vals deps-tree))))]
     ;; 打印所有依赖路径（包括传递依赖）
     (println "Resolved paths:" paths)
     (doseq [^String path paths]
-      (RT/addURL (File. path)))))
+      (RT/addURL (.toURL
+                   (File. path))))))
 
 ;;从自定义目录中加载lib
 (defn load-dependency-from-custom-lib [deps-map custom-lib-path]
@@ -37,14 +42,13 @@
   "自动加载deps"
   [^String dep-file]
   (let [deps-map (edn/read-string dep-file)]
-    (load-dependency deps-map))
-  )
+    (load-dependency deps-map)
+    (timbre/info "依赖加载完成")))
 
 (defn load-clj-file!
   "加载脚本文件"
   [^String clj-file]
-  (load-string clj-file)
-  )
+  (load-string clj-file))
 
 ;不支持嵌套脚本目录
 ;支持a.clj,b.clj,deps.clj一层目录的不支持;d/a.clj,d/d1/a.clj这种
@@ -56,6 +60,7 @@
     ;加载deps.edn
     (when-let [deps-entry (.getEntry zip-file "deps.edn")]
       (load-deps-edn! (slurp (.getInputStream zip-file deps-entry))))
+    (require '[clj-http.client :as client])
     (while (.hasMoreElements entries)
       (let [^ZipEntry entry (.nextElement entries)
             entry-name (.getName entry)]
