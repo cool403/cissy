@@ -3,6 +3,7 @@
     [cissy.helpers :as helpers]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
+    [clojure.string :as str]
     [clojure.tools.deps :as deps]
     [clojure.tools.deps.util.maven :as maven]
     [taoensso.timbre :as timbre])
@@ -34,10 +35,10 @@
     (load-dependency deps-map nil)
     (timbre/info "依赖加载完成")))
 
-(defn load-clj-file!
-  "加载脚本文件"
-  [^String clj-file]
-  (load-string clj-file))
+;(defn load-clj-file!
+;  "加载脚本文件"
+;  [^String clj-file]
+;  (load-string clj-file))
 
 ;不支持嵌套脚本目录
 ;支持a.clj,b.clj,deps.clj一层目录的不支持;d/a.clj,d/d1/a.clj这种
@@ -55,7 +56,7 @@
       ;; 让compiler 也绑定到同一个classloader上
       (.set Compiler/LOADER script-class-loader)
       (load-deps-edn! (slurp (.getInputStream zip-file deps-entry))))
-    (require '[clj-http.client :as client])
+    ;(require '[clj-http.client :as client])
     (while (.hasMoreElements entries)
       (let [^ZipEntry entry (.nextElement entries)
             entry-name (.getName entry)]
@@ -71,6 +72,8 @@
   [^String main-entry]
   (if (file-exists? main-entry)
     ;相关的注册以及加载声明都需要放entry-script脚本里
-    (load-file main-entry)
+    (cond (str/ends-with? main-entry ".clj") (load-file main-entry)
+          (str/ends-with? main-entry ".zip") (load-zip! main-entry)
+          :else (timbre/error "不支持的文件后缀:" main-entry))
     (timbre/error (str "脚本文件不存在:" main-entry))))
 
