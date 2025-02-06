@@ -2,6 +2,8 @@
  :task_group_name "mysql同步测试"
  ;;数据库节点目前支持drn和dwn,drn负责加载数据,dwn负责写数据
  :nodes           "drn->dwn;"
+ ;;执行模式，默认是一直执行，配置成once，只会执行一次任务就结束
+ :sched_type      "once"
  :datasource      {
                    :db1 {
                          :host     "localhost"
@@ -22,7 +24,8 @@
                          }
                    }
  ;;自定义任务脚本时,需要这里显式声明,注意这里要写绝对路径
- :entry_script ["xx.clj"]
+ ;;也支持zip格式任务加载
+ :entry_script    ["xx.clj"]
  ;;测试
  :drn             {
                    :from_db   "db1"
