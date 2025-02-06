@@ -54,7 +54,10 @@
       (let [current-thread (Thread/currentThread)]
         (.setContextClassLoader current-thread script-class-loader))
       ;; 让compiler 也绑定到同一个classloader上
-      (.set Compiler/LOADER script-class-loader)
+      (prn script-class-loader)
+      ;; 20250206 如果当前线程没有初始化绑定值，直接reset会异常抛出
+      (if (.isBound Compiler/LOADER)
+        (.set Compiler/LOADER script-class-loader))
       (load-deps-edn! (slurp (.getInputStream zip-file deps-entry))))
     ;(require '[clj-http.client :as client])
     (while (.hasMoreElements entries)

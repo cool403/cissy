@@ -56,6 +56,7 @@ clojure -M:test
 - [x] `20250122` 配置文件格式替换使用`edn`格式,`json`解析先保留
 - [x] `20250202` 解决使用`deps/resolve-deps`因为`deps-map`参数中没有传递`mvn/repo`参数导致每次加载都提示`Caused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find artifact org.apache:apache:pom:21`
 - [x] `20250204` 解决`deps`加载成功,但是加载脚本仍然报找不到依赖问题，主要原因是因为加载脚本所使用的`classloader`和加载`deps`使用的不一致
+- [x] `20250206` 解决`zip`格式任务单元测试能执行成功，但是使用命令行执行`java -jar cissy.jar`提示`Exception in thread "main" java.lang.IllegalStateException: Can't change/establish root binding of: null with set`问题
 - [ ] 基于`cissy`封装一个爬虫`demo`
 
 
