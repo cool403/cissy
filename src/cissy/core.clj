@@ -98,7 +98,89 @@
       [:fail nil])))
 
 
-(defn process-node-chan-based
+(defn process-node-chan
+  "执行一次"
+  [node-id task-execution-info node-channels node-graph node-monitor-channel]
+  (let [{task-info :task-info} @task-execution-info
+        node-func (register/get-node-func node-id)
+        node-chan (get @node-channels node-id)
+        child-nodes (get (:child-node-map node-graph) node-id)
+        child-chans (map #(get @node-channels (:node-id %)) child-nodes)
+        thread-count (or (get-in @task-info [:task-config (keyword node-id) :threads]) 1)
+        curr-offset (ref 0)
+        ;; 只用atom 无法保证多线程情况下获取到的offset不重复;;stm
+        ;; lock (ReentrantLock.)
+        get-offset-fn (fn [page-size]
+                        (dosync
+                          (alter curr-offset + page-size)
+                          @curr-offset))]
+
+    ;; 创建指定数量的工作线程
+    (dotimes [thread-idx thread-count]
+      (let [thread-node-execution (-> (executions/new-node-execution-info node-id task-execution-info)
+                                      (fill-node-param node-id (:task-config @task-info)))
+            task-execution-dict (:task-execution-dict @task-execution-info)]
+        (go
+          ;设置节点状态为ding
+          (reset! thread-node-execution (assoc @thread-node-execution :curr-node-status "ding"))
+
+          (when-not (= (:curr-task-status @task-execution-info) "done")
+            (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程，执行轮次" 1))
+            ;; 更新执行信息
+            (let [curr-node-execution (-> thread-node-execution
+                                          (fill-thread-info thread-idx 1))
+                  curr-node-status (:curr-node-status @curr-node-execution)
+                  ;; 如果存在calc-page-offset函数，计算新的offset
+                  node-param-dict (:node-param-dict @curr-node-execution)]
+              (>! node-monitor-channel {:node-id    node-id :node-status curr-node-status
+                                        :thread-idx thread-idx})
+              ;; 如果有offset计算函数，更新page_offset
+              (when (contains? @node-param-dict :page_size)
+                (let [page-size (get @node-param-dict :page_size 1000)]
+                  (reset! node-param-dict
+                          (assoc @node-param-dict :page_offset (get-offset-fn page-size)))
+                  (timbre/info "当前thread-index=" thread-idx "的取到的offset=" (get @node-param-dict :page_offset))))
+              ;(prn curr-node-status)
+              (when (not= curr-node-status "done")
+                (if node-chan
+                  ;; 非root节点等待输入或者父节点是done状态也不执行,当前节点标记done状态
+                  ;; 等待3s
+                  (let [time-out (timeout 3000)
+                        ;{:priority true}如果多个通道同时有数据到时，有限按照顺序来
+                        ;保证不会出现数据丢失什么的
+                        [curr-result ch] (alts! [node-chan time-out] {:priority true})]
+                    (if (= ch time-out)
+                      ;超时判断父节点是否已经是done状态
+                      (if (check-parent-nodes-done? node-id node-graph task-execution-dict)
+                        (do
+                          (timbre/info (str "工作节点" node-id " thread-idx=" thread-idx "所有父节点都为done状态，当前线程任务状态标记为done"))
+                          ;发送done状态
+                          (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx})))
+                      (do
+                        (timbre/info (str "节点" node-id "获取到父节点结果"))
+                        (let [[status result] (-> curr-node-execution
+                                                  (fill-node-result-cxt node-id node-graph curr-result)
+                                                  (execute-node-fn node-func node-monitor-channel thread-idx))]
+                          (when (= status :ok)
+                            (doseq [ch child-chans]
+                              (>! ch result))))))))
+                ;; root节点执行
+                (do
+                  (timbre/info (str "开始启动root节点" node-id))
+                  ;;如果root节点的直接子节点状态都为done，则root节点状态为done，不执行
+                  (if-not (check-child-nodes-done? node-id node-graph task-execution-dict)
+                    (let [[status result] (-> curr-node-execution
+                                              (execute-node-fn node-func node-monitor-channel thread-idx))]
+                      (when (= status :ok)
+                        (doseq [ch child-chans]
+                          (>! ch result)))))
+                  (do
+                    (timbre/info (str "根节点nodeId=" node-id " 所有子任务都是done状态"))
+                    (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx})))))
+            ))))))
+
+
+(defn process-node-chan-loop
   "处理基于Channel的节点执行"
   [node-id task-execution-info node-channels node-graph node-monitor-channel]
   (let [{task-info :task-info} @task-execution-info

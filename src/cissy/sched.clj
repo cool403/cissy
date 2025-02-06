@@ -1,11 +1,12 @@
 (ns cissy.sched
   (:require
-    [cissy.core :refer [process-node-chan-based]]
+    [cissy.core :refer [process-node-chan-loop process-node-chan]]
     [taoensso.timbre :as timbre]
     [cissy.executions :as executions]
     [cissy.registry :as register]
     [clojure.core.async :as async :refer [>! <! go chan buffer dropping-buffer]]
-    [clojure.string :as str]))
+    [clojure.string :as str])
+  (:import (cissy.executions TaskExecutionInfo)))
 
 
 
@@ -16,7 +17,9 @@
   (sched-task-execution [this task-execution-info]
     (timbre/info "开始以Channel策略执行任务")
     (let [{task-info :task-info task-execution-dict :task-execution-dict} @task-execution-info
-          {node-graph :node-graph} @task-info
+          {node-graph :node-graph task-config :task-config} @task-info
+          ;获取执行策略是执行一次还是一直执行
+          sched-type (:sched_type task-config)
           all-node-id-set (:all-node-id-set node-graph)
           node-channels (atom {})                           ; 存储节点ID -> channel的映射
           node-monitor-channel (chan)
@@ -56,11 +59,20 @@
       ;; 启动所有节点的处理
       (doseq [node all-node-id-set]
         (let [node-id (:node-id node)]
-          (process-node-chan-based node-id
-                                   task-execution-info
-                                   node-channels
-                                   node-graph
-                                   node-monitor-channel)))
+          (if (and (not (nil? sched-type)) (= sched-type "once"))
+            ;sched_type配置成once，就执行一次
+            (do
+              (timbre/info (str node-id "节点只执行一次once"))
+              (process-node-chan node-id
+                                 task-execution-info
+                                 node-channels
+                                 node-graph
+                                 node-monitor-channel))
+            (process-node-chan-loop node-id
+                                    task-execution-info
+                                    node-channels
+                                    node-graph
+                                    node-monitor-channel))))
       ;; 等待任务完成或被中断
       (loop []
         (let [status (:curr-task-status @task-execution-info)]

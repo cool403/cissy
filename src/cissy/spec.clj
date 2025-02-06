@@ -66,10 +66,11 @@
 (s/def ::tasks
   (s/coll-of ::node-config))
 
+(s/def ::sched_type (s/coll-of #{"once" "always"}))
 ;; 定义整个数据结构spec
 (s/def ::task-json
   (s/keys :req-un [::datasource ::tasks ::nodes ::task_group_name]
-          :opt-un [::entry_script ::node-config]))
+          :opt-un [::entry_script ::node-config ::sched_type]))
 
 (defn valid-config-json
   "docstring"

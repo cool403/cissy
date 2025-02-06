@@ -40,11 +40,12 @@
                                          }
                        :task_group_name "简单任务测试"
                        :nodes           "ding->dong;"
+                       :sched_type      "once"
                        :ding            {
-                                         :threads 2
+                                         :threads 1
                                          }
                        :dong            {
-                                         :threads 3
+                                         :threads 1
                                          }
                        :tasks           [{
                                           :ding {
