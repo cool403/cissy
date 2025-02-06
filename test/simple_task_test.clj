@@ -6,37 +6,61 @@
     [clojure.test :as test]
     [ding]
     [dong]))
+(comment
+  (def simple-task-json
+    (str (->> ["{"
+               "    \"datasource\": {"
+               "    },"
+               "	\"task_group\":[{"
+               "		\"task_group_name\":\"hello windows\","
+               "		\"nodes\": \"ding->dong;\","
+               "		\"ding\": {"
+               "			\"threads\":2"
+               "		},"
+               "		\"dong\": {"
+               "			\"threads\":3"
+               "		},"
+               "		\"tasks\":["
+               "			{"
+               "				\"ding\": {"
+               "					},"
+               "				\"dong\": {"
+               "				}"
+               "			}"
+               "		]}"
+               "	]"
+               "  }  "
+               ""]
+              (str/join \newline))))
+  )
 
-(def simple-task-json
-  (str (->> ["{"
-             "    \"datasource\": {"
-             "    },"
-             "	\"task_group\":[{"
-             "		\"task_group_name\":\"hello windows\","
-             "		\"nodes\": \"ding->dong;\","
-             "		\"ding\": {"
-             "			\"threads\":2"
-             "		},"
-             "		\"dong\": {"
-             "			\"threads\":3"
-             "		},"
-             "		\"tasks\":["
-             "			{"
-             "				\"ding\": {"
-             "					},"
-             "				\"dong\": {"
-             "				}"
-             "			}"
-             "		]}"
-             "	]"
-             "  }  "
-             ""]
-            (str/join \newline))))
+(def task-config (str {
+                       :datasource      {
+
+                                         }
+                       :task_group_name "简单任务测试"
+                       :nodes           "ding->dong;"
+                       :ding            {
+                                         :threads 2
+                                         }
+                       :dong            {
+                                         :threads 3
+                                         }
+                       :tasks           [{
+                                          :ding {
+
+                                                 }
+                                          :dong {
+
+                                                 }
+                                          }]
+                       }))
+
 
 (test/deftest simple-task-test
   (test/testing "最简单的ding dong任务测试"
-    (prn simple-task-json)
-    (let [task-info-lst (loader/get-task-from-json simple-task-json)
+    ;(prn simple-task-json)
+    (let [task-info-lst (loader/get-task-from-json task-config)
           task-info (first task-info-lst)
           sched-info (:sched-info @task-info)
           new-task-execution-info (executions/new-task-execution-info)]
