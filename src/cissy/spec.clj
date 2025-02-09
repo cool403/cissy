@@ -66,7 +66,7 @@
 (s/def ::tasks
   (s/coll-of ::node-config))
 
-(s/def ::sched_type (s/coll-of #{"once" "always"}))
+(s/def ::sched_type #{"once" "always"})
 ;; 定义整个数据结构spec
 (s/def ::task-json
   (s/keys :req-un [::datasource ::tasks ::nodes ::task_group_name]

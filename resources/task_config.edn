@@ -34,7 +34,7 @@
                    :threads   20
                    }
  :dwn             {
-                   :from_db   "db1"
+                   :to_db   "db2"
                    :page_size 1000
                    :threads   20
                    }
