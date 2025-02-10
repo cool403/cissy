@@ -58,6 +58,7 @@ clojure -M:test
 - [x] `20250204` 解决`deps`加载成功,但是加载脚本仍然报找不到依赖问题，主要原因是因为加载脚本所使用的`classloader`和加载`deps`使用的不一致
 - [x] `20250206` 解决`zip`格式任务单元测试能执行成功，但是使用命令行执行`java -jar cissy.jar`提示`Exception in thread "main" java.lang.IllegalStateException: Can't change/establish root binding of: null with set`问题
 - [x] `20250206` 新增全局任务配置项`sched_type`, 如果配置的是`once`,此次任务将只会执行一次，不会一直执行，默认策略是`always`
+- [x] `20250210` 新增一个输出节点`csvw`,支持默导出到`csv`文件当中
 - [ ] 基于`cissy`封装一个爬虫`demo`
 
 
