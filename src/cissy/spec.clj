@@ -38,6 +38,10 @@
 (s/def ::dwn
   (s/keys :opt-un [::to_db ::to_table]))
 
+(def ::target_file string?)
+(s/def ::csvw
+  (s/keys :req-un [::target_file]))
+
 ;; 定义任务组配置spec
 (s/def ::task_group_name string?)
 (s/def ::nodes string?)
@@ -47,6 +51,7 @@
                             #(cond
                                (contains? % :drn) (s/valid? ::drn (get % :drn))
                                (contains? % :drn) (s/valid? ::dwn (get % :dwn))
+                               (contains? % :csvw) (s/valid? ::csvw (get % :csvw))
                                :else true)))
 
 ;(s/def ::uni-node-config (s/nilable ::nodes-config))

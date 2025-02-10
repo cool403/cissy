@@ -5,7 +5,6 @@
     [cissy.spec :as spec]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
-    [clojure.string :as str]
     [taoensso.timbre :as timbre]
     [clojure.java.io :as io])
   (:gen-class
@@ -49,7 +48,7 @@
                      (System/exit 1))
   (let [config-path (:config options)
         config-edn (slurp config-path)]
-    (require '[cissy.dbms.dbms-core :as dbms-core])
+    (require '[cissy.init :as init])
     (timbre/info "执行任务启动命令" options)
     (when-not (= (spec/valid-config-json config-edn) :ok)
       (timbre/error "任务配置json格式错误, 请检查配置文件")
