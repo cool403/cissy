@@ -9,10 +9,18 @@
 
 ;(def target-file "/home/mawdx/桌面/demo.csv")
 
+(def write-header? (ref false))
+
+;保证只有一个线程能写成功
+(defn- writer-csv-headers [headers writers]
+  (dosync
+   (when (not @write-header?)
+     (alter write-header? (constantly true))
+     (csv/write-csv writers [headers]))))
+
 ;; 写出到csv文件
 (defnode csvw [^NodeExecutionInfo node-exec-info]
   (let [{task-execution-info :task-execution-info
-         node-param-dict     :node-param-dict
          node-result-dict    :node-result-dict} @node-exec-info
         {task-execution-dict :task-execution-dict} @task-execution-info
         drn-res (get @node-result-dict :drn)
@@ -21,8 +29,11 @@
       (do
         (timbre/info "当前节点未读取到数据，不执行csvw节点")
         (helpers/curr-node-done node-exec-info))
-      (let [rows (vec (map #(vec (vals %)) drn-res))]
+      (let [rows (vec (map #(vec (vals %)) drn-res))
+            ;获取列信息
+            headers (vec (map #(name %) (keys (first drn-res))))] 
         ;追加写入,不覆盖
         (with-open [wrt (io/writer target-file :append true)]
+          (writer-csv-headers headers wrt)
           (csv/write-csv wrt rows)
           (timbre/info (str "已写入" (deref (:sync-count @task-execution-dict)) "条记录到文件:" target-file)))))))
