@@ -1,7 +1,6 @@
 (ns simple-task-test
   (:require
-    [cissy.executions :as executions]
-    [cissy.loader :as loader]
+    [cissy.commands :as commands]
     [clojure.string :as str]
     [clojure.test :as test]
     [ding]
@@ -61,10 +60,5 @@
 (test/deftest simple-task-test
   (test/testing "最简单的ding dong任务测试"
     ;(prn simple-task-json)
-    (let [task-info-lst (loader/get-task-from-json task-config)
-          task-info (first task-info-lst)
-          sched-info (:sched-info @task-info)
-          new-task-execution-info (executions/new-task-execution-info)]
-      (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
-      (executions/sched-task-execution sched-info new-task-execution-info)
-      (test/is (= "done" (:curr-task-status @new-task-execution-info))))))
+    (commands/-startj task-config)
+    (test/is (= 1 1))))

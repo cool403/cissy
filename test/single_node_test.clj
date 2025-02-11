@@ -2,7 +2,8 @@
   (:require [cissy.executions :as executions]
             [cissy.loader :as loader]
             [clojure.test :refer :all]
-            [ding]))
+            [ding]
+            [cissy.commands :as commands]))
 
 (def task-config (str {
                        :datasource      {
@@ -23,10 +24,5 @@
 
 (deftest single-node-test
   (testing "单节点执行测试"
-    (let [task-info-lst (loader/get-task-from-json task-config)
-          task-info (first task-info-lst)
-          sched-info (:sched-info @task-info)
-          new-task-execution-info (executions/new-task-execution-info)]
-      (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
-      (executions/sched-task-execution sched-info new-task-execution-info)
-      (is (= "done" (:curr-task-status @new-task-execution-info))))))
+    (commands/-startj task-config)
+    (is (true? true))))

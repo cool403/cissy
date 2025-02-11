@@ -38,7 +38,7 @@
 (s/def ::dwn
   (s/keys :opt-un [::to_db ::to_table]))
 
-(def ::target_file string?)
+(s/def ::target_file string?)
 (s/def ::csvw
   (s/keys :req-un [::target_file]))
 

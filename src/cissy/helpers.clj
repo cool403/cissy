@@ -18,5 +18,4 @@
   (if (or (nil? task-node-execution-info) (not (instance? clojure.lang.Atom task-node-execution-info)))
     (throw (IllegalArgumentException. "类型必须是atom类型，且不能为nil"))
     (cond (instance? cissy.executions.NodeExecutionInfo @task-node-execution-info)
-          (reset! task-node-execution-info (assoc @task-node-execution-info :curr-node-status "done"))))
-  )
+          (reset! task-node-execution-info (assoc @task-node-execution-info :curr-node-status "done")))))
