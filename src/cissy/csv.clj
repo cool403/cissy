@@ -30,7 +30,7 @@
 ;保证只有一个线程能写成功
 (defn- writer-csv-headers [headers writers task-execution-dict thread-idx]
   ;避免后续线程再次写入header
-  (let [writer-headers-idx (keyword (str "write-headers" thread-idx))]
+  (let [writer-headers-idx (keyword (str "write-headers-" thread-idx))]
     (when (nil? (writer-headers-idx @task-execution-dict))
       (try
         (loop []
