@@ -31,7 +31,7 @@
 (defn- writer-csv-headers [headers writers task-execution-dict thread-idx]
   ;避免后续线程再次写入header
   (let [writer-headers-idx (keyword (str "write-headers" thread-idx))]
-    (when (nil? (:write-headers @task-execution-dict))
+    (when (nil? (writer-headers-idx @task-execution-dict))
       (try
         (loop []
           (if (compare-and-set! write-headers-lock false true)
