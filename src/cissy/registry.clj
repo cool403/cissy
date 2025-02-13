@@ -6,58 +6,54 @@
   (:import (cissy.executions NodeExecutionInfo)
            java.lang.IllegalArgumentException))
 
-;注册器
+; Registry
 (def task-node-register (atom {}))
-;注册atom listener
+; Register atom listener
 ;; (add-watch )
-
 
 (def param-nei? (fn [param]
                   (when-not (instance? NodeExecutionInfo @param)
-                    (throw (IllegalArgumentException. "参数必须是NodeExecutionInfo类型,定义可见cissy.executions 命名空间")))))
+                    (throw (IllegalArgumentException. "Parameter must be of type NodeExecutionInfo, see cissy.executions namespace for definition")))))
 
 (comment
   (defn a [x] (inc x))
   (reset! task-node-register (assoc @task-node-register :12 a))
   ((:12 @task-node-register) 12))
 
-;统一默认参数名就是方法名keyword
+; Unified default parameter name is the method name keyword
 (defmacro defnode [name params & body]
   (when-not (= 1 (count params) 1)
-    (throw (IllegalArgumentException. (str "节点方法" name "只能有一个参数"))))
+    (throw (IllegalArgumentException. (str "Node method " name " can only have one parameter"))))
   (let [[param1] params
         type-checks `(param-nei? ~param1)]
     `(do
-       ;;定义方法
+       ;; Define method
        (defn ~name ~params
          ;~@(when docstring [docstring])
-         ;校验
+         ; Check
          ~type-checks
          ~@body)
-       ;;注册方法
+       ;; Register method
        (reset! task-node-register (assoc @task-node-register ~(keyword `~name) ~name))
-       ;;返回方法符号
+       ;; Return method symbol
        ~name
        )))
 
-
-;注册task-node
+; Register task-node
 ;(defn regist-node-fun [node-id func]
-;  ;如果已经注册过,不再注册
+;  ; If already registered, do not register again
 ;  (when-not (contains? @task-node-register (keyword node-id))
-;    (timbre/info (str "开始注册节点=" node-id "及执行函数=" func))
+;    (timbre/info (str "Start registering node=" node-id " and execution function=" func))
 ;    (compare-and-set! task-node-register @task-node-register
 ;                      (assoc @task-node-register (keyword node-id) func))))
 
-;获取关联函数
+; Get associated function
 (defn get-node-func [node-id]
-  ;不包含注册函数,报错
+  ; If the registered function is not included, report an error
   ;; (prn node-id)
   (if-not (contains? @task-node-register (keyword node-id))
-    (throw (IllegalArgumentException. (str "没有发现node-id=" node-id "注册节点，请先注册节点")))
+    (throw (IllegalArgumentException. (str "Node-id=" node-id " registered node not found, please register the node first")))
     (get @task-node-register (keyword node-id))))
-
-
 
 ;(comment
 ;  (defn test-node []
@@ -65,13 +61,12 @@
 ;  (regist-node-fun "test" test-node)
 ;  ((get-node-func "test")))
 
-
-;db register
+; db register
 (def datasource-ins-register (atom {}))
 
-;oracle, mysql, pg 都是这个格式;sqlite 特殊些
-;约定sqlite文件还是host里，只是到时候特殊处理, dbtype枚举值: mysql,postgresql
-;oracle
+; oracle, mysql, pg are in this format; sqlite is special
+; Conventionally, the sqlite file is still in the host, just special handling at that time, dbtype enumeration values: mysql, postgresql
+; oracle
 (comment (def db {:dbtype   "postgresql"
                   :host     "your-db-host-name"
                   :dbname   "your-db"
@@ -79,25 +74,23 @@
                   :password "develop"
                   :port     5432}))
 (defn register-datasource
-  "注册一个数据源"
+  "Register a datasource"
   [^String db-sign datasource-config]
   (when-not (contains? @datasource-ins-register (keyword db-sign))
-    ;不包含，首先实例化
+    ; If not included, instantiate first
     (if-let [_ (contains? const/db-types (:dbtype datasource-config))]
       (cond
         (= (:dbtype datasource-config) "sqlite") (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) (:host datasource-config)))
         :else
         (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) datasource-config)))
       (do
-        (timbre/error "数据源配置必须有dbtype属性,且有效值类型只有oracle,mysql,sqlite,postgresql")
-        (throw (IllegalArgumentException. "数据源配置必须有dbtype属性,且有效值类型只有oracle,mysql,sqlite,postgresql"))))))
-
+        (timbre/error "Datasource configuration must have dbtype attribute, and valid values are only oracle, mysql, sqlite, postgresql")
+        (throw (IllegalArgumentException. "Datasource configuration must have dbtype attribute, and valid values are only oracle, mysql, sqlite, postgresql"))))))
 
 (defn get-datasource-ins [db-sign]
-  ;获取注册数据源
-  (if-not (contains? @datasource-ins-register (keyword db-sign)) (throw (IllegalArgumentException. (str "未发现db-sign" db-sign "注册数据源")))
-                                                                 (get @datasource-ins-register (keyword db-sign)))
-  )
+  ; Get registered datasource
+  (if-not (contains? @datasource-ins-register (keyword db-sign)) (throw (IllegalArgumentException. (str "Registered datasource for db-sign " db-sign " not found")))
+                                                                 (get @datasource-ins-register (keyword db-sign))))
 
 (comment (get-datasource-ins "21"))
 ;; (def db1 {:dbtype "postgresql", :host "localhost", :user "hello", :password "123456", :port 5432})

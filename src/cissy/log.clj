@@ -7,7 +7,7 @@
            (java.lang Thread)))
 
 (defn- truncate-str
-  "截断字符串到指定长度，超出部分用...替代"
+  "Truncate string to specified length, replace excess with ..."
   [s max-len]
   (if (<= (count s) max-len)
     (str s (apply str (repeat (- max-len (count s)) " ")))
@@ -26,7 +26,7 @@
     (format thread-name)))
 
 (defn- format-msg
-  "格式化消息，处理特殊对象"
+  "Format message, handle special objects"
   [msg]
   (cond
     (delay? msg) (format-msg @msg)
@@ -36,7 +36,7 @@
     :else (str msg)))
 
 (defn- format-location
-  "格式化文件位置信息"
+  "Format file location information"
   [?file ?line]
   (let [file-name (if ?file
                     (last (str/split ?file #"/"))
@@ -44,7 +44,7 @@
     (format "%-20s:%-4d" file-name (or ?line 0))))
 
 (def ^:private log-format
-  "自定义日志格式"
+  "Custom log format"
   (fn [{:keys [level thread msg_ ?file ?line] :as data}]
     (let [thread-name (truncate-str (get-thread-name) 17)
           level-str (truncate-str (-> level name str/upper-case) 5)
@@ -58,7 +58,7 @@
               formatted-msg))))
 
 (defn init-logging!
-  "初始化日志配置"
+  "Initialize log configuration"
   []
   (timbre/merge-config!
     {:output-fn log-format

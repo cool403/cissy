@@ -15,28 +15,27 @@
 
 ;; (def demo-json "{\n    \"task_name\":\"demo\",\n    \"nodes\":\"demo->\",\n    \"demo\":{\n        \n    }\n}")
 
-;解析json中的nodes 配置
+; Parse the nodes configuration in the json
 (defn- parse-node-rel-str [s]
   (let [parts (str/split s #";")
-        res (atom [])]                                      ; 按照分号切分
+        res (atom [])]                                      ; Split by semicolon
     (doseq [part parts]
-      (let [[k v] (str/split part #"->")]                   ; 按照箭头切分
+      (let [[k v] (str/split part #"->")]                   ; Split by arrow
         (timbre/info (str k "->" v))
-        (if (empty? v)                                      ; 如果没有箭头后的值，视为nil
+        (if (empty? v)                                      ; If there is no value after the arrow, treat it as nil
           (reset! res (conj @res (vector k nil)))
           (doseq [v1 (str/split v #",")]
             (reset! res (conj @res (vector k v1)))))))
-    @res))                                                  ; 如果有值，按照逗号切分
+    @res))                                                  ; If there is a value, split by comma
 (comment
   (parse-node-rel-str "a->b;a->c,d;e->"))
 
-
 (defn- comp-new-task-fn [task tasks-map]
-  ;组合新的task
+  ; Combine new task
   (merge-with (fn [v1 v2] (helpers/my-merge-fn v1 v2)) task (dissoc tasks-map :tasks :task_group_name :entry_script :datasource)))
 
 (defn- get-tasks-map-fn [config-json]
-  ;解析任务组
+  ; Parse task group
   (let [config-map (edn/read-string config-json)
         {datasource      :datasource
          task-group-name :task_group_name
@@ -44,60 +43,59 @@
          entry-scripts   :entry_script} config-map
         task-map-vec (atom [])]
     (when (not-empty entry-scripts)
-      (timbre/info "检测到此次使用脚本任务")
+      (timbre/info "Detected script tasks")
       (doseq [entry-script entry-scripts]
         (sl/load-main-entry entry-script)))
-    ;FIX 202502 下面这种写法会导致迭代次数是一个笛卡尔积
+    ; FIX 202502 The following writing method will cause the number of iterations to be a Cartesian product
     ;; (doseq [task tasks idx (range 0 (count tasks))]
     (doseq [[idx task] (map-indexed vector tasks)]
       (reset! task-map-vec (conj @task-map-vec (-> task
                                                    (comp-new-task-fn config-map)
                                                    (assoc :datasource datasource)
-                                                   ;子任务名称先用一个简单的名称加任务序号替代吧，后续再优化
+                                                   ; Use a simple name plus task number to replace the subtask name for now, optimize later
                                                    (assoc :task_name (str task-group-name "_" idx))
                                                    (assoc :task-idx idx)))))
     @task-map-vec))
 
-
 (defn assemble-task-fn [task-map]
-  ;构建task-info
+  ; Build task-info
   (let [{task-name  :task_name
          nodes      :nodes
          datasource :datasource} task-map
         node-graph (task/create-task-node-graph)
         task-info (atom (task/->TaskInfo nil task-name nil (sched/->ChanBasedSched) node-graph task-map))]
-    ;解析节点配置nodes(a->b;)为节点对
+    ; Parse node configuration nodes(a->b;) into node pairs
     (doseq [[from-node-id to-node-id] (parse-node-rel-str nodes)]
       (cond
         (nil? to-node-id) (task/add-node-pair node-graph (task/->TaskNodeInfo from-node-id nil) nil)
         :else (task/add-node-pair node-graph (task/->TaskNodeInfo from-node-id nil) (task/->TaskNodeInfo to-node-id nil))))
-    ;验证节点图结构
-    (timbre/info (str "开始验证节点图结构,当前子任务配置:" task-map))
+    ; Validate node graph structure
+    (timbre/info (str "Start validating node graph structure, current subtask configuration:" task-map))
     ;; (prn node-graph)
     (checker/validate-node-graph node-graph)
-    (timbre/info "节点图结构验证通过")
-    ;添加完成后构建tree
+    (timbre/info "Node graph structure validation passed")
+    ; Build tree after adding
     ;; (prn node-grpah)
     (task/build-node-tree node-graph)
-    (timbre/info "解析节点关系完成")
-    ;注册数据源
-    (timbre/info "开始初始化数据源配置")
+    (timbre/info "Node relationship parsing completed")
+    ; Register datasource
+    (timbre/info "Start initializing datasource configuration")
     (doseq [[db-sign db-config-map] datasource]
-      (timbre/info "开始初始化db-sign的" db-sign "数据源")
-      ;直接调用注册数据源，由register完成实例化和注册
+      (timbre/info "Start initializing datasource for db-sign" db-sign)
+      ; Directly call register datasource, register and instantiate by register
       (registry/register-datasource db-sign db-config-map)
-      (timbre/info "初始化数据源配置完成")
+      (timbre/info "Datasource configuration initialization completed")
       (when (contains? (set (map #(:node-id %) (:all-node-id-set node-graph))) const/drn)
-        (timbre/info "由于当前任务配置包含drn 节点，自动切换为ExecutionAlwaysSched 策略")
+        (timbre/info "Since the current task configuration contains drn node, automatically switch to ExecutionAlwaysSched strategy")
         (reset! task-info (assoc @task-info :sched-info (sched/->ChanBasedSched)))))
     task-info))
 
-;从 json 中解析任务
+; Parse task from json
 (defn get-task-from-json [^String task-json]
-  ;json->keyword map,keyword map才能用(:name 方式访问)
-  (timbre/info "开始解析任务组配置" task-json)
+  ; json->keyword map, keyword map can be accessed by (:name)
+  (timbre/info "Start parsing task group configuration" task-json)
   (map assemble-task-fn (get-tasks-map-fn task-json)))
 
-;测试
+; Test
 ;; (def demo-json (slurp "/home/mawdx/Desktop/task_config.json"))
 ;; (get-task-from-json demo-json)

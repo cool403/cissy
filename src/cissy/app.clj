@@ -7,23 +7,23 @@
             [cissy.log :as log]))
 
 (def cli-options
-  [["-c" "--config CONFIG" "任务配置描述文件路径(json格式)"]
-   ["-h" "--help" "显示帮助信息"]
-   ["-z" "--zip" "生成一个zip任务demo"]])
+  [["-c" "--config CONFIG" "Task configuration description file path (json format)"]
+   ["-h" "--help" "Show help information"]
+   ["-z" "--zip" "Generate a zip task demo"]])
 
 (defn usage [options-summary]
-  (->> ["cissy - 数据同步工具"
+  (->> ["cissy - Data synchronization tool"
         ""
-        "用法: cissy [选项] 命令"
+        "Usage: cissy [options] command"
         ""
-        "选项:"
+        "Options:"
         options-summary
         ""
-        "命令:"
-        "  start    启动任务"
-        "  demo     获取配置文件示例"
+        "Commands:"
+        "  start    Start task"
+        "  demo     Get configuration file example"
         ""
-        "示例:"
+        "Examples:"
         "  cissy -c task.json start"
         "  cissy demo > task.json"]
        (str/join \newline)))
@@ -45,7 +45,7 @@
            (#{"start" "demo"} (first arguments)))
       {:action (first arguments) :options options}
       :else                                                 ; failed custom validation => exit with usage summary
-      {:exit-message "Error: start 命令需要指定配置文件(-c)"})))
+      {:exit-message "Error: start command requires a configuration file (-c)"})))
 
 (defn exit [status msg]
   (println msg)

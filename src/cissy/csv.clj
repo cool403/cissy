@@ -12,19 +12,19 @@
 (def write-headers-lock (atom false))
 
 (comment (defn- get-write-header-lock
-  "获取写header的锁"
+  "Get the lock for writing headers"
   []
   (loop []
     (if (compare-and-set! write-headers-lock false true)
       true
       (do
-        (timbre/warn "获取写header的锁失败")
+        (timbre/warn "Failed to get the lock for writing headers")
         (Thread/sleep 10)
         (recur))))))
 
-;保证只有一个线程能写成功
+; Ensure that only one thread can write successfully
 (defn- writer-csv-headers [headers writers task-execution-dict thread-idx task-idx]
-  ;避免后续线程再次写入header
+  ; Avoid subsequent threads writing headers again
   (let [writer-headers-idx (keyword (str "write-headers-" task-idx))]
     (when (nil? (writer-headers-idx @task-execution-dict))
       (try
@@ -33,13 +33,13 @@
             (when (nil? (writer-headers-idx @task-execution-dict))
               (csv/write-csv writers [headers])
               (reset! task-execution-dict (assoc @task-execution-dict writer-headers-idx true))
-              (timbre/info (str "线程=" thread-idx "写入header成功")))
+              (timbre/info (str "Thread=" thread-idx "successfully wrote headers")))
             (do
-              (timbre/warn (str "线程=" thread-idx "获取写header的锁失败"))
+              (timbre/warn (str "Thread=" thread-idx "failed to get the lock for writing headers"))
               (Thread/sleep 10)
               (recur))))
         (finally
-          ;释放写header的锁
+          ; Release the lock for writing headers
           (reset! write-headers-lock false))))))
 
 (defn- target-file-fn [task-info]
@@ -49,11 +49,11 @@
       (str (helpers/get-desktop-path) "/" task-name ".csv")
       task-file-config)))
 
-;父节点唯一或者空的
+; Unique or empty parent node
 (defn- parent-node-id [node-graph node-id]
        (:node-id (first (task/get-parent-nodes node-graph node-id))))
 
-;; 写出到csv文件
+;; Write to csv file
 (defnode csvw [^NodeExecutionInfo node-exec-info]
   (let [{:keys [task-execution-info node-result-dict node-execution-dict]} @node-exec-info
         {:keys [task-info task-execution-dict]} @task-execution-info
@@ -64,14 +64,14 @@
         target-file (target-file-fn task-info)]
     (if (or (nil? node-result-lst) (= (count node-result-lst) 0))
       (do
-        (timbre/info (str "当前节点=" thread-idx "未读取到数据，不执行csvw节点"))
+        (timbre/info (str "Current node=" thread-idx "did not read data, do not execute csvw node"))
         (helpers/curr-node-done node-exec-info))
       (let [rows (vec (map #(vec (vals %)) node-result-lst))
-            ;获取列信息
+            ; Get column information
             headers (vec (map #(name %) (keys (first node-result-lst))))]
-        ;追加写入,不覆盖
+        ; Append write, do not overwrite
         (with-open [wrt (io/writer target-file :append true)]
           (writer-csv-headers headers wrt task-execution-dict thread-idx task-idx)
           (csv/write-csv wrt rows)
           (swap! (:sync-count @task-execution-dict) #(+ % (count rows)))
-          (timbre/info (str "已写入" (deref (:sync-count @task-execution-dict)) "条记录到文件:" target-file)))))))
+          (timbre/info (str "Written " (deref (:sync-count @task-execution-dict)) " records to file:" target-file)))))))

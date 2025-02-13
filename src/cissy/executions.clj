@@ -1,8 +1,7 @@
 (ns cissy.executions
   (:import (java.util UUID)))
 
-
-;任务执行中间变量
+; Task execution intermediate variable
 (defrecord TaskExecutionInfo [task-execution-id
                               task-info
                               start-time
@@ -10,7 +9,7 @@
                               curr-task-status
                               task-param-dict
                               task-execution-dict])
-;初始化一个任务执行变量
+; Initialize a task execution variable
 (defn new-task-execution-info [] (atom (->TaskExecutionInfo
                                          (UUID/randomUUID)
                                          nil
@@ -20,20 +19,20 @@
                                          (atom {})
                                          (atom {:sync-count (atom 0)}))))
 
-;任务节点执行中间变量
+; Task node execution intermediate variable
 (defrecord NodeExecutionInfo [node-execution-id
                               task-execution-info
                               node-id
                               curr-node-status
-                              ;节点执行要的参���,初始化用
+                              ; Parameters required for node execution, initialized
                               node-param-dict
-                              ;依赖节点的执行结果
+                              ; Execution results of dependent nodes
                               node-result-dict
-                              ;执行上下文,临时变量区
+                              ; Execution context, temporary variable area
                               node-execution-dict
                               start-time
                               stop-time])
-;初始化任务节点执行中间变量
+; Initialize task node execution intermediate variable
 (defn new-node-execution-info
   "docstring"
   [node-id task-execution-info]
@@ -48,8 +47,8 @@
                              (System/currentTimeMillis))))
 
 (defprotocol TaskSched
-  "任务执行调度接口定义"
-  (get-task-sched-type [this] "获取调度类型")
-  (get-task-sched-name [this] "获取调度名称")
-  (sched-task-execution [this task-execution-info] "调度任务执行"))
+  "Task execution scheduling interface definition"
+  (get-task-sched-type [this] "Get scheduling type")
+  (get-task-sched-name [this] "Get scheduling name")
+  (sched-task-execution [this task-execution-info] "Schedule task execution"))
 

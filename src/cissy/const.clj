@@ -1,14 +1,13 @@
 (ns cissy.const)
 
-;db配置前缀
+; Database configuration prefix
 (def db-suffix "_db")
 
-;drn节点名称
-(def drn "drn")                                             ;数据库读取节点
-(def dwn "dwn")                                             ;数据库写节点
+; drn node name
+(def drn "drn")                                             ; Database read node
+(def dwn "dwn")                                             ; Database write node
 
-(def csvw "csvw")                                           ;csv写节点
+(def csvw "csvw")                                           ; CSV write node
 
-
-;支持的数据库类型
+; Supported database types
 (def db-types #{"mysql" "postgresql", "oracle", "sqlite"})

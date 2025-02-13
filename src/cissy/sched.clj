@@ -8,61 +8,61 @@
     [clojure.string :as str])
   (:import (cissy.executions TaskExecutionInfo)))
 
-
-
 (deftype ChanBasedSched []
   executions/TaskSched
   (get-task-sched-type [this] "exec_chan_based")
-  (get-task-sched-name [this] "Channel基础执行")
+  (get-task-sched-name [this] "Channel based execution")
   (sched-task-execution [this task-execution-info]
-    (timbre/info "开始以Channel策略执行任务")
+    (timbre/info "Start executing task with Channel strategy")
     (let [{task-info :task-info task-execution-dict :task-execution-dict} @task-execution-info
           {node-graph :node-graph task-config :task-config} @task-info
-          ;获取执行策略是执行一次还是一直执行
+          ; Get execution strategy, whether to execute once or always execute
           sched-type (:sched_type task-config)
           all-node-id-set (:all-node-id-set node-graph)
-          node-channels (atom {})                           ; 存储节点ID -> channel的映射
+          node-channels (atom {})                           ; Store the mapping of node ID -> channel
           node-monitor-channel (chan)
           get-threads-fn (fn [node-id] (get-in @task-info [:task-config (keyword node-id) :threads] 1))
           node-thread-fn (fn [node-id] (vec (map #(str node-id "_" %) (range (get-threads-fn node-id)))))]
-      ;; 设置任务状态为运行中
+
+      ;; Set task status to running
       (reset! task-execution-info (assoc @task-execution-info :curr-task-status "ding"))
 
-      ;; 为每个非root节点创建channel
+      ;; Create channel for each non-root node
       (doseq [node all-node-id-set]
         (when-not (empty? (get (:parent-node-map node-graph) (:node-id node)))
           (swap! node-channels assoc (:node-id node)
                  (chan (dropping-buffer 1024)))))
-      ;; 启动监控线程
+
+      ;; Start monitoring thread
       (go
-        (timbre/info "启动一个监控线程，监控节点状态")
-        ;comp函数从右到左执行的
+        (timbre/info "Start a monitoring thread to monitor node status")
+        ; comp function executes from right to left
         (let [node-status-map (zipmap (vec (flatten (map (comp node-thread-fn #(:node-id %)) all-node-id-set))) (repeat "ding"))]
           (loop [x node-status-map]
             (let [node-status (<! node-monitor-channel)
                   {node-id :node-id node-status :node-status thread-idx :thread-idx} node-status]
-              (timbre/info (str "收到" node-id "第" thread-idx "个线程处理状态:" node-status))
-              ;合并状态
+              (timbre/info (str "Received status of thread " thread-idx " of node " node-id ": " node-status))
+              ; Merge status
               (let [y (assoc x (str node-id "_" thread-idx) node-status)
                     z (vals (filter #(str/starts-with? (key %) (str node-id "_")) y))]
-                ;如果所有节点的线程任务状态为done，则这个节点标记为done
+                ; If the status of all threads of the node is done, mark the node status as done
                 (when (every? #(= % "done") z)
-                  (timbre/info (str "节点" node-id "所有线程任务状态都为done，节点状态标记为done"))
+                  (timbre/info (str "All thread statuses of node " node-id " are done, mark node status as done"))
                   (reset! task-execution-dict (assoc @task-execution-dict (keyword node-id) "done")))
-                ;如果所有节点状态都为done，则任务完成
+                ; If the status of all nodes is done, the task is completed
                 ;; (prn y)
                 (when (every? #(= % "done") (vals y))
-                  (timbre/info "所有节点状态都为done，任务完成")
+                  (timbre/info "All node statuses are done, task completed")
                   (reset! task-execution-info (assoc @task-execution-info :curr-task-status "done")))
                 (recur y))))))
 
-      ;; 启动所有节点的处理
+      ;; Start processing all nodes
       (doseq [node all-node-id-set]
         (let [node-id (:node-id node)]
           (if (and (not (nil? sched-type)) (= sched-type "once"))
-            ;sched_type配置成once，就执行一次
+            ; If sched_type is configured as once, execute once
             (do
-              (timbre/info (str node-id "节点只执行一次once"))
+              (timbre/info (str "Node " node-id " will only execute once"))
               (process-node-chan node-id
                                  task-execution-info
                                  node-channels
@@ -73,31 +73,32 @@
                                     node-channels
                                     node-graph
                                     node-monitor-channel))))
-      ;; 等待任务完成或被中断
+
+      ;; Wait for task completion or interruption
       (loop []
         (let [status (:curr-task-status @task-execution-info)]
           (cond
-            ;; 任务完成
+            ;; Task completed
             (= status "done")
             nil
-            ;; 任务被中断
+            ;; Task interrupted
             (= status "interrupted")
             (do
-              (timbre/info "任务被外部中断")
+              (timbre/info "Task interrupted externally")
               (reset! task-execution-info
                       (assoc @task-execution-info :curr-task-status "done")))
-            ;; 继续等待
+            ;; Continue waiting
             :else
             (do
               (Thread/sleep 1000)
               (recur)))))
 
-      ;; 记录执行结束时间
+      ;; Record end time of execution
       (reset! task-execution-info
               (assoc @task-execution-info
                 :stop-time (System/currentTimeMillis)))
 
-      (timbre/info (str "任务执行完成，耗时:"
+      (timbre/info (str "Task execution completed, time taken: "
                         (- (:stop-time @task-execution-info)
                            (:start-time @task-execution-info))
-                        "毫秒")))))
+                        " milliseconds")))))

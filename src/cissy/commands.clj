@@ -14,26 +14,26 @@
               #^{:static true} [demo [java.util.Map] void]]))
 
 (defn -demo
-  "任务配置json样例"
+  "Task configuration json example"
   [options]
   (cond
     (:zip options) (do 
-                     (println "#这是一个简单的zip格式节点任务，仅供参考")
+                     (println "#This is a simple zip format node task, for reference only")
                      (let [copy-to-bytes-fn (fn [is] (let [buffer (java.io.ByteArrayOutputStream.)]
                                                        (io/copy is buffer)
                                                        (.toByteArray buffer)))
-                           ;;slurp 是读取成string的
+                           ;; slurp reads as string
                            is (io/input-stream (io/resource "ding.zip"))
                            file-path (helpers/write-files-to-desktop (copy-to-bytes-fn is) "zip_task_demo.zip")]
-                       (println (str "文件已经写入到桌面:" file-path))))
+                       (println (str "File has been written to desktop:" file-path))))
     :else
     (do 
-      (println "#这是一个mysql同步demo 配置，仅供参考")
+      (println "#This is a mysql sync demo configuration, for reference only")
       (println (slurp (io/resource "task_config.edn"))))
     ))
 
 (defn -startj [config-json]
-  ;解析任务配置
+  ; Parse task configuration
   (let [task-info-vec (loader/get-task-from-json config-json)
         to-future-fn (fn [task-info]
                        (let [sched-info (:sched-info @task-info)
@@ -45,8 +45,8 @@
       (try
         (deref fut)
         (catch Exception ex
-          (timbre/error "执行任务出错" (.getMessage ex) ex))))
-    (timbre/info "当前任务组全部执行完成")))
+          (timbre/error "Error executing task" (.getMessage ex) ex))))
+    (timbre/info "All tasks in the current task group have been completed")))
 
 (defn valid-path?
   "docstring"
@@ -54,17 +54,17 @@
   (not (str/blank? path)))
 
 (defn start
-  "通过配置文件启动任务"
+  "Start task through configuration file"
   [options]
-  ;加载注册节点drn和dwn
+  ; Load and register nodes drn and dwn
   (when-not s/valid? (valid-path? (:config options))
-                     (timbre/error "Error: start 命令需要指定配置文件(-c)")
+                     (timbre/error "Error: start command requires a configuration file (-c)")
                      (System/exit 1))
   (let [config-path (:config options)
         config-edn (slurp config-path)]
     (require '[cissy.init :as init])
-    (timbre/info "执行任务启动命令" options)
+    (timbre/info "Execute task start command" options)
     (when-not (= (spec/valid-config-json config-edn) :ok)
-      (timbre/error "任务配置json格式错误, 请检查配置文件")
+      (timbre/error "Task configuration json format error, please check the configuration file")
       (System/exit 1))
     (-startj config-edn)))

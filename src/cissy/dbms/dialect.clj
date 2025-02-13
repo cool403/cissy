@@ -4,18 +4,17 @@
             [clojure.string :as str])
   (:import (java.lang IllegalArgumentException)))
 
-
 (defn- build-where-cond
-  "构造where条件"
+  "Build where condition"
   [prefix-sql sql-params-map]
   ;; (prn prefix-sql)
   (if-let [incr-key (:incr_key sql-params-map)]
-    ;where lastmodify_time >= '2021-12-12'
+    ; where lastmodify_time >= '2021-12-12'
     (str/join " " [prefix-sql "where" incr-key ">=" (str "'" (:incr_key_value sql-params-map) "'")])
     (str/join " " [prefix-sql "where 1=1 "])))
 
 (defn- build-orderby-cond
-  "构造orderby"
+  "Build orderby"
   [prefix-sql sql-params-map]
   ;; (prn prefix-sql)
   (if-let [order-by (:order_by sql-params-map)]
@@ -23,7 +22,7 @@
     prefix-sql))
 
 (defn- build-page-cond
-  "构造分页"
+  "Build pagination"
   [prefix-sql sql-params-map]
   ;; (prn prefix-sql)
   #_{:clj-kondo/ignore [:syntax]}
@@ -37,9 +36,9 @@
         :else (str/join " " [prefix-sql "limit" page-offset "," page-size])))))
 
 (defn read-data-sql
-  "获取读取数据sql"
+  "Get sql for reading data"
   [sql-params-map]
-  ;如果是sql模板，直接渲染返回
+  ; If it is a sql template, render and return directly
   (if-not (str/blank? (:sql_template sql-params-map))
     (-> (:sql_template sql-params-map)
         (build-page-cond sql-params-map))

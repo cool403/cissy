@@ -19,45 +19,45 @@
 ;;   (def j (->Jissy "张三" 23))
 ;;   (age j))
 
-;填充执行参数
+; Fill execution parameters
 (defn- fill-node-param [node-execution-info curr-node-id task-config]
   (let [node-rel-config ((keyword curr-node-id) task-config)
         db-keys (filter #(str/ends-with? % const/db-suffix) (keys node-rel-config))]
-    ;把所有node-rel-config当做param传入到node-param-dict中
+    ; Put all node-rel-config into node-param-dict
     (doseq [db-key db-keys]
       (let [db-ref-key (get node-rel-config db-key)
             db-ins (register/get-datasource-ins (keyword db-ref-key))]
-        (timbre/info "node=" curr-node-id "依赖数据源配置:" db-ref-key "添加" db-ins)
+        (timbre/info "node=" curr-node-id "dependent datasource configuration:" db-ref-key "add" db-ins)
         (-> (:node-param-dict @node-execution-info)
             (#(reset! % (assoc (deref %) (keyword db-ref-key) db-ins))))))
     (reset! (:node-param-dict @node-execution-info) (merge (deref (:node-param-dict @node-execution-info)) node-rel-config)))
   node-execution-info)
 
-;填充执行结果集
+; Fill execution result set
 (defn- fill-node-result-cxt [node-execution-info curr-node-id node-graph may-used-node-res]
-  ;获取父节点列表
+  ; Get parent node list
   #_{:clj-kondo/ignore [:missing-else-branch]}
   (when-let [parent-node-list (task/get-parent-nodes node-graph curr-node-id)]
     (doseq [parent-node parent-node-list]
-      ;传入父节点的执行结果作为此次节点的执行依赖传入
+      ; Pass the execution result of the parent node as the dependency for this node execution
       (let [parent-node-id (:node-id parent-node)
             node-result-dict (:node-result-dict @node-execution-info)]
-        (timbre/info "当前节点" curr-node-id "依赖的父节点" parent-node-id "返回" (if (counted? may-used-node-res)
-                                                                                    (str (count may-used-node-res) "条纪录")
+        (timbre/info "Current node" curr-node-id "dependent parent node" parent-node-id "returns" (if (counted? may-used-node-res)
+                                                                                    (str (count may-used-node-res) "records")
                                                                                     may-used-node-res))
         (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) may-used-node-res)))))
   node-execution-info)
 
 (defn- fill-thread-info [node-execution-info thread-idx round]
-  ;; 填充线程信息
-  ;; thread-idx: 线程索引
-  ;; round: 执行轮次
+  ;; Fill thread information
+  ;; thread-idx: thread index
+  ;; round: execution round
   (let [node-execution-dict (:node-execution-dict @node-execution-info)]
     (reset! node-execution-dict (assoc @node-execution-dict :thread-idx thread-idx :execution-round round)))
   node-execution-info)
 
 (defn- check-parent-nodes-done? [node-id node-graph task-execution-dict]
-  ; 判断是否父节点都是done
+  ; Check if all parent nodes are done
   (let [parent-node-lst (task/get-parent-nodes node-graph node-id)
         parent-node-id-set (set (map :node-id parent-node-lst))]
     (if (and (not-empty parent-node-id-set)
@@ -66,7 +66,7 @@
       false)))
 
 (defn- check-child-nodes-done? [node-id node-graph task-execution-dict]
-  ;判断是否子节点都是done
+  ; Check if all child nodes are done
   (let [child-node-lst (task/get-child-nodes node-graph node-id)
         child-node-id-set (set (map :node-id child-node-lst))]
     (if (and (not-empty child-node-id-set)
@@ -75,31 +75,30 @@
       false)))
 
 (defn- execute-node-fn [thread-node-execution node-func node-monitor-channel thread-idx]
-  ;;执行node-func,执行失败打印日志，停止当前thread,发送channel
+  ;; Execute node-func, log error if execution fails, stop current thread, send channel
   (try
     (let [r (node-func thread-node-execution)
           node-execution-dict (:node-execution-dict @thread-node-execution)
           node-id (:node-id @thread-node-execution)]
-      ;有可能子任务已执行结束，比如返回空,这里还要处理
+      ; It is possible that the subtask has been completed, such as returning empty, this needs to be handled
       (if (= (get @node-execution-dict (keyword (str thread-idx))) "done")
         (do
           (go
-            ;;发送信息到chan一定要在go语句块里
+            ;; Send message to chan must be in go block
             (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
           [:fail nil])
         [:ok r]))
     (catch Exception e
-      (timbre/error "执行节点nodeId=" (:node-id @thread-node-execution) "thread-idx=" thread-idx
-                    "出现异常，异常信息:" (.getMessage e) e)
+      (timbre/error "Executing node nodeId=" (:node-id @thread-node-execution) "thread-idx=" thread-idx
+                    "exception occurred, exception message:" (.getMessage e) e)
       (go
-        ;;发送信息到chan一定要在go语句块里
+        ;; Send message to chan must be in go block
         (>! node-monitor-channel {:node-id    (:node-id @thread-node-execution) :node-status "done"
                                   :thread-idx thread-idx}))
       [:fail nil])))
 
-
 (defn process-node-chan
-  "执行一次"
+  "Execute once"
   [node-id task-execution-info node-channels node-graph node-monitor-channel]
   (let [{task-info :task-info} @task-execution-info
         node-func (register/get-node-func node-id)
@@ -108,55 +107,55 @@
         child-chans (map #(get @node-channels (:node-id %)) child-nodes)
         thread-count (or (get-in @task-info [:task-config (keyword node-id) :threads]) 1)
         curr-offset (ref 0)
-        ;; 只用atom 无法保证多线程情况下获取到的offset不重复;;stm
+        ;; Only using atom cannot guarantee that the offset obtained in a multi-threaded situation is not duplicated;;stm
         ;; lock (ReentrantLock.)
         get-offset-fn (fn [page-size]
                         (dosync
                           (alter curr-offset + page-size)
                           @curr-offset))]
 
-    ;; 创建指定数量的工作线程
+    ;; Create the specified number of worker threads
     (dotimes [thread-idx thread-count]
       (let [thread-node-execution (-> (executions/new-node-execution-info node-id task-execution-info)
                                       (fill-node-param node-id (:task-config @task-info)))
             task-execution-dict (:task-execution-dict @task-execution-info)]
         (go
-          ;设置节点状态为ding
+          ; Set node status to ding
           (reset! thread-node-execution (assoc @thread-node-execution :curr-node-status "ding"))
 
           (when-not (= (:curr-task-status @task-execution-info) "done")
-            (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程，执行轮次" 1))
-            ;; 更新执行信息
+            (timbre/info (str "Create thread " thread-idx " for node " node-id ", execution round " 1))
+            ;; Update execution information
             (let [curr-node-execution (-> thread-node-execution
                                           (fill-thread-info thread-idx 1))
                   curr-node-status (:curr-node-status @curr-node-execution)
-                  ;; 如果存在calc-page-offset函数，计算新的offset
+                  ;; If there is a calc-page-offset function, calculate the new offset
                   node-param-dict (:node-param-dict @curr-node-execution)]
               (>! node-monitor-channel {:node-id    node-id :node-status curr-node-status
                                         :thread-idx thread-idx})
-              ;; 如果有offset计算函数，更新page_offset
+              ;; If there is an offset calculation function, update page_offset
               (when (contains? @node-param-dict :page_size)
                 (let [page-size (get @node-param-dict :page_size 1000)]
                   (reset! node-param-dict
                           (assoc @node-param-dict :page_offset (get-offset-fn page-size)))
-                  (timbre/info "当前thread-index=" thread-idx "的取到的offset=" (get @node-param-dict :page_offset))))
+                  (timbre/info "Current thread-index=" thread-idx "obtained offset=" (get @node-param-dict :page_offset))))
               ;(prn curr-node-status)
               (when (not= curr-node-status "done")
                 (if node-chan
-                  ;; 非root节点等待输入或者父节点是done状态也不执行,当前节点标记done状态
-                  ;; 等待3s
+                  ;; Non-root node waits for input or parent node is done, current node marked as done
+                  ;; Wait for 3s
                   (let [time-out (timeout 3000)
-                        ;{:priority true}如果多个通道同时有数据到时，有限按照顺序来
-                        ;保证不会出现数据丢失什么的
+                        ;{:priority true} If multiple channels have data at the same time, prioritize in order
+                        ; Ensure that there will be no data loss or anything
                         [curr-result ch] (alts! [node-chan time-out] {:priority true})]
                     (if (= ch time-out)
-                      ;超时判断父节点是否已经是done状态
+                      ; Timeout to determine if the parent node is already done
                       (when (check-parent-nodes-done? node-id node-graph task-execution-dict)
-                          (timbre/info (str "工作节点" node-id " thread-idx=" thread-idx "所有父节点都为done状态，当前线程任务状态标记为done"))
-                          ;发送done状态
+                          (timbre/info (str "Worker node " node-id " thread-idx=" thread-idx "all parent nodes are done, current thread task status marked as done"))
+                          ; Send done status
                           (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
                       (do
-                        (timbre/info (str "节点" node-id "获取到父节点结果"))
+                        (timbre/info (str "Node " node-id "obtained parent node result"))
                         (let [[status result] (-> curr-node-execution
                                                   (fill-node-result-cxt node-id node-graph curr-result)
                                                   (execute-node-fn node-func node-monitor-channel thread-idx))]
@@ -164,10 +163,11 @@
                             (doseq [ch child-chans]
                               (>! ch result))
                             (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))))))
-                  ;; root节点执行
+
+                  ;; Root node execution
                   (do
-                    (timbre/info (str "开始启动root节点" node-id))
-                    ;;如果root节点的直接子节点状态都为done，则root节点状态为done，不执行
+                    (timbre/info (str "Start root node " node-id))
+                    ;; If the direct child nodes of the root node are all done, the root node status is done and not executed
                     (if-not (check-child-nodes-done? node-id node-graph task-execution-dict)
                       (let [[status result] (-> curr-node-execution
                                                 (execute-node-fn node-func node-monitor-channel thread-idx))]
@@ -176,13 +176,12 @@
                             (>! ch result))
                           (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx})))
                       (do
-                        (timbre/info (str "根节点nodeId=" node-id " 所有子任务都是done状态"))
-                        (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx})))
-                    ))))))))))
+                        (timbre/info (str "Root node nodeId=" node-id " all subtasks are done"))
+                        (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx})))))))))))))
 
 
 (defn process-node-chan-loop
-  "处理基于Channel的节点执行"
+  "Process node execution based on Channel"
   [node-id task-execution-info node-channels node-graph node-monitor-channel]
   (let [{task-info :task-info} @task-execution-info
         node-func (register/get-node-func node-id)
@@ -191,57 +190,57 @@
         child-chans (map #(get @node-channels (:node-id %)) child-nodes)
         thread-count (or (get-in @task-info [:task-config (keyword node-id) :threads]) 1)
         curr-offset (ref 0)
-        ;; 只用atom 无法保证多线程情况下获取到的offset不重复;;stm
+        ;; Only using atom cannot guarantee that the offset obtained in a multi-threaded situation is not duplicated;;stm
         ;; lock (ReentrantLock.)
         get-offset-fn (fn [page-size]
                         (dosync
                           (alter curr-offset + page-size)
                           @curr-offset))]
 
-    ;; 创建指定数量的工作线程
+    ;; Create the specified number of worker threads
     (dotimes [thread-idx thread-count]
       (let [thread-node-execution (-> (executions/new-node-execution-info node-id task-execution-info)
                                       (fill-node-param node-id (:task-config @task-info)))
             task-execution-dict (:task-execution-dict @task-execution-info)]
         (go
-          ;设置节点状态为ding
+          ; Set node status to ding
           (reset! thread-node-execution (assoc @thread-node-execution :curr-node-status "ding"))
           (loop [round 1]
             (when-not (= (:curr-task-status @task-execution-info) "done")
-              (timbre/info (str "为节点" node-id "创建第" thread-idx "个线程，执行轮次" round))
-              ;; 更新执行信息
+              (timbre/info (str "Create thread " thread-idx " for node " node-id ", execution round " round))
+              ;; Update execution information
               (let [curr-node-execution (-> thread-node-execution
                                             (fill-thread-info thread-idx round))
                     curr-node-status (:curr-node-status @curr-node-execution)
-                    ;; 如果存在calc-page-offset函数，计算新的offset
+                    ;; If there is a calc-page-offset function, calculate the new offset
                     node-param-dict (:node-param-dict @curr-node-execution)]
                 (>! node-monitor-channel {:node-id    node-id :node-status curr-node-status
                                           :thread-idx thread-idx})
-                ;; 如果有offset计算函数，更新page_offset
+                ;; If there is an offset calculation function, update page_offset
                 (when (contains? @node-param-dict :page_size)
                   (let [page-size (get @node-param-dict :page_size 1000)]
                     (reset! node-param-dict
                             (assoc @node-param-dict :page_offset (get-offset-fn page-size)))
-                    (timbre/info "当前thread-index=" thread-idx "的取到的offset=" (get @node-param-dict :page_offset))))
+                    (timbre/info "Current thread-index=" thread-idx "obtained offset=" (get @node-param-dict :page_offset))))
                 ;(prn curr-node-status)
                 (when (not= curr-node-status "done")
                   (if node-chan
-                    ;; 非root节点等待输入或者父节点是done状态也不执行,当前节点标记done状态
-                    ;; 等待3s
+                    ;; Non-root node waits for input or parent node is done, current node marked as done
+                    ;; Wait for 3s
                     (let [time-out (timeout 3000)
-                          ;{:priority true}如果多个通道同时有数据到时，有限按照顺序来
-                          ;保证不会出现数据丢失什么的
+                          ;{:priority true} If multiple channels have data at the same time, prioritize in order
+                          ; Ensure that there will be no data loss or anything
                           [curr-result ch] (alts! [node-chan time-out] {:priority true})]
                       (if (= ch time-out)
-                        ;超时判断父节点是否已经是done状态
+                        ; Timeout to determine if the parent node is already done
                         (if (check-parent-nodes-done? node-id node-graph task-execution-dict)
                           (do
-                            (timbre/info (str "工作节点" node-id " thread-idx=" thread-idx "所有父节点都为done状态，当前线程任务状态标记为done"))
-                            ;发送done状态
+                            (timbre/info (str "Worker node " node-id " thread-idx=" thread-idx "all parent nodes are done, current thread task status marked as done"))
+                            ; Send done status
                             (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
                           (recur round))
                         (do
-                          (timbre/info (str "节点" node-id "获取到父节点结果"))
+                          (timbre/info (str "Node " node-id "obtained parent node result"))
                           (let [[status result] (-> curr-node-execution
                                                     (fill-node-result-cxt node-id node-graph curr-result)
                                                     (execute-node-fn node-func node-monitor-channel thread-idx))]
@@ -249,10 +248,10 @@
                               (doseq [ch child-chans]
                                 (>! ch result))
                               (recur (inc round)))))))
-                    ;; root节点执行
+                    ;; Root node execution
                     (do
-                      (timbre/info (str "开始启动root节点" node-id))
-                      ;;如果root节点的直接子节点状态都为done，则root节点状态为done，不执行
+                      (timbre/info (str "Start root node " node-id))
+                      ;; If the direct child nodes of the root node are all done, the root node status is done and not executed
                       (if-not (check-child-nodes-done? node-id node-graph task-execution-dict)
                         (let [[status result] (-> curr-node-execution
                                                   (execute-node-fn node-func node-monitor-channel thread-idx))]
@@ -261,6 +260,5 @@
                               (>! ch result))
                             (recur (inc round))))
                         (do
-                          (timbre/info (str "根节点nodeId=" node-id " 所有子任务都是done状态"))
-                          (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx})))))
-                  )))))))))
+                          (timbre/info (str "Root node nodeId=" node-id " all subtasks are done"))
+                          (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))))))))))))))

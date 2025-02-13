@@ -10,52 +10,53 @@
   (:import (clojure.lang DynamicClassLoader RT)
            (java.io File)
            (java.util.zip ZipEntry ZipFile)))
-;全局
+
+; Global
 (def script-class-loader (DynamicClassLoader. (RT/baseLoader)))
 
-; 加载依赖项
+; Load dependencies
 (defn load-dependency [deps-map ^String custom-lib-path]
   (let [default-repos maven/standard-repos
         repo-lst (if (nil? custom-lib-path) default-repos (assoc default-repos :custom-lib {:url custom-lib-path}))
-        ;添加repo配置不加会无法解析deps
+        ; Add repo configuration, otherwise deps cannot be resolved
         deps-tree (deps/resolve-deps (helpers/my-merge-fn deps-map {:mvn/repos repo-lst}) nil)
-        ;解析paths
+        ; Resolve paths
         paths (vec (flatten (map :paths (vals deps-tree))))]
-    ;; 打印所有依赖路径（包括传递依赖）
+    ;; Print all dependency paths (including transitive dependencies)
     (println "Resolved paths:" paths)
     (doseq [^String path paths]
       (RT/addURL (.toURL
                    (File. path))))))
 
-;加载deps,一个zip包正常应该只有一个deps.edn
+; Load deps, a zip package should normally only have one deps.edn
 (defn load-deps-edn!
-  "自动加载deps"
+  "Automatically load deps"
   [^String dep-file]
   (let [deps-map (edn/read-string dep-file)]
     (load-dependency deps-map nil)
-    (timbre/info "依赖加载完成")))
+    (timbre/info "Dependencies loaded")))
 
 ;(defn load-clj-file!
-;  "加载脚本文件"
+;  "Load script file"
 ;  [^String clj-file]
 ;  (load-string clj-file))
 
-;不支持嵌套脚本目录
-;支持a.clj,b.clj,deps.clj一层目录的不支持;d/a.clj,d/d1/a.clj这种
+; Does not support nested script directories
+; Supports a.clj, b.clj, deps.clj in one level directory, does not support d/a.clj, d/d1/a.clj
 (defn load-zip!
-  "加载zip格式的任务"
+  "Load zip format task"
   [^String zip-file-path]
   (let [zip-file (ZipFile. zip-file-path)
         entries (.entries zip-file)]
-    ;加载deps.edn
-    ;修改classloader，只有加载deps了才需要修改
+    ; Load deps.edn
+    ; Modify classloader, only need to modify if deps are loaded
     (when-let [deps-entry (.getEntry zip-file "deps.edn")]
-      ;; 设置上下文类加载器为 DynamicClassLoader
+      ;; Set context classloader to DynamicClassLoader
       (let [current-thread (Thread/currentThread)]
         (.setContextClassLoader current-thread script-class-loader))
-      ;; 让compiler 也绑定到同一个classloader上
+      ;; Bind compiler to the same classloader
       (prn script-class-loader)
-      ;; 20250206 如果当前线程没有初始化绑定值，直接reset会异常抛出
+      ;; 20250206 If the current thread has no initialized bound value, directly resetting will throw an exception
       (when (.isBound Compiler/LOADER)
         (.set Compiler/LOADER script-class-loader))
       (load-deps-edn! (slurp (.getInputStream zip-file deps-entry))))
@@ -65,18 +66,18 @@
             entry-name (.getName entry)]
         (when (.endsWith entry-name ".clj")
           (load-string (slurp (.getInputStream zip-file entry)))
-          (timbre/info (str "加载脚本文件:" entry-name "成功.")))))))
+          (timbre/info (str "Successfully loaded script file:" entry-name)))))))
 
 (defn file-exists? [^String path]
   (.exists (io/file path)))
 
 (defn load-main-entry
-  "加载脚本"
+  "Load script"
   [^String main-entry]
   (if (file-exists? main-entry)
-    ;相关的注册以及加载声明都需要放entry-script脚本里
+    ; Related registration and loading declarations need to be placed in the entry-script script
     (cond (str/ends-with? main-entry ".clj") (load-file main-entry)
           (str/ends-with? main-entry ".zip") (load-zip! main-entry)
-          :else (timbre/error "不支持的文件后缀:" main-entry))
-    (timbre/error (str "脚本文件不存在:" main-entry))))
+          :else (timbre/error "Unsupported file suffix:" main-entry))
+    (timbre/error (str "Script file does not exist:" main-entry))))
 

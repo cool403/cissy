@@ -3,7 +3,7 @@
     [clojure.edn :as edn]
     [clojure.spec.alpha :as s]))
 
-;; 定义数据库配置spec
+;; Define database configuration spec
 (s/def ::host string?)
 (s/def ::dbname string?)
 (s/def ::password string?)
@@ -14,11 +14,11 @@
 (s/def ::db-config
   (s/keys :req-un [::host ::dbname ::password ::port ::user ::dbtype]))
 
-;; 定义datasource spec
+;; Define datasource spec
 (s/def ::datasource
   (s/map-of keyword? ::db-config))
 
-;; 定义节点配置spec
+;; Define node configuration spec
 (s/def ::threads (s/nilable int?))
 (s/def ::from_db keyword?)
 (s/def ::page_size int?)
@@ -34,7 +34,6 @@
   (s/keys :opt-un [::threads ::sql_template ::order_by ::from_table ::incr_key ::incr_key_value ::page_size
                    ::from_db]))
 
-
 (s/def ::dwn
   (s/keys :opt-un [::to_db ::to_table]))
 
@@ -42,7 +41,7 @@
 (s/def ::csvw
   (s/keys :req-un [::target_file]))
 
-;; 定义任务组配置spec
+;; Define task group configuration spec
 (s/def ::task_group_name string?)
 (s/def ::nodes string?)
 (s/def ::entry_script (s/nilable (s/coll-of string?)))
@@ -60,7 +59,7 @@
 ;  (s/keys :req-un [::task_group_name ::nodes ::entry_script ::tasks]
 ;          :opt-un [::uni-node-config]))
 
-;; 定义任务配置spec
+;; Define task configuration spec
 ;(s/def ::task
 ;  (s/and (s/map-of keyword? ::node-config)
 ;         #(cond
@@ -72,7 +71,7 @@
   (s/coll-of ::node-config))
 
 (s/def ::sched_type #{"once" "always"})
-;; 定义整个数据结构spec
+;; Define the entire data structure spec
 (s/def ::task-json
   (s/keys :req-un [::datasource ::tasks ::nodes ::task_group_name]
           :opt-un [::entry_script ::node-config ::sched_type]))
