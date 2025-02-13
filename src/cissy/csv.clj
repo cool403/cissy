@@ -22,11 +22,6 @@
         (Thread/sleep 10)
         (recur))))))
 
-(comment (defn- release-write-header-lock
-  "释放写header的锁"
-  []
-  (reset! write-headers-lock false)))
-
 ;保证只有一个线程能写成功
 (defn- writer-csv-headers [headers writers task-execution-dict thread-idx task-idx]
   ;避免后续线程再次写入header
@@ -54,25 +49,26 @@
       (str (helpers/get-desktop-path) "/" task-name ".csv")
       task-file-config)))
 
+;父节点唯一或者空的
+(defn- parent-node-id [node-graph node-id]
+       (:node-id (first (task/get-parent-nodes node-graph node-id))))
+
 ;; 写出到csv文件
 (defnode csvw [^NodeExecutionInfo node-exec-info]
-  (let [{task-execution-info :task-execution-info
-         node-result-dict    :node-result-dict
-         node-execution-dict :node-execution-dict} @node-exec-info
-         thread-idx (get @node-execution-dict :thread-idx 0)
-        {task-execution-dict :task-execution-dict
-         task-info :task-info} @task-execution-info
-        ;task 在 tasks中的位置idx
-        task-idx (get @task-info :task-idx 0)
-        drn-res (get @node-result-dict :drn)
+  (let [{:keys [task-execution-info node-result-dict node-execution-dict]} @node-exec-info
+        {:keys [task-info task-execution-dict]} @task-execution-info
+        {:keys [task-idx task-name task-config node-graph]} @task-info
+        {:keys [csvw]} task-config
+        {:keys [thread-idx]} @node-execution-dict
+        node-result-lst (get @node-result-dict (keyword (parent-node-id node-graph "csvw")))
         target-file (target-file-fn task-info)]
-    (if (or (nil? drn-res) (= (count drn-res) 0))
+    (if (or (nil? node-result-lst) (= (count node-result-lst) 0))
       (do
         (timbre/info (str "当前节点=" thread-idx "未读取到数据，不执行csvw节点"))
         (helpers/curr-node-done node-exec-info))
-      (let [rows (vec (map #(vec (vals %)) drn-res))
+      (let [rows (vec (map #(vec (vals %)) node-result-lst))
             ;获取列信息
-            headers (vec (map #(name %) (keys (first drn-res))))]
+            headers (vec (map #(name %) (keys (first node-result-lst))))]
         ;追加写入,不覆盖
         (with-open [wrt (io/writer target-file :append true)]
           (writer-csv-headers headers wrt task-execution-dict thread-idx task-idx)

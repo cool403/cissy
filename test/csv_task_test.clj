@@ -39,12 +39,12 @@
                                                  {
                                                   :drn  {
                                                          :from_table   "orders"
-                                                         :page_size    12000
+                                                         :page_size    100
                                                          :sql_template "select * from orders"
                                                          }
                                                   :csvw {
                                                          :target_file "/home/mawdx/桌面/orders.csv"
-                                                         :threads     1
+                                                         :threads     7
                                                          }
                                                   }]
                                }))

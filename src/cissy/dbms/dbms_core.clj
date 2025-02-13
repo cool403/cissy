@@ -10,6 +10,7 @@
     ;; [pod.babashka.go-sqlite3 :as sqlite]
             [cissy.const :as const]
     ;[honey.sql.helpers :as helpers]
+            [cissy.task :as task]
             [honey.sql :as sql]
             [taoensso.timbre :as timbre]
             [next.jdbc :as jdbc]
@@ -66,32 +67,34 @@
 ;  ;columns 需要转成keyword,不然会被当成参数
 ;  (apply helpers/columns sql (map keyword columns)))
 
+;父节点唯一或者空的
+(defn- parent-node-id [node-graph node-id]
+  (:node-id (first (task/get-parent-nodes node-graph node-id))))
+
 ;按行写数据库到db
 (register/defnode dwn
-  [task-node-execution-info]
+  [node-exec-info]
   (timbre/info "开始执行dwn节点")
-  (let [{task-execution-info :task-execution-info
-         node-param-dict     :node-param-dict
-         node-result-dict    :node-result-dict} @task-node-execution-info
-        {task-execution-dict :task-execution-dict} @task-execution-info
-        {to-db :to_db} @node-param-dict
+  (let [{:keys [task-execution-info node-result-dict node-execution-dict]} @node-exec-info
+        {:keys [task-info task-execution-dict]} @task-execution-info
+        {:keys [task-idx task-name task-config node-graph]} @task-info
+        {:keys [dwn]} task-config
+        {:keys [thread-idx]} @node-execution-dict
+        {:keys [to_db to_table]} dwn
+        node-result-lst (get @node-result-dict (keyword (parent-node-id node-graph "dwn"))) 
         ;获取关联数据源配置
-        to-db-ins (register/get-datasource-ins to-db)
-        ;获取db类型
-        db-type (if (map? to-db-ins) (:dbtype to-db-ins) "sqlite")
-        drn-res ((keyword const/drn) @node-result-dict)
-        to-table (:to_table @node-param-dict)]
+        to-db-ins (register/get-datasource-ins to_db)]
     ;判断drn节点数据是否为空
-    (if (or (nil? drn-res) (= (count drn-res) 0))
+    (if (or (nil? node-result-lst) (= (count node-result-lst) 0))
       (do
         (timbre/warn "drn节点未读取到数据，什么都不做")
         ;这里只能重置当前节点，不能重置任务状态，因为任务状态是任务级别的，不能因为一个节点的终止而终止任务
-        (helpers/curr-node-done task-node-execution-info))
+        (helpers/curr-node-done node-exec-info))
       ;获取列信息 
-      (let [columns (vec (map #(name %) (keys (first drn-res))))
-            datas (vec (map #(vec (vals %)) drn-res))]
+      (let [columns (vec (map #(name %) (keys (first node-result-lst))))
+            datas (vec (map #(vec (vals %)) node-result-lst))]
         ;根据db类型写入不同的数据库
-        (jdbc-sql/insert-multi! to-db-ins to-table columns datas)
+        (jdbc-sql/insert-multi! to-db-ins to_table columns datas)
         ;; (case (keyword db-type)
         ;;   :oralce (oracle-sql/insert-multi! to-db-ins to-table  columns datas)
         ;;   :mysql (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
@@ -104,7 +107,7 @@
         ;同步计数
         ;打印日志
         (swap! (:sync-count @task-execution-dict) #(+ % (count datas)))
-        (timbre/info (str "已插入" (deref (:sync-count @task-execution-dict)) "条记录到" to-table "表里"))))))
+        (timbre/info (str "已插入" (deref (:sync-count @task-execution-dict)) "条记录到" to_table "表里"))))))
 
 
 ;注册节点

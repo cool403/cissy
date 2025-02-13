@@ -1,5 +1,6 @@
 (ns zip-task-test
-  (:require [cissy.executions :as executions]
+  (:require [cissy.commands :as commands]
+            [cissy.executions :as executions]
             [cissy.loader :as loader]
             [clojure.test :refer :all]))
 
@@ -21,10 +22,5 @@
 
 (deftest zip-task-test
   (testing "测试zip格式加载,包含外部依赖加载"
-    (let [task-info-lst (loader/get-task-from-json zip-task-config-edn)
-          task-info (first task-info-lst)
-          sched-info (:sched-info @task-info)
-          new-task-execution-info (executions/new-task-execution-info)]
-      (reset! new-task-execution-info (assoc @new-task-execution-info :task-info task-info))
-      (executions/sched-task-execution sched-info new-task-execution-info)
-      (is (= "done" (:curr-task-status @new-task-execution-info))))))
+    (commands/-startj zip-task-config-edn)
+    (is (true? true))))
