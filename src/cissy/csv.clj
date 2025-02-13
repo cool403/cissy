@@ -47,6 +47,13 @@
           ;释放写header的锁
           (reset! write-headers-lock false))))))
 
+(defn- target-file-fn [task-info]
+  (let [task-file-config (get-in @task-info [:task-config :csvw :target_file] nil) 
+        task-name (:task-name @task-info)]
+    (if (nil? task-file-config)
+      (str (helpers/get-desktop-path) "/" task-name ".csv")
+      task-file-config)))
+
 ;; 写出到csv文件
 (defnode csvw [^NodeExecutionInfo node-exec-info]
   (let [{task-execution-info :task-execution-info
@@ -58,7 +65,7 @@
         ;task 在 tasks中的位置idx
         task-idx (get @task-info :task-idx 0)
         drn-res (get @node-result-dict :drn)
-        target-file (get-in (deref (:task-info @task-execution-info)) [:task-config :csvw :target_file] "/tmp/result.csv")]
+        target-file (target-file-fn task-info)]
     (if (or (nil? drn-res) (= (count drn-res) 0))
       (do
         (timbre/info (str "当前节点=" thread-idx "未读取到数据，不执行csvw节点"))

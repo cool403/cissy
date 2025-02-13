@@ -1,0 +1,5 @@
+{
+ :deps {
+        ;;    cheshire/cheshire                 {:mvn/version "5.12.0"} 
+       }
+}

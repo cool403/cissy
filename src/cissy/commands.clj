@@ -6,7 +6,8 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [taoensso.timbre :as timbre]
-    [clojure.java.io :as io])
+    [clojure.java.io :as io]
+    [cissy.helpers :as helpers])
   (:gen-class
     :name cissy.commands
     :methods [#^{:static true} [startj [java.lang.String] void]
@@ -15,8 +16,21 @@
 (defn -demo
   "任务配置json样例"
   [options]
-  (println "#这是一个mysql同步demo 配置，仅供参考")
-  (println (slurp (io/resource "task_config.edn"))))
+  (cond
+    (:zip options) (do 
+                     (println "#这是一个简单的zip格式节点任务，仅供参考")
+                     (let [copy-to-bytes-fn (fn [is] (let [buffer (java.io.ByteArrayOutputStream.)]
+                                                       (io/copy is buffer)
+                                                       (.toByteArray buffer)))
+                           ;;slurp 是读取成string的
+                           is (io/input-stream (io/resource "ding.zip"))
+                           file-path (helpers/write-files-to-desktop (copy-to-bytes-fn is) "ding.zip")]
+                       (println (str "文件已经写入到桌面:" file-path))))
+    :else
+    (do 
+      (println "#这是一个mysql同步demo 配置，仅供参考")
+      (println (slurp (io/resource "task_config.edn"))))
+    ))
 
 (defn -startj [config-json]
   ;解析任务配置

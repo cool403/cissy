@@ -8,7 +8,8 @@
 
 (def cli-options
   [["-c" "--config CONFIG" "任务配置描述文件路径(json格式)"]
-   ["-h" "--help" "显示帮助信息"]])
+   ["-h" "--help" "显示帮助信息"]
+   ["-z" "--zip" "生成一个zip任务demo"]])
 
 (defn usage [options-summary]
   (->> ["cissy - 数据同步工具"
