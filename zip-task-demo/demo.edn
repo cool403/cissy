@@ -1,0 +1,18 @@
+{
+ :task_group_name "zip包任务加载"
+                               ;;数据库节点目前支持drn和dwn,drn负责加载数据,dwn负责写数据
+ :nodes           "rnd->wnd;" 
+ :sched_type      "once"
+ :datasource      {
+                   
+                   }
+                               ;;自定义任务脚本时,需要这里显式声明,注意这里要写绝对路径
+ :entry_script    ["C:\\Users\\chen_\\Desktop\\zip_task_demo.zip"]
+ :tasks           [{
+                    :rnd {
+                          
+                          }
+                    :wnd {
+                          }
+                    }]
+ }

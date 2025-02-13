@@ -24,7 +24,7 @@
                                                        (.toByteArray buffer)))
                            ;;slurp 是读取成string的
                            is (io/input-stream (io/resource "ding.zip"))
-                           file-path (helpers/write-files-to-desktop (copy-to-bytes-fn is) "ding.zip")]
+                           file-path (helpers/write-files-to-desktop (copy-to-bytes-fn is) "zip_task_demo.zip")]
                        (println (str "文件已经写入到桌面:" file-path))))
     :else
     (do 
