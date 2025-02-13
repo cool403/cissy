@@ -28,9 +28,9 @@
   (reset! write-headers-lock false)))
 
 ;保证只有一个线程能写成功
-(defn- writer-csv-headers [headers writers task-execution-dict thread-idx]
+(defn- writer-csv-headers [headers writers task-execution-dict thread-idx task-idx]
   ;避免后续线程再次写入header
-  (let [writer-headers-idx (keyword (str "write-headers-" thread-idx))]
+  (let [writer-headers-idx (keyword (str "write-headers-" task-idx))]
     (when (nil? (writer-headers-idx @task-execution-dict))
       (try
         (loop []
@@ -53,7 +53,10 @@
          node-result-dict    :node-result-dict
          node-execution-dict :node-execution-dict} @node-exec-info
          thread-idx (get @node-execution-dict :thread-idx 0)
-        {task-execution-dict :task-execution-dict} @task-execution-info
+        {task-execution-dict :task-execution-dict
+         task-info :task-info} @task-execution-info
+        ;task 在 tasks中的位置idx
+        task-idx (get @task-info :task-idx 0)
         drn-res (get @node-result-dict :drn)
         target-file (get-in (deref (:task-info @task-execution-info)) [:task-config :csvw :target_file] "/tmp/result.csv")]
     (if (or (nil? drn-res) (= (count drn-res) 0))
@@ -65,7 +68,7 @@
             headers (vec (map #(name %) (keys (first drn-res))))]
         ;追加写入,不覆盖
         (with-open [wrt (io/writer target-file :append true)]
-          (writer-csv-headers headers wrt task-execution-dict thread-idx)
+          (writer-csv-headers headers wrt task-execution-dict thread-idx task-idx)
           (csv/write-csv wrt rows)
           (swap! (:sync-count @task-execution-dict) #(+ % (count rows)))
           (timbre/info (str "已写入" (deref (:sync-count @task-execution-dict)) "条记录到文件:" target-file)))))))

@@ -47,12 +47,15 @@
       (timbre/info "检测到此次使用脚本任务")
       (doseq [entry-script entry-scripts]
         (sl/load-main-entry entry-script)))
-    (doseq [task tasks idx (range 0 (count tasks))]
+    ;FIX 202502 下面这种写法会导致迭代次数是一个笛卡尔积
+    ;; (doseq [task tasks idx (range 0 (count tasks))]
+    (doseq [[idx task] (map-indexed vector tasks)]
       (reset! task-map-vec (conj @task-map-vec (-> task
                                                    (comp-new-task-fn config-map)
                                                    (assoc :datasource datasource)
                                                    ;子任务名称先用一个简单的名称加任务序号替代吧，后续再优化
-                                                   (assoc :task_name (str task-group-name "_" idx))))))
+                                                   (assoc :task_name (str task-group-name "_" idx))
+                                                   (assoc :task-idx idx)))))
     @task-map-vec))
 
 
@@ -69,7 +72,7 @@
         (nil? to-node-id) (task/add-node-pair node-graph (task/->TaskNodeInfo from-node-id nil) nil)
         :else (task/add-node-pair node-graph (task/->TaskNodeInfo from-node-id nil) (task/->TaskNodeInfo to-node-id nil))))
     ;验证节点图结构
-    (timbre/info "开始验证节点图结构")
+    (timbre/info (str "开始验证节点图结构,当前子任务配置:" task-map))
     ;; (prn node-graph)
     (checker/validate-node-graph node-graph)
     (timbre/info "节点图结构验证通过")
@@ -92,7 +95,7 @@
 ;从 json 中解析任务
 (defn get-task-from-json [^String task-json]
   ;json->keyword map,keyword map才能用(:name 方式访问)
-  (timbre/info "开始解析任务配置" task-json)
+  (timbre/info "开始解析任务组配置" task-json)
   (map assemble-task-fn (get-tasks-map-fn task-json)))
 
 ;测试

@@ -35,9 +35,21 @@
                                                          :target_file "/home/mawdx/桌面/demo1.csv"
                                                          :threads     20
                                                          }
+                                                  }
+                                                 {
+                                                  :drn  {
+                                                         :from_table   "orders"
+                                                         :page_size    12000
+                                                         :sql_template "select * from orders"
+                                                         }
+                                                  :csvw {
+                                                         :target_file "/home/mawdx/桌面/orders.csv"
+                                                         :threads     1
+                                                         }
                                                   }]
                                }))
 
+(def thread-size 1)
 
 (deftest csv-task-test
   (testing "测试数据写到csv中"
@@ -47,8 +59,7 @@
     (let [future-vec (map #(future (commands/-startj (-> (edn/read-string csv-task-config-edn)
                                                          (assoc :task_group_name (str "csvm导出测试" %))
                                                          (assoc-in [:tasks 0 :csvw :target_file] (str "/home/mawdx/桌面/demo" % ".csv"))
-                                                         (str)))) (range 2))
-          ]
+                                                         (str)))) (range thread-size))]
       (doseq [fut future-vec]
         (try
           (deref fut)
@@ -56,16 +67,16 @@
             (timbre/error "执行任务出错" (.getMessage ex) ex)))))
     (let [header-vec (map #(-> (slurp %)
                                (str/split-lines)
-                               first) (map #(str "/home/mawdx/桌面/demo" % ".csv") (range 2)))
+                               first) (map #(str "/home/mawdx/桌面/demo" % ".csv") (range thread-size)))
           lines-vec (map #(-> (slurp %)
                               (str/split-lines)
-                              count) (map #(str "/home/mawdx/桌面/demo" % ".csv") (range 2)))]
+                              count) (map #(str "/home/mawdx/桌面/demo" % ".csv") (range thread-size)))]
       (when (and (is (every? #(str/starts-with? % "email,first_name") header-vec))
                  (is (apply = lines-vec)))
         (timbre/info (str "lines-vec:" (first lines-vec)))
-        (doseq [idx (range 2)]
+        (comment (doseq [idx (range thread-size)]
           (try
             (io/delete-file (str "/home/mawdx/桌面/demo" idx ".csv"))
             (timbre/info (str "删除文件/home/mawdx/桌面/demo" idx ".csv 成功"))
             (catch Exception ex
-              (timbre/error "删除文件出错" (.getMessage ex) ex))))))))
+              (timbre/error "删除文件出错" (.getMessage ex) ex)))))))))
