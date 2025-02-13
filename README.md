@@ -26,11 +26,14 @@ clojure -T:build uber
 
 ### 运行
 ```sh
-java -jar cissy.jar start -c path/to/config.json
+java -jar cissy.jar start -c {edn格式配置的绝对路径}
 ```
+[`edn`格式](https://github.com/edn-format/edn)
+> `edn`相比`json` 更简单、支持更多数据类型、在`clojure`生态中更好用、可扩展性
+
 clojure环境下可以使用如下命令启动
 ```sh
-clojure -m cissy.app start -c /home/xxx/Desktop/group_tasks.json
+clojure -m cissy.app start -c /home/xxx/Desktop/group_tasks.edn
 ```
 
 ### 配置文件
