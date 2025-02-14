@@ -7,7 +7,8 @@
                    
                    }
                                ;;自定义任务脚本时,需要这里显式声明,注意这里要写绝对路径
- :entry_script    ["C:\\Users\\chen_\\Desktop\\zip_task_demo.zip"]
+;;  :entry_script    ["C:\\Users\\chen_\\Desktop\\zip_task_demo.zip"]
+ :entry_script    ["/home/mawdx/mywork/cissy/resources/zip_task_demo.zip"]
  :tasks           [{
                     :rnd {
                           
