@@ -5,10 +5,10 @@
 
 
 (def task-config-str (str {
-                           :task_group_name "mysql同步测试"
-                           ;;数据库节点目前支持drn和dwn,drn负责加载数据,dwn负责写数据
+                           :task_group_name "mysql sync test"
+                           ;; Database nodes currently support drn and dwn, drn is responsible for loading data, dwn is responsible for writing data
                            :nodes           "drn->dwn;"
-                           ;;执行模式，默认是一直执行，配置成once，只会执行一次任务就结束
+                           ;; Execution mode, the default is always execute, configure to once, it will only execute the task once and then end
                            ;;  :sched_type      "once"
                            :datasource      {
                                              :db1 {
@@ -17,7 +17,7 @@
                                                    :password "123456"
                                                    :port     4000
                                                    :user     "root"
-                                                   ;;dbtype 目前支持sqlite,mysql,oracle,postgresql
+                                                   ;; dbtype currently supports sqlite, mysql, oracle, postgresql
                                                    :dbtype   "mysql"
                                                    }
                                              :db2 {
@@ -29,14 +29,14 @@
                                                    :dbtype   "postgresql"
                                                    }
                                              }
-                           ;;自定义任务脚本时,需要这里显式声明,注意这里要写绝对路径
-                           ;;也支持zip格式任务加载
+                           ;; When customizing task scripts, you need to explicitly declare here, note that you need to write the absolute path here
+                           ;; Also supports zip format task loading
                            ;;  :entry_script    ["xx.clj"]
-                           ;;测试
+                           ;; Test
                            :drn             {
                                              :from_db   "db1"
                                              :page_size 1000
-                                             ;;一次启动多少个线程
+                                             ;; Number of threads to start at one time
                                              :threads   20
                                              }
                            :dwn             {
@@ -45,10 +45,10 @@
                                              :threads   40
                                              }
                            :tasks           [{
-                                              ;;drn中的配置和外层的drn配置存在覆盖关系，优先使用子任务的配置
+                                              ;; The configuration in drn and the outer drn configuration have an override relationship, the subtask configuration takes precedence
                                               :drn {
                                                     :from_table   "users"
-                                                    ;;自定义sql同步时可设置这个选项
+                                                    ;; When customizing sql sync, you can set this option
                                                     :sql_template "select * from users u order by id "
                                                     }
                                               :dwn {
@@ -59,6 +59,6 @@
                            }))
 
 (deftest db-task-test
-  (testing "数据同步"
+  (testing "Data sync"
     (commands/-startj task-config-str)
     (is (true? true))))

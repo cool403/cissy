@@ -9,7 +9,7 @@
     [taoensso.timbre :as timbre]))
 
 (def csv-task-config-edn (str {
-                               :task_group_name "csvm导出测试"
+                               :task_group_name "csv export test"
                                :nodes           "drn->csvw;"
                                :datasource      {
                                                  :db1 {
@@ -52,19 +52,19 @@
 (def thread-size 1)
 
 (deftest csv-task-test
-  (testing "测试数据写到csv中"
-    ;并发执行10个任务，每个任务的输出文件名+idx，任务名+idx，检查csv数量是否正确，第一行是否是header
-    ;检查所有csv文件行数是否正确
-    ;最后删除所有文件
+  (testing "Test data writing to csv"
+    ; Concurrently execute 10 tasks, each task's output file name + idx, task name + idx, check if the number of csv files is correct, and if the first line is the header
+    ; Check if the number of lines in all csv files is correct
+    ; Finally delete all files
     (let [future-vec (map #(future (commands/-startj (-> (edn/read-string csv-task-config-edn)
-                                                         (assoc :task_group_name (str "csvm导出测试" %))
+                                                         (assoc :task_group_name (str "csv export test" %))
                                                          (assoc-in [:tasks 0 :csvw :target_file] (str "/home/mawdx/桌面/demo" % ".csv"))
                                                          (str)))) (range thread-size))]
       (doseq [fut future-vec]
         (try
           (deref fut)
           (catch Exception ex
-            (timbre/error "执行任务出错" (.getMessage ex) ex)))))
+            (timbre/error "Error executing task" (.getMessage ex) ex)))))
     (let [header-vec (map #(-> (slurp %)
                                (str/split-lines)
                                first) (map #(str "/home/mawdx/桌面/demo" % ".csv") (range thread-size)))
@@ -77,6 +77,6 @@
         (comment (doseq [idx (range thread-size)]
           (try
             (io/delete-file (str "/home/mawdx/桌面/demo" idx ".csv"))
-            (timbre/info (str "删除文件/home/mawdx/桌面/demo" idx ".csv 成功"))
+            (timbre/info (str "Successfully deleted file /home/mawdx/桌面/demo" idx ".csv"))
             (catch Exception ex
-              (timbre/error "删除文件出错" (.getMessage ex) ex)))))))))
+              (timbre/error "Error deleting file" (.getMessage ex) ex)))))))))

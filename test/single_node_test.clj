@@ -9,7 +9,7 @@
                        :datasource      {
 
                                          }
-                       :task_group_name "单节点执行测试"
+                       :task_group_name "single node execution test"
                        :nodes           "ding->;"
                        :sched_type      "once"
                        :ding            {
@@ -23,6 +23,6 @@
                        }))
 
 (deftest single-node-test
-  (testing "单节点执行测试"
+  (testing "Single node execution test"
     (commands/-startj task-config)
     (is (true? true))))

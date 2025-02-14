@@ -9,7 +9,7 @@
 (def config-path "task_config.edn")
 
 (test/deftest task-config-edn-test
-  (test/testing "测试edn格式配置加载"
+  (test/testing "Test edn format configuration loading"
     (let [cfg (edn/read-string (slurp (io/resource config-path)))]
       (println cfg)
       (println (type cfg))
@@ -19,7 +19,7 @@
 
 
 (def aa {
-         :task_group_name "mysql同步测试"
+         :task_group_name "mysql sync test"
          :nodes           "drn->dwn;"
          :datasource      {
                            :db1 {
@@ -28,7 +28,7 @@
                                  :password "123456"
                                  :port     4002
                                  :user     "root"
-                                 ;;dbtype 目前支持sqlite,mysql,oracle,postgresql
+                                 ;; dbtype currently supports sqlite, mysql, oracle, postgresql
                                  :dbtype   "mysql"
                                  }
                            :db2 {
@@ -41,7 +41,7 @@
                                  }
                            }
 
-         ;;测试
+         ;; Test
          :drn             {
                            :from_db   "db1"
                            :page_size 1000
@@ -65,5 +65,5 @@
          })
 
 (test/deftest test-valid-config
-  (test/testing "测试任务配置是否符号格式要求"
+  (test/testing "Test if the task configuration meets the format requirements"
     (test/is (= :ok (spec/valid-config-json (prn-str aa))))))

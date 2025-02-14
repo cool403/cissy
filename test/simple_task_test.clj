@@ -37,7 +37,7 @@
                        :datasource      {
 
                                          }
-                       :task_group_name "简单任务测试"
+                       :task_group_name "simple task test"
                        :nodes           "ding->dong;"
                        :sched_type      "once"
                        :ding            {
@@ -58,7 +58,7 @@
 
 
 (test/deftest simple-task-test
-  (test/testing "最简单的ding dong任务测试"
+  (test/testing "Simplest ding dong task test"
     ;(prn simple-task-json)
     (commands/-startj task-config)
     (test/is (= 1 1))))
