@@ -15,15 +15,13 @@
 (def script-class-loader (DynamicClassLoader. (RT/baseLoader)))
 
 ; Load dependencies
-(defn load-dependency [deps-map ^String custom-lib-path]
-  (let [default-repos maven/standard-repos
-        repo-lst (if (nil? custom-lib-path) default-repos (assoc default-repos :custom-lib {:url custom-lib-path}))
-        ; Add repo configuration, otherwise deps cannot be resolved
-        deps-tree (deps/resolve-deps (helpers/my-merge-fn deps-map {:mvn/repos repo-lst}) nil)
+(defn load-dependency [deps-map]
+  (let [; Add repo configuration, otherwise deps cannot be resolved
+        deps-tree (deps/resolve-deps deps-map nil)
         ; Resolve paths
         paths (vec (flatten (map :paths (vals deps-tree))))]
     ;; Print all dependency paths (including transitive dependencies)
-    (println "Resolved paths:" paths)
+    (timbre/info "Resolved paths:" paths)
     (doseq [^String path paths]
       (RT/addURL (.toURL
                    (File. path))))))
@@ -33,7 +31,11 @@
   "Automatically load deps"
   [^String dep-file]
   (let [deps-map (edn/read-string dep-file)]
-    (load-dependency deps-map nil)
+    (if-let [_ (get deps-map :mvn/repos)]
+      (load-dependency deps-map)
+      (do
+        (timbre/info "No custom repos found, loading standard repos[https://repo1.maven.org/maven2/,https://clojars.org/repo/]")
+        (load-dependency (assoc deps-map :mvn/repos maven/standard-repos))))
     (timbre/info "Dependencies loaded")))
 
 ;(defn load-clj-file!

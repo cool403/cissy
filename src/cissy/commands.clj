@@ -23,7 +23,7 @@
                                                        (io/copy is buffer)
                                                        (.toByteArray buffer)))
                            ;; slurp reads as string
-                           is (io/input-stream (io/resource "ding.zip"))
+                           is (io/input-stream (io/resource "zip_task_demo.zip"))
                            file-path (helpers/write-files-to-desktop (copy-to-bytes-fn is) "zip_task_demo.zip")]
                        (println (str "File has been written to desktop:" file-path))))
     :else
