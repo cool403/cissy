@@ -2,6 +2,8 @@
 
 Cissy 是一个基于 Clojure的数据同步工具，支持多种数据库之间的数据迁移和同步。
 
+![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
+
 ## 功能特性
 
 - 支持多种数据库：SQLite、MySQL、PostgreSQL、Oracle
