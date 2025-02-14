@@ -6,5 +6,5 @@
  ;; When customizing task scripts, it needs to be explicitly declared here, note that the absolute path should be written here
  ;;  :entry_script    ["C:\\Users\\chen_\\Desktop\\zip_task_demo.zip"]
  :entry_script    ["/home/mawdx/mywork/cissy/resources/zip_task_demo.zip"]
- :tasks           [:rnd {{}
-                         :wnd {}}]}
+ :tasks           [{:rnd {}
+                    :wnd {}}]}

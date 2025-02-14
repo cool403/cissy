@@ -5,8 +5,8 @@
  ;same time the local dir file tree should be like this:{group-id}/{artifact-id}/{version}/{artifact-id}-{version}.jar !!!
  ;at last you can alse use local/root to add a jar file directly,but it is not recommended
  :mvn/repos {
-       ;;       "central" {:url "https://repo1.maven.org/maven2"}
-       ;;       "clojars" {:url "https://clojars.org/repo"}
+             "central" {:url "https://repo1.maven.org/maven2"}
+             "clojars" {:url "https://clojars.org/repo"}
        ;;       "custom-lib" {:url "file:///home/mawdx/桌面/lib"}
              }
  :deps {
