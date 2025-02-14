@@ -4,23 +4,15 @@
             [cissy.loader :as loader]
             [clojure.test :refer :all]))
 
-(def zip-task-config-edn (str {
-                               :task_group_name "zip包任务加载"
-                               ;;数据库节点目前支持drn和dwn,drn负责加载数据,dwn负责写数据
+(def zip-task-config-edn (str {:task_group_name "Zip Task Loading"
+                               ;; Database nodes currently support drn and dwn, drn is responsible for loading data, dwn is responsible for writing data
                                :nodes           "ding->;"
-                               :datasource      {
-
-                                                 }
-                               ;;自定义任务脚本时,需要这里显式声明,注意这里要写绝对路径
-                               :entry_script    ["/home/mawdx/桌面/ding.zip"]
-                               :tasks           [{
-                                                  :ding {
-
-                                                         }
-                                                  }]
-                               }))
+                               :datasource      {}
+                               ;; When customizing task scripts, it needs to be explicitly declared here, note that the absolute path should be written here
+                               :entry_script    ["/home/mawdx/Desktop/ding.zip"]
+                               :tasks           [{:ding {}}]}))
 
 (deftest zip-task-test
-  (testing "测试zip格式加载,包含外部依赖加载"
+  (testing "Test zip format loading, including external dependency loading"
     (commands/-startj zip-task-config-edn)
     (is (true? true))))
