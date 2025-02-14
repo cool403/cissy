@@ -1,3 +1,5 @@
+# 中文 | [英文](./README_EN.md)
+
 # Cissy
 
 Cissy 是一个基于 Clojure的数据同步工具，支持多种数据库之间的数据迁移和同步。
