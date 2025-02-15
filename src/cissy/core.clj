@@ -6,18 +6,8 @@
     [cissy.task :as task]
     [clojure.core.async :refer [>! alts! go timeout]]
     [clojure.string :as str]
-    [taoensso.timbre :as timbre])
-  (:import
-    [java.util.concurrent.locks ReentrantLock]))
+    [taoensso.timbre :as timbre]))
 
-;; (comment
-;;   (defprotocol Human
-;;     (age []))
-;;   (deftype Jissy [name age]
-;;     Human
-;;     (age [this] age))
-;;   (def j (->Jissy "张三" 23))
-;;   (age j))
 
 ; Fill execution parameters
 (defn- fill-node-param [node-execution-info curr-node-id task-config]

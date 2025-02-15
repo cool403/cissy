@@ -1,15 +1,7 @@
 (ns cissy.dbms.dbms-core
   (:require [cissy.registry :as register]
             [cissy.dbms.dialect :as dialect]
-    ;; [pod.babashka.mysql :as mysql]
-    ;; [pod.babashka.oracle :as oracle]
-    ;; [pod.babashka.postgresql :as pg]
-    ;; [pod.babashka.mysql.sql :as mysql-sql]
-    ;; [pod.babashka.oracle.sql :as oracle-sql]
-    ;; [pod.babashka.postgresql.sql :as pg-sql]
-    ;; [pod.babashka.go-sqlite3 :as sqlite]
             [cissy.const :as const]
-    ;[honey.sql.helpers :as helpers]
             [cissy.task :as task]
             [honey.sql :as sql]
             [taoensso.timbre :as timbre]
@@ -60,13 +52,6 @@
           (reset! node-execution-dict (assoc @node-execution-dict (keyword (str thread-idx)) "done")))
         result-list))))
 
-;(mysql-sql/insert-multi! aa :users ["id" "username","email"] [[22222222 "njones" "2332"]])
-;(vec (map (fn[x] (vec (vals x))) ee)) --> (vec (map #(vec (vals %)) ee))
-;(vec (map (fn [x] (name x)) (keys (first ee)))) -->(vec (map #(name %) (keys (first ee))))
-;(defn- get-table-columns [sql columns]
-;  ;columns need to be converted to keyword, otherwise they will be treated as parameters
-;  (apply helpers/columns sql (map keyword columns)))
-
 ; Unique or empty parent node
 (defn- parent-node-id [node-graph node-id]
   (:node-id (first (task/get-parent-nodes node-graph node-id))))
@@ -95,21 +80,6 @@
             datas (vec (map #(vec (vals %)) node-result-lst))]
         ; Write to different databases based on db type
         (jdbc-sql/insert-multi! to-db-ins to_table columns datas)
-        ;; (case (keyword db-type)
-        ;;   :oralce (oracle-sql/insert-multi! to-db-ins to-table  columns datas)
-        ;;   :mysql (mysql-sql/insert-multi! to-db-ins to-table  columns datas)
-        ;;   :postgresql (pg-sql/insert-multi! to-db-ins to-table  columns datas)
-        ;;   :sqlite (let [insert-sql (-> (helpers/insert-into to-table)
-        ;;                                (get-table-columns columns)
-        ;;                                (helpers/values datas)
-        ;;                                sql/format)]
-        ;;             (sqlite/execute! to-db-ins insert-sql)))
-        ; Sync count
-        ; Log
         (swap! (:sync-count @task-execution-dict) #(+ % (count datas)))
         (timbre/info (str "Inserted " (deref (:sync-count @task-execution-dict)) " records into " to_table " table"))))))
-
-; Register nodes
-;(register/regist-node-fun const/drn read-rows)
-;(register/regist-node-fun const/dwn write-rows)
 

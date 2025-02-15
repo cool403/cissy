@@ -53,20 +53,6 @@
                                (contains? % :csvw) (s/valid? ::csvw (get % :csvw))
                                :else true)))
 
-;(s/def ::uni-node-config (s/nilable ::nodes-config))
-
-;(s/def ::tg
-;  (s/keys :req-un [::task_group_name ::nodes ::entry_script ::tasks]
-;          :opt-un [::uni-node-config]))
-
-;; Define task configuration spec
-;(s/def ::task
-;  (s/and (s/map-of keyword? ::node-config)
-;         #(cond
-;            (contains? % :drn) (s/valid? ::drn (get % :drn))
-;            (contains? % :drn) (s/valid? ::dwn (get % :dwn))
-;            :else true)))
-
 (s/def ::tasks
   (s/coll-of ::node-config))
 
