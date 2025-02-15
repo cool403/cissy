@@ -1,0 +1,5 @@
+{
+ :deps {
+        org.apache.kafka/kafka-clients {:mvn/version "3.9.0"}
+        }
+ }

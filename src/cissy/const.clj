@@ -10,4 +10,4 @@
 (def csvw "csvw")                                           ; CSV write node
 
 ; Supported database types
-(def db-types #{"mysql" "postgresql", "oracle", "sqlite"})
+(def db-types #{"mysql" "postgresql", "oracle", "sqlite" "kafka"})
