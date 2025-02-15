@@ -26,7 +26,6 @@
 ; Fill execution result set
 (defn- fill-node-result-cxt [node-execution-info curr-node-id node-graph may-used-node-res]
   ; Get parent node list
-  #_{:clj-kondo/ignore [:missing-else-branch]}
   (when-let [parent-node-list (task/get-parent-nodes node-graph curr-node-id)]
     (doseq [parent-node parent-node-list]
       ; Pass the execution result of the parent node as the dependency for this node execution
