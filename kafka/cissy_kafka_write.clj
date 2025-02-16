@@ -12,8 +12,8 @@
 (def kafka-producer-map (atom {}))
 (def init-kafka-producer-lock (atom false))
 
-(def topic-sub-lock (atom false))
-(def topic-vec (atom []))
+;; (def topic-sub-lock (atom false))
+;; (def topic-vec (atom []))
 
 
 (defn- init-kafka-Producer [kafka-config-map]
