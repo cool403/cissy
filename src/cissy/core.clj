@@ -140,7 +140,7 @@
                     (if (= ch time-out)
                       ; Timeout to determine if the parent node is already done
                       (when (check-parent-nodes-done? node-id node-graph task-execution-dict)
-                          (timbre/info (str "Worker node " node-id " thread-idx=" thread-idx "all parent nodes are done, current thread task status marked as done"))
+                          (timbre/info (str "Worker node=" node-id ",thread-idx=" thread-idx ", all parent nodes are done, current thread task status marked as done"))
                           ; Send done status
                           (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
                       (do
@@ -224,7 +224,7 @@
                         ; Timeout to determine if the parent node is already done
                         (if (check-parent-nodes-done? node-id node-graph task-execution-dict)
                           (do
-                            (timbre/info (str "Worker node " node-id " thread-idx=" thread-idx "all parent nodes are done, current thread task status marked as done"))
+                            (timbre/info (str "Worker node=" node-id " thread-idx=" thread-idx ", all parent nodes are done, current thread task status marked as done"))
                             ; Send done status
                             (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
                           (recur round))
