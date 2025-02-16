@@ -11,6 +11,9 @@
 (def kafka-consumer-map (atom {}))
 (def init-kafka-consumer-lock (atom false))
 
+(def topic-sub-lock (atom false))
+(def topic-vec (atom []))
+
 
 (defn- init-kafka-consumer [kafka-config-map]
   (let [kafka-properties (java.util.Properties.)]
@@ -21,26 +24,47 @@
     (new KafkaConsumer kafka-properties)))
 
 ; ensure that only one thread can get kafka successfully
+; The KafkaConsumer class in Apache Kafka is designed to be used by a single thread
 (defn- get-kafka-consumer [ref-kafka thread-idx kafka-config-map]
-  (try
-    (loop []
-      (if (compare-and-set! init-kafka-consumer-lock false true)
-        (if (nil? (get @kafka-consumer-map (keyword ref-kafka)))
-          (let [kafka-instance (init-kafka-consumer kafka-config-map)]
-            ;; (prn (type kafka-instance))
-            (timbre/info (str "Thread=" thread-idx "successfully init kafka"))
-            (swap! kafka-consumer-map assoc (keyword ref-kafka) kafka-instance)
-            kafka-instance)
-          (do
-            (timbre/info (str "Thread=" thread-idx ",kafka instance already exists"))
-            ;return the kafka instance
-            (get @kafka-consumer-map (keyword ref-kafka))))
-        (do
-          (timbre/warn (str "Thread=" thread-idx "failed to get the lock for init kafka"))
-          (Thread/sleep 10)
-          (recur))))
-    (finally
-      (reset! init-kafka-consumer-lock false))))
+  (let [kafka-sign (keyword (str ref-kafka "_" thread-idx))]
+    (if (nil? (get @kafka-consumer-map kafka-sign))
+      (try
+        (loop []
+          (if (compare-and-set! init-kafka-consumer-lock false true)
+            (if (nil? (get @kafka-consumer-map kafka-sign))
+              (let [kafka-instance (init-kafka-consumer kafka-config-map)]
+                ;; (prn (type kafka-instance))
+                (timbre/info (str "Thread=" thread-idx "successfully init kafka"))
+                (swap! kafka-consumer-map assoc kafka-sign kafka-instance)
+                kafka-instance)
+              (do
+                (timbre/info (str "Thread=" thread-idx ",kafka instance already exists"))
+                ;return the kafka instance
+                (get @kafka-consumer-map kafka-sign)))
+            (do
+              (timbre/warn (str "Thread=" thread-idx ",failed to get the lock for init kafka"))
+              (Thread/sleep 10)
+              (recur))))
+        (finally
+          (reset! init-kafka-consumer-lock false)))
+      (get @kafka-consumer-map kafka-sign))))
+
+;aovid concurrent sub the topic
+(comment (defn- sub-topic [thread-idx kafka-instance topic]
+           (when-not (contains? @topic-vec topic)
+             (try
+               (loop []
+                 (if (compare-and-set! topic-sub-lock false true)
+                   (when-not (contains? @topic-vec topic)
+                     (.subscribe kafka-instance (java.util.Arrays/asList (into-array String [topic])))
+                     (timbre/info (str "Thread=" thread-idx ", subsribe the topic=" topic " success."))
+                     (swap! topic-vec conj topic))
+                   (do
+                     (timbre/warn (str "Thread=" thread-idx ", failed to get the lock for register the consumer topic"))
+                     (Thread/sleep 10)
+                     (recur))))
+               (finally
+                 (reset! topic-sub-lock false))))))
 
 (defn- val2json [val]
   (json/parse-string (str val) true))

@@ -17,7 +17,7 @@
                             :tasks           [{:krn {
                                                      :topic "test-topic"
                                                      :from_db "main"
-                                                     :threads 1
+                                                     :threads 5
                                                      }
                                                :console {
                                                          :threads 1
