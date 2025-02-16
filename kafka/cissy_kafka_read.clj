@@ -34,7 +34,7 @@
             (if (nil? (get @kafka-consumer-map kafka-sign))
               (let [kafka-instance (init-kafka-consumer kafka-config-map)]
                 ;; (prn (type kafka-instance))
-                (timbre/info (str "Thread=" thread-idx "successfully init kafka"))
+                (timbre/info (str "Thread=" thread-idx ", successfully init kafka"))
                 (swap! kafka-consumer-map assoc kafka-sign kafka-instance)
                 kafka-instance)
               (do

@@ -79,10 +79,11 @@
   (when-not (contains? @datasource-ins-register (keyword db-sign))
     ; If not included, instantiate first
     (if-let [_ (contains? const/db-types (:dbtype datasource-config))]
-      (cond
-        (= (:dbtype datasource-config) "sqlite") (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) (:host datasource-config)))
-        :else
-        (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) datasource-config)))
+      (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) datasource-config))
+      ;; (cond
+      ;;   (= (:dbtype datasource-config) "sqlite") (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) (:host datasource-config)))
+      ;;   :else
+      ;;   (reset! datasource-ins-register (assoc @datasource-ins-register (keyword db-sign) datasource-config)))
       (do
         (timbre/error "Datasource configuration must have dbtype attribute, and valid values are only oracle, mysql, sqlite, postgresql")
         (throw (IllegalArgumentException. "Datasource configuration must have dbtype attribute, and valid values are only oracle, mysql, sqlite, postgresql"))))))
