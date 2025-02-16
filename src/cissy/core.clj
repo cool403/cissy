@@ -32,7 +32,7 @@
       (let [parent-node-id (:node-id parent-node)
             node-result-dict (:node-result-dict @node-execution-info)]
         (timbre/info "node-id=" curr-node-id ", dependent parent-node" parent-node-id ",returns" (if (counted? may-used-node-res)
-                                                                                    (str (count may-used-node-res) "records")
+                                                                                    (str (count may-used-node-res) " records")
                                                                                     may-used-node-res))
         (reset! node-result-dict (assoc @node-execution-info (keyword parent-node-id) may-used-node-res)))))
   node-execution-info)

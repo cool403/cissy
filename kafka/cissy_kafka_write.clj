@@ -21,7 +21,7 @@
     (doseq [[k v] (-> kafka-config-map
                       (helpers/my-merge-fn {"key.serializer" "org.apache.kafka.common.serialization.StringSerializer"
                                             "value.serializer" "org.apache.kafka.common.serialization.StringSerializer"
-                                            "batch.size" 32678
+                                            "batch.size" (int 32678)
                                             "linger.ms" 100}))]
       (.put kafka-properties (name k) v))
     (new KafkaProducer kafka-properties)))
