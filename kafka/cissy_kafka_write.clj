@@ -74,7 +74,7 @@
     (if (nil? node-result-lst)
       (timbre/warn (str "task_name=" task-name ", thread-idx=" thread-idx ", get parent result is nil, will don't send to kafka"))
       (cond 
-        (seq? node-result-lst) 
+        (counted? node-result-lst) 
         (doseq [item node-result-lst]
           (let [value-str (json/generate-string item)]
             (.send kafka-producer (new ProducerRecord topic nil value-str))))
