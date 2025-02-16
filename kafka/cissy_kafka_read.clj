@@ -3,8 +3,9 @@
    [cissy.registry :refer [defnode] :as register]
    [cissy.task :as task]
    [taoensso.timbre :as timbre]
-   [cissy.helpers :as helpers])
-  (:import [org.apache.kafka.clients.consumer KafkaConsumer]))
+   [cissy.helpers :as helpers]
+   [cheshire.core :as json])
+  (:import [org.apache.kafka.clients.consumer KafkaConsumer ConsumerRecords]))
 
 ;global kafka instance map;key is the kafka instance name, value is the kafka instance
 (def kafka-consumer-map (atom {}))
@@ -14,8 +15,7 @@
 (defn- init-kafka-consumer [kafka-config-map]
   (let [kafka-properties (java.util.Properties.)]
     (doseq [[k v] (-> kafka-config-map
-                      (helpers/my-merge-fn {
-                                            "key.deserializer" "org.apache.kafka.common.serialization.StringDeserializer"
+                      (helpers/my-merge-fn {"key.deserializer" "org.apache.kafka.common.serialization.StringDeserializer"
                                             "value.deserializer" "org.apache.kafka.common.serialization.StringDeserializer"}))]
       (.put kafka-properties (name k) v))
     (new KafkaConsumer kafka-properties)))
@@ -42,6 +42,9 @@
     (finally
       (reset! init-kafka-consumer-lock false))))
 
+(defn- val2json [val]
+  (json/parse-string (str val) true))
+
 
 ;kafka startup node, pull data from kafka
 ;from_db ref to kafka configuration
@@ -53,18 +56,19 @@
         {:keys [krn]} task-config
         {:keys [thread-idx]} @node-execution-dict
         {:keys [from_db topic]} krn
-        kafka-consumer (get-kafka-consumer from_db thread-idx (register/get-datasource-ins from_db))] 
-    (prn (type kafka-consumer))
+        kafka-consumer (get-kafka-consumer from_db thread-idx (register/get-datasource-ins from_db))]
+    ;; (prn (type kafka-consumer))
     (.subscribe kafka-consumer (java.util.Arrays/asList (into-array String [topic])))
     ;poll data from kafka, if there is no data, the thread will be blocked,you can set the timeout
-    (let [records (.poll kafka-consumer (java.time.Duration/ofMillis Long/MAX_VALUE))]
-      (doseq [record records]
-        (let [topic (.topic record)
-              value (.value record)
-              partition (.partition record)
-              offset (.offset record)
-              headers (.headers record)
-              timestamp (.timestamp record)]
-        (timbre/info (str "Thread=" thread-idx ", topic=" topic ", value=" value ", partition=" partition ", offset=" offset ", headers=" headers ", timestamp=" timestamp)))))))
+    (let [^ConsumerRecords records (.poll kafka-consumer (java.time.Duration/ofMillis Long/MAX_VALUE))]
+      (timbre/info (str "task-name=" task-name ",thread-idx=" thread-idx ",poll records count=" (.count records)))
+      ;transform the data to json format
+      (vec (map #(val2json (.value %)) (into [] (iterator-seq (.iterator records))))))))
+;; (doseq [record records]
+;;   (let [topic (.topic record)
+;;         value (.value record)
+;;         partition (.partition record)
+;;         offset (.offset record)
+;;         headers (.headers record)
+;;         timestamp (.timestamp record)] (timbre/info (str "Thread=" thread-idx ", topic=" topic ", value=" value ", partition=" partition ", offset=" offset ", headers=" headers ", timestamp=" timestamp))))
     
-

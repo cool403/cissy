@@ -1,10 +1,11 @@
 (ns kafka_task_test
   (:require [cissy.commands :as commands]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all]
+            [cissy.init :as init]))
 
 
 (def kafka-config-edn (str {:task_group_name "kafka task demo"
-                            :nodes           "krn->;"
+                            :nodes           "krn->console;"
                             :datasource      {
                                               :main {
                                                      :dbtype "kafka"
@@ -16,7 +17,11 @@
                             :tasks           [{:krn {
                                                      :topic "test-topic"
                                                      :from_db "main"
-                                                     }}]}))
+                                                     :threads 1
+                                                     }
+                                               :console {
+                                                         :threads 1
+                                                         }}]}))
 
 (deftest kafka-task-test
   (testing "load data from kafka"
