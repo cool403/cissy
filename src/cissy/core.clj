@@ -144,7 +144,7 @@
                           ; Send done status
                           (>! node-monitor-channel {:node-id node-id :node-status "done" :thread-idx thread-idx}))
                       (do
-                        (timbre/info (str "Node " node-id "obtained parent node result"))
+                        ;; (timbre/info (str "Node " node-id "obtained parent node result"))
                         (let [[status result] (-> curr-node-execution
                                                   (fill-node-result-cxt node-id node-graph curr-result)
                                                   (execute-node-fn node-func node-monitor-channel thread-idx))]
