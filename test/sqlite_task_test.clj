@@ -20,8 +20,8 @@
                              :tasks           [{:krn {:topic   "test-topic"
                                                       :from_db "main"
                                                       :threads 5}
-                                                :dwn {:threads 2
-                                                      :to_db   "sqlite-test"
+                                                :dwn {:threads  2
+                                                      :to_db    "sqlite-test"
                                                       :to_table "Users"}}]}))
 
 (deftest sqlite-task-test
