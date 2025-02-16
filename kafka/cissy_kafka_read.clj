@@ -34,7 +34,7 @@
             (if (nil? (get @kafka-consumer-map kafka-sign))
               (let [kafka-instance (init-kafka-consumer kafka-config-map)]
                 ;; (prn (type kafka-instance))
-                (timbre/info (str "Thread=" thread-idx ", successfully init kafka"))
+                (timbre/info (str "Thread=" thread-idx ", successfully init kafka consumer"))
                 (swap! kafka-consumer-map assoc kafka-sign kafka-instance)
                 kafka-instance)
               (do
@@ -42,7 +42,7 @@
                 ;return the kafka instance
                 (get @kafka-consumer-map kafka-sign)))
             (do
-              (timbre/warn (str "Thread=" thread-idx ",failed to get the lock for init kafka"))
+              (timbre/warn (str "Thread=" thread-idx ",failed to get the lock for init kafka consumer"))
               (Thread/sleep 10)
               (recur))))
         (finally
