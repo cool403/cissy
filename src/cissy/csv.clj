@@ -75,3 +75,18 @@
           (csv/write-csv wrt rows)
           (swap! (:sync-count @task-execution-dict) #(+ % (count rows)))
           (timbre/info (str "Written " (deref (:sync-count @task-execution-dict)) " records to file:" target-file)))))))
+
+
+(defnode csvr [^NodeExecutionInfo node-exec-info]
+    (let [{:keys [task-execution-info node-result-dict node-execution-dict]} @node-exec-info
+        {:keys [task-info task-execution-dict]} @task-execution-info
+        {:keys [task-idx task-name task-config node-graph]} @task-info
+        {:keys [csvr]} task-config
+        {:keys [thread-idx]} @node-execution-dict
+        {:keys [target_file separator]} csvr]
+      ;as default first row is column row
+      (with-open [reader (io/reader target_file)]
+        (let [lines (csv/read-csv reader :separator \,)
+              column-vec (map keyword (doall (first lines)))
+              data-vec (doall (drop 1 lines))]
+          (vec (map #(zipmap column-vec %) data-vec))))))

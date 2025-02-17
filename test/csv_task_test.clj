@@ -80,3 +80,22 @@
             (timbre/info (str "Successfully deleted file /home/mawdx/桌面/demo" idx ".csv"))
             (catch Exception ex
               (timbre/error "Error deleting file" (.getMessage ex) ex)))))))))
+
+
+(def csv-read-config-edn (str {:task_group_name "23223"
+                               :nodes           "csvr->console;"
+                               :sched_type      "once"
+                               :datasource      {}
+                               :tasks           [{
+                                                  :csvr    {
+                                                            :target_file "/home/mawdx/桌面/testdata.csv"
+                                                            }
+                                                  :console {
+
+                                                            }
+                                                  }]}))
+
+(deftest csv-read-test
+  (testing "load data from csv"
+    (commands/-startj csv-read-config-edn)
+    (is true)))
