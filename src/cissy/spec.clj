@@ -58,17 +58,17 @@
 
 (s/def ::sched_type #{"once" "always"})
 ;; Define the entire data structure spec
-(s/def ::task-json
+(s/def ::task-edn
   (s/keys :req-un [::datasource ::tasks ::nodes ::task_group_name]
           :opt-un [::entry_script ::node-config ::sched_type]))
 
-(defn valid-config-json
+(defn valid-config-edn
   "docstring"
-  [config-json]
+  [config-edn]
   ;(let [config-map (json/parse-string config-json #(keyword %))]
-  (let [config-map (edn/read-string config-json)]
-    (if-not (s/valid? ::task-json config-map)
+  (let [config-map (edn/read-string config-edn)]
+    (if-not (s/valid? ::task-edn config-map)
       (do
-        (println (s/explain ::task-json config-map))
+        (println (s/explain ::task-edn config-map))
         :fail)
       :ok)))

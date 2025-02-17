@@ -64,7 +64,7 @@
         config-edn (slurp config-path)]
     (require '[cissy.init :as init])
     (timbre/info "Execute task start command" options)
-    (when-not (= (spec/valid-config-json config-edn) :ok)
-      (timbre/error "Task configuration json format error, please check the configuration file")
+    (when-not (= (spec/valid-config-edn config-edn) :ok)
+      (timbre/error "Task configuration edn format error, please check the configuration file")
       (System/exit 1))
     (-startj config-edn)))
