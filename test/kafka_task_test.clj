@@ -1,4 +1,4 @@
-(ns kafka_task_test
+(ns kafka-task-test
   (:require [cissy.commands :as commands]
             [clojure.test :refer :all]
             [cissy.init :as init]))
