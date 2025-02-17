@@ -76,7 +76,6 @@
           (swap! (:sync-count @task-execution-dict) #(+ % (count rows)))
           (timbre/info (str "Written " (deref (:sync-count @task-execution-dict)) " records to file:" target-file)))))))
 
-
 (defnode csvr [^NodeExecutionInfo node-exec-info]
     (let [{:keys [task-execution-info node-result-dict node-execution-dict]} @node-exec-info
         {:keys [task-info task-execution-dict]} @task-execution-info
