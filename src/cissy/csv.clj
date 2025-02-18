@@ -49,10 +49,6 @@
       (str (helpers/get-desktop-path) "/" task-name ".csv")
       task-file-config)))
 
-; Unique or empty parent node
-(defn- parent-node-id [node-graph node-id]
-       (:node-id (first (task/get-parent-nodes node-graph node-id))))
-
 ;; Write to csv file
 (defnode csvw [^NodeExecutionInfo node-exec-info]
   (let [{:keys [task-execution-info node-result-dict node-execution-dict]} @node-exec-info
@@ -60,7 +56,7 @@
         {:keys [task-idx task-name task-config node-graph]} @task-info
         {:keys [csvw]} task-config
         {:keys [thread-idx]} @node-execution-dict
-        node-result-lst (get @node-result-dict (keyword (parent-node-id node-graph "csvw")))
+        node-result-lst (get @node-result-dict (keyword (helpers/parent-node-id-fn node-graph "csvw")))
         target-file (target-file-fn task-info)]
     (if (or (nil? node-result-lst) (= (count node-result-lst) 0))
       (do

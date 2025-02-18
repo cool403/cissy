@@ -12,10 +12,6 @@
 (def kafka-producer-map (atom {}))
 (def init-kafka-producer-lock (atom false))
 
-;; (def topic-sub-lock (atom false))
-;; (def topic-vec (atom []))
-
-
 (defn- init-kafka-Producer [kafka-config-map]
   (let [kafka-properties (java.util.Properties.)]
     (doseq [[k v] (-> kafka-config-map
@@ -52,14 +48,6 @@
           (reset! init-kafka-producer-lock false)))
       (get @kafka-producer-map kafka-sign))))
 
-
-
-
-; The parent node is either unique or empty
-(defn- parent-node-id [node-graph node-id]
-  (:node-id (first (task/get-parent-nodes node-graph node-id))))
-
-
 ;to_db ref to kafka configuration
 ;kafka configuration is in the datasource configuration
 (defnode kwn [node-exec-info]
@@ -70,7 +58,7 @@
         {:keys [thread-idx]} @node-execution-dict
         {:keys [to_db topic]} kwn
         kafka-producer (get-kafka-producer to_db thread-idx (register/get-datasource-ins to_db))
-        node-result-lst (get @node-result-dict (keyword (parent-node-id node-graph "kwn")))]
+        node-result-lst (get @node-result-dict (keyword (helpers/parent-node-id-fn node-graph "kwn")))]
     (if (nil? node-result-lst)
       (timbre/warn (str "task_name=" task-name ", thread-idx=" thread-idx ", get parent result is nil, will don't send to kafka"))
       (cond 

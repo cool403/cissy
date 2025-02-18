@@ -52,10 +52,6 @@
           (reset! node-execution-dict (assoc @node-execution-dict (keyword (str thread-idx)) "done")))
         result-list))))
 
-; Unique or empty parent node
-(defn- parent-node-id [node-graph node-id]
-  (:node-id (first (task/get-parent-nodes node-graph node-id))))
-
 ; Write data to db row by row
 (register/defnode dwn
   [node-exec-info]
@@ -66,7 +62,7 @@
         {:keys [dwn]} task-config
         {:keys [thread-idx]} @node-execution-dict
         {:keys [to_db to_table]} dwn
-        node-result-lst (get @node-result-dict (keyword (parent-node-id node-graph "dwn"))) 
+        node-result-lst (get @node-result-dict (keyword (helpers/parent-node-id-fn node-graph "dwn"))) 
         ; Get associated datasource configuration
         to-db-ins (register/get-datasource-ins to_db)]
     ; Check if drn node data is empty

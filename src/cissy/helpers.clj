@@ -1,6 +1,7 @@
 (ns cissy.helpers
   (:require [cissy.executions :as executions]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [cissy.task :as task])
   (:import (java.io File)
            (java.nio.file Files Path Paths StandardOpenOption)))
 
@@ -13,7 +14,6 @@
               (assoc acc k v)))
           m1
           m2))
-
 
 (defn curr-node-done
   "Mark the current node as done"
@@ -38,3 +38,7 @@
     (Files/write file-path file-bytes
                  (into-array [StandardOpenOption/CREATE StandardOpenOption/TRUNCATE_EXISTING]))
     (str file-path)))
+
+; Unique or empty parent node
+(defn parent-node-id-fn [node-graph node-id]
+  (:node-id (first (task/get-parent-nodes node-graph node-id))))
