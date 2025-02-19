@@ -1,0 +1,5 @@
+{
+ :deps {
+       clj-http/clj-http {:mvn/version "3.13.0"} 
+ }
+ }
