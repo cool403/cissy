@@ -22,4 +22,6 @@
 
 
 (def http-get (new HttpGet "www.baidu.com"))
-(def http-client (HttpClients/createDefault))
+
+;; create a default http client
+(defonce http-client (HttpClients/createDefault))
