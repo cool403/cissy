@@ -1,4 +1,4 @@
-(ns xhs.init-sql)
+(ns xhs.create-table-sql)
 
 ;; xhs_pages definition
 (defonce xhs-pages-table-sql 
