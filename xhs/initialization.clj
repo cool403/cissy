@@ -25,4 +25,5 @@
 ;{dbtype "sqlite",  dbname "db/xhs.db"}
 (defn init-db [db-spec]
   (timbre/info "Initialize database")
+  #_{:clj-kondo/ignore [:inline-def]}
   (defonce init (create-tables db-spec)))
