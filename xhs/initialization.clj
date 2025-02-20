@@ -5,10 +5,8 @@
    [xhs.init-sql :refer [xhs-comments-table-sql xhs-pages-table-sql
                          xhs-posts-table-sql]]))
 
+; the check sql
 (defonce check-table-sql "select 1 from sqlite_master where name='xhs_pages' and type='table'")
-
-;{dbtype "sqlite",  dbname "db/xhs.db"}
-(defn init-db [db-spec])
 
 ; Check if the table exists
 (defn- check-table-exists? [db-spec]
@@ -23,3 +21,8 @@
       (jdbc/execute! db-spec xhs-posts-table-sql)
       (jdbc/execute! db-spec xhs-comments-table-sql))
     (timbre/info "xhs_pages, xhs_posts, xhs_comments tables already exists")))
+
+;{dbtype "sqlite",  dbname "db/xhs.db"}
+(defn init-db [db-spec]
+  (timbre/info "Initialize database")
+  (defonce init (create-tables db-spec)))
