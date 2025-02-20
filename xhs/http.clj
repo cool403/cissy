@@ -4,7 +4,8 @@
   (:import
    [org.apache.hc.core5.http.message BasicHttpRequest]
    [org.apache.hc.client5.http.classic.methods HttpGet]
-   [org.apache.hc.client5.http.impl.classic HttpClients]))
+   [org.apache.hc.client5.http.impl.classic HttpClients]
+   [org.apache.hc.core5.http.io.entity EntityUtils]))
 
 ;; wrap a http request
 ;; set the default headers
@@ -20,8 +21,17 @@
     (.setHeader "Cache-Control" "max-age=0")
     (.setHeader "Upgrade-Insecure-Requests" "1")))
 
-
-(def http-get (new HttpGet "www.baidu.com"))
-
 ;; create a default http client
 (defonce http-client (HttpClients/createDefault))
+
+;; get the response content as string
+(defn http-get [^String url]
+  (let [request (-> (new HttpGet url)
+                   (wrapper-request))
+        response (.execute http-client request)
+        status (.getStatusCode response)]
+    (if (= status 200)
+      (EntityUtils/toString (.getEntity response))
+      (throw (Exception. (str "HTTP status: " status ",content: " (.getContent response)))))))
+
+

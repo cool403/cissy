@@ -3,9 +3,16 @@
    [cissy.executions :refer [NodeExecutionInfo]]
    [cissy.registry :refer [defnode]]
    [taoensso.timbre :as timbre]
-   [xhs.initialization :refer [init-db]]))
+   [xhs.initialization :refer [init-db]]
+   [xhs.db :refer [get-todo-pages]]
+   [xhs.http :as http]))
 
+(defn- extract-all-posts [page content])
 
+(defn- craw-page [page]
+  (let [{:keys [page_url :id]} page
+        content (http/http-get page_url)]
+    (extract-all-posts page content)))
 
 ; init get-posts url
 ; read people's profile page from database
@@ -21,4 +28,13 @@
       ;as default first row is column row
     (timbre/info (str "thread-idx=" thread-idx ",seed_url=" seed_url ",db_file=" db_file))
     ;init db
-    (init-db db-spec seed_url)))
+    (init-db db-spec seed_url)
+    ;; load page urls
+    (let [todo-pages (get-todo-pages db-spec thread-idx)]
+      (if (> (count todo-pages) 0)
+        (doseq [page todo-pages]
+          (try
+            (craw-page page)
+            (catch Exception e
+              (timbre/error (str "Thread=" thread-idx ", error when crawling page" page ", " (.getMessage e) e)))))
+        (timbre/info (str "Thread=" thread-idx ", no more todo pages"))))))

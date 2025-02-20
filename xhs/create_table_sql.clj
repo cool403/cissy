@@ -19,7 +19,7 @@
 	uid TEXT(50),
 	post TEXT,
 	post_url TEXT DEFAULT ('200'),
-	is_visited TEXT(4),
+	craw_status TEXT(4),
 	last_visit_time INTEGER,
 	tag TEXT(10),
 	comments_count INTEGER,
