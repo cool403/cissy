@@ -1,4 +1,4 @@
-(ns xhs.helper
+(ns xhs.http
   (:require
    [taoensso.timbre :as timbre]) 
   (:import
