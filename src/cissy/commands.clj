@@ -32,9 +32,9 @@
       (println (slurp (io/resource "task_config.edn"))))
     ))
 
-(defn -startj [config-json]
+(defn -startj [config-edn]
   ; Parse task configuration
-  (let [task-info-vec (loader/get-task-from-json config-json)
+  (let [task-info-vec (loader/get-task-from-edn config-edn)
         to-future-fn (fn [task-info]
                        (let [sched-info (:sched-info @task-info)
                              new-task-execution-info (executions/new-task-execution-info)]

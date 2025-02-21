@@ -66,7 +66,7 @@
 (defonce http-client (HttpClients/createDefault))
 
 ;; get the response content as string
-(defn http-get [^{} get-dict]
+(defn http-get [get-dict]
   (let [request (-> (new HttpGet (:page_url get-dict))
                     (wrapper-request (:cookie_file get-dict)))
         response (.execute http-client request)

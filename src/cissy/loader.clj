@@ -90,12 +90,12 @@
         (reset! task-info (assoc @task-info :sched-info (sched/->ChanBasedSched)))))
     task-info))
 
-; Parse task from json
-(defn get-task-from-json [^String task-json]
-  ; json->keyword map, keyword map can be accessed by (:name)
-  (timbre/info "Start parsing task group configuration" task-json)
-  (map assemble-task-fn (get-tasks-map-fn task-json)))
+; Parse task from edn
+(defn get-task-from-edn [^String task-config-edn]
+  ; edn->keyword map, keyword map can be accessed by (:name)
+  (timbre/info "Start parsing task group configuration" task-config-edn)
+  (map assemble-task-fn (get-tasks-map-fn task-config-edn)))
 
 ; Test
-;; (def demo-json (slurp "/home/mawdx/Desktop/task_config.json"))
-;; (get-task-from-json demo-json)
+;; (def demo-edn (slurp "/home/mawdx/Desktop/task_config.edn"))
+;; (get-task-from-edn demo-edn)

@@ -1,6 +1,5 @@
 (ns xhs.get-posts
-  (:require
-   [cissy.executions :refer [NodeExecutionInfo]]
+  (:require 
    [cissy.registry :refer [defnode]]
    [taoensso.timbre :as timbre]
    [xhs.initialization :refer [init-db]]
@@ -9,7 +8,7 @@
 
 (defn- extract-all-posts [page content])
 
-(defn- craw-page [^{} page-dict]
+(defn- craw-page [page-dict]
   (let [{:keys [page cookie_file]} page-dict
         {:keys [page_url :id]} page
         content (http/http-get {:page_url page_url :cookie_file cookie_file})]
@@ -17,7 +16,7 @@
 
 ; init get-posts url
 ; read people's profile page from database
-(defnode get-posts [^NodeExecutionInfo node-exec-info]
+(defnode get-posts [node-exec-info]
   (timbre/info "start get-posts")
   (let [{:keys [task-execution-info node-result-dict node-execution-dict]} @node-exec-info
         {:keys [task-info task-execution-dict]} @task-execution-info
