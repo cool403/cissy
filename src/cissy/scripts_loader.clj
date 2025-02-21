@@ -1,14 +1,14 @@
 (ns cissy.scripts-loader
   (:require
-    [cissy.helpers :as helpers]
-    [clojure.edn :as edn]
-    [clojure.java.io :as io]
-    [clojure.string :as str]
-    [clojure.tools.deps :as deps]
-    [clojure.tools.deps.util.maven :as maven]
-    [taoensso.timbre :as timbre])
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [clojure.tools.deps :as deps]
+   [clojure.tools.deps.util.maven :as maven]
+   [clojure.tools.namespace.parse :as parser]
+   [taoensso.timbre :as timbre])
   (:import (clojure.lang DynamicClassLoader RT)
-           (java.io File)
+           (java.io File PushbackReader StringReader)
            (java.util.zip ZipEntry ZipFile)))
 
 ; Global
@@ -24,7 +24,7 @@
     (timbre/info "Resolved paths:" paths)
     (doseq [^String path paths]
       (RT/addURL (.toURL
-                   (File. path))))))
+                  (File. path))))))
 
 ; Load deps, a zip package should normally only have one deps.edn
 (defn load-deps-edn!
@@ -38,18 +38,40 @@
         (load-dependency (assoc deps-map :mvn/repos maven/standard-repos))))
     (timbre/info "Dependencies loaded")))
 
-;(defn load-clj-file!
-;  "Load script file"
-;  [^String clj-file]
-;  (load-string clj-file))
+;; parse clj-file
+(defn- clj-file [zip-file clj-entry]
+  (let [clj-content (slurp (.getInputStream zip-file clj-entry))]
+    (with-open [rdr (PushbackReader. (StringReader. clj-content))]
+      ;; return a list,first element is ns,second is curr ns
+      (let [ns-list (parser/read-ns-decl rdr)]
+        {:curr-ns     (str (second ns-list))
+         :deps-str    (str (vec (drop 2 ns-list)))
+         :clj-content clj-content
+         :file-name   (.getName clj-entry)}))))
+
+;; include all the sub-dir under the specified directory
+;; find all clj files
+(defn- get-clj-files-from-zip [zip-file]
+  ;; Get all clj files under the specified directory
+  (let [clj-entries (loop [entries (enumeration-seq (.entries zip-file))
+                           clj-entries []]
+                      (if (empty? entries)
+                        clj-entries
+                        (let [entry (first entries)]
+                          (if (and (not (.isDirectory entry)) (.endsWith (.getName entry) ".clj"))
+                            (recur (rest entries) (conj clj-entries entry))
+                            (recur (rest entries) clj-entries)))))]
+    (map (fn [entry] (clj-file zip-file entry)) clj-entries)))
+
+(defn- get-deps-vec [clj-file ns-decls]
+  (filter #(str/includes? (:deps-str clj-file) %) ns-decls))
 
 ; Does not support nested script directories
 ; Supports a.clj, b.clj, deps.clj in one level directory, does not support d/a.clj, d/d1/a.clj
 (defn load-zip!
   "Load zip format task"
   [^String zip-file-path]
-  (let [zip-file (ZipFile. zip-file-path)
-        entries (.entries zip-file)]
+  (let [zip-file (ZipFile. zip-file-path)]
     ; Load deps.edn
     ; Modify classloader, only need to modify if deps are loaded
     (when-let [deps-entry (.getEntry zip-file "deps.edn")]
@@ -62,13 +84,33 @@
       (when (.isBound Compiler/LOADER)
         (.set Compiler/LOADER script-class-loader))
       (load-deps-edn! (slurp (.getInputStream zip-file deps-entry))))
-    ;(require '[clj-http.client :as client])
-    (while (.hasMoreElements entries)
-      (let [^ZipEntry entry (.nextElement entries)
-            entry-name (.getName entry)]
-        (when (.endsWith entry-name ".clj")
-          (load-string (slurp (.getInputStream zip-file entry)))
-          (timbre/info (str "Successfully loaded script file:" entry-name)))))))
+    ; Load scripts
+    (let [clj-files (get-clj-files-from-zip zip-file)]
+      (timbre/info "the loading order is:" (map :file-name clj-files))
+      ;; get all the ns declarations
+      (let [ns-decls (map :curr-ns clj-files)
+            clj-files-with-deps (map #(assoc % :deps (doall (get-deps-vec % ns-decls))) clj-files)]
+        (timbre/info (str clj-files-with-deps))
+        (loop [clj-files clj-files-with-deps
+               loaded-ns #{}]
+          (prn "----------------" loaded-ns " clj-file-size" (count clj-files))
+          (if (empty? clj-files)
+            (timbre/info "All scripts loaded")
+            ; the script loading precedence is based on the dependency relationship
+            ; if a depends on b, then b should be loaded before a
+            ; if a and b have no dependency relationship, then a should be loaded before b
+            (let [loadable-files (filter #(or (empty? (:deps %))
+                                              (and
+                                               (> (count loaded-ns) 0)
+                                               (every? loaded-ns (set (:deps %))))) clj-files)
+                  loadable-ns (set (map :curr-ns loadable-files))]
+              (doseq [clj-file loadable-files]
+                (timbre/info "start to load:" (:file-name clj-file))
+                (load-string (:clj-content clj-file))
+                (timbre/info "load:" (:file-name clj-file) "success!"))
+              (recur
+               (remove #(contains? loadable-ns (:curr-ns %)) clj-files)
+               (into loaded-ns loadable-ns)))))))))
 
 (defn file-exists? [^String path]
   (.exists (io/file path)))
@@ -82,4 +124,3 @@
           (str/ends-with? main-entry ".zip") (load-zip! main-entry)
           :else (timbre/error "Unsupported file suffix:" main-entry))
     (timbre/error (str "Script file does not exist:" main-entry))))
-

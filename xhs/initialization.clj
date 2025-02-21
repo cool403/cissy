@@ -2,10 +2,9 @@
   (:require
    [honey.sql :as sql]
    [honey.sql.helpers :refer [columns insert-into values]]
-   [java-time :as java-time]
    [next.jdbc :as jdbc]
    [taoensso.timbre :as timbre]
-   [xhs.init-sql :refer [xhs-comments-table-sql xhs-pages-table-sql
+   [xhs.create-table-sql :refer [xhs-comments-table-sql xhs-pages-table-sql
                          xhs-posts-table-sql]]))
 
 ; the check sql
