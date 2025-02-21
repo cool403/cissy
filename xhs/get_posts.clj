@@ -9,9 +9,10 @@
 
 (defn- extract-all-posts [page content])
 
-(defn- craw-page [page]
-  (let [{:keys [page_url :id]} page
-        content (http/http-get page_url)]
+(defn- craw-page [^{} page-dict]
+  (let [{:keys [page cookie_file]} page-dict
+        {:keys [page_url :id]} page
+        content (http/http-get {:page_url page_url :cookie_file cookie_file})]
     (extract-all-posts page content)))
 
 ; init get-posts url
@@ -23,7 +24,7 @@
         {:keys [task-idx task-name task-config node-graph]} @task-info
         {:keys [get-posts]} task-config
         {:keys [thread-idx]} @node-execution-dict
-        {:keys [seed_url db_file]} get-posts
+        {:keys [seed_url db_file cookie_file]} get-posts
         db-spec {:dbtype "sqlite" :dbname db_file}]
       ;as default first row is column row
     (timbre/info (str "thread-idx=" thread-idx ",seed_url=" seed_url ",db_file=" db_file))
@@ -34,7 +35,7 @@
       (if (> (count todo-pages) 0)
         (doseq [page todo-pages]
           (try
-            (craw-page page)
+            (craw-page {:page page :cookie_file cookie_file})
             (catch Exception e
               (timbre/error (str "Thread=" thread-idx ", error when crawling page" page ", " (.getMessage e) e)))))
         (timbre/info (str "Thread=" thread-idx ", no more todo pages"))))))
