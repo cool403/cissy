@@ -1,5 +1,6 @@
 (ns xhs.db
   (:require
+   [honey.sql :as sql]
    [honey.sql.helpers :as helpers]
    [next.jdbc :as jdbc]
    [next.jdbc.result-set :as rs]
@@ -22,13 +23,13 @@
   (try
     (loop []
       (if (compare-and-set! get-todo-pages-lock false true)
-        (do 
+        (do
           (timbre/info (str "Thread=" thread-idx ", successfully get todo pages"))
-          (let [res-vec (jdbc/execute! db-spec get-todo-pages-sql {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})]
+          (let [res-vec (jdbc/execute! db-spec [get-todo-pages-sql] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})]
             ;; update page status to DING
-            (jdbc/execute! db-spec (-> (helpers/update :xhs_pages)
-                                       (helpers/set {:craw_status "DING" :lastmodifiy_time (System/currentTimeMillis)})
-                                       (helpers/where {:id [:in (map :id res-vec)]})))
+            (jdbc/execute! db-spec (sql/format (-> (helpers/update :xhs_pages)
+                                                   (helpers/set {:craw_status "DING" :lastmodifiy_time (System/currentTimeMillis)})
+                                                   (helpers/where [:in :id (map :id res-vec)]))))
             res-vec))
         (do
           (timbre/warn (str "Thread=" thread-idx ",failed to get the lock for init kafka producer"))
@@ -45,11 +46,11 @@
       (if (compare-and-set! get-todo-posts-lock false true)
         (do
           (timbre/info (str "Thread=" thread-idx ", successfully get todo posts"))
-          (let [res-vec (jdbc/execute! db-spec get-todo-posts-sql {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})]
+          (let [res-vec (jdbc/execute! db-spec [get-todo-posts-sql] {:result-set-fn rs/as-maps :builder-fn rs/as-unqualified-maps})]
             ;; update post status to DING
-            (jdbc/execute! db-spec (-> (helpers/update :xhs_posts)
-                                       (helpers/set {:craw_status "DING" :lastmodify_time (System/currentTimeMillis)})
-                                       (helpers/where {:id [:in (map :id res-vec)]})))
+            (jdbc/execute! db-spec (sql/format (-> (helpers/update :xhs_posts)
+                                                   (helpers/set {:craw_status "DING" :lastmodify_time (System/currentTimeMillis)})
+                                                   (helpers/where [:in :id (map :id res-vec)]))))
             res-vec))
         (do
           (timbre/warn (str "Thread=" thread-idx ",failed to get the lock for init kafka producer"))

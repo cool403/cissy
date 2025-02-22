@@ -5,27 +5,27 @@
    [next.jdbc :as jdbc]
    [taoensso.timbre :as timbre]
    [xhs.create-table-sql :refer [xhs-comments-table-sql xhs-pages-table-sql
-                         xhs-posts-table-sql]]))
+                                 xhs-posts-table-sql]]))
 
 ; the check sql
 (defonce check-table-sql "select 1 from sqlite_master where name='xhs_pages' and type='table'")
 
 ; Check if the table exists
 (defn- check-table-exists? [db-spec]
-  (seq (jdbc/execute! db-spec [check-table-sql] {:multi-rs true})))
+  (seq (jdbc/execute! db-spec [check-table-sql])))
 
 ; Create tables if not exists
 (defn- create-tables [db-spec seed-url]
   (if (not (check-table-exists? db-spec))
     (do
       (timbre/info "Create xhs_pages, xhs_posts, xhs_comments tables")
-      (jdbc/execute! db-spec xhs-pages-table-sql)
-      (jdbc/execute! db-spec xhs-posts-table-sql)
-      (jdbc/execute! db-spec xhs-comments-table-sql)
+      (jdbc/execute! db-spec [xhs-pages-table-sql])
+      (jdbc/execute! db-spec [xhs-posts-table-sql])
+      (jdbc/execute! db-spec [xhs-comments-table-sql])
       ; Insert seed data
       (jdbc/execute! db-spec (sql/format (-> (insert-into :xhs_pages)
-                                            (columns [:page_url :craw_status :create_time :lastmodifiy_time])
-                                            (values [seed-url "TODO" (System/currentTimeMillis) (System/currentTimeMillis)]))))
+                                             (columns :page_url :craw_status :create_time :lastmodifiy_time)
+                                             (values [[seed-url "TODO" (System/currentTimeMillis) (System/currentTimeMillis)]]))))
       (timbre/info "insert into seed url:" seed-url " success!"))
     (timbre/info "xhs_pages, xhs_posts, xhs_comments tables already exists")))
 

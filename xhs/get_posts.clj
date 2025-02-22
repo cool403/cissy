@@ -25,7 +25,6 @@
         {:keys [thread-idx]} @node-execution-dict
         {:keys [seed_url db_file cookie_file]} get-posts
         db-spec {:dbtype "sqlite" :dbname db_file}]
-      ;as default first row is column row
     (timbre/info (str "thread-idx=" thread-idx ",seed_url=" seed_url ",db_file=" db_file))
     ;init db
     (init-db db-spec seed_url)
