@@ -29,8 +29,20 @@
       (timbre/info "insert into seed url:" seed-url " success!"))
     (timbre/info "xhs_pages, xhs_posts, xhs_comments tables already exists")))
 
+;; make sure only one thread call create-tables
+(defonce init-lock (atom false))
+(defonce initialized (atom false))
+
 ;{dbtype "sqlite",  dbname "db/xhs.db"}
 (defn init-db [db-spec seed-url]
   (timbre/info "Initialize database")
-  #_{:clj-kondo/ignore [:inline-def]}
-  (defonce _ (create-tables db-spec seed-url)))
+  (loop []
+    (if @initialized
+      (timbre/info "Database already initialized")
+      (if (compare-and-set! init-lock false true)
+        (do
+          (create-tables db-spec seed-url)
+          (reset! initialized true))
+        (do
+          (Thread/sleep 15)
+          (recur))))))

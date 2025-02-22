@@ -12,6 +12,7 @@
                                :tasks           [{:get-posts {
                                                               :db_file     "/home/mawdx/桌面/xhs1.db"
                                                               :seed_url    "https://chat.deepseek.com/"
+                                                              :threads 5
                                                               ;:cookie_file "/home/mawdx/桌面/xhs.zip"
                                                               }}]}))
 
