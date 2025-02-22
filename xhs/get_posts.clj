@@ -11,7 +11,7 @@
 (defn- craw-page [page-dict]
   (timbre/info (str "craw-page=" page-dict))
   (let [{:keys [page cookie_file]} page-dict
-        {:keys [page_url :id]} page
+        {:keys [page_url id]} page
         content (http/http-get {:page_url page_url :cookie_file cookie_file})]
     (extract-all-posts page content)))
 
@@ -31,6 +31,7 @@
     (init-db db-spec seed_url)
     ;; load page urls
     (let [todo-pages (get-todo-pages db-spec thread-idx)]
+      (timbre/info (str "thread-idx=" thread-idx ",todo-pages=" todo-pages))
       (if (> (count todo-pages) 0)
         (doseq [page todo-pages]
           (try

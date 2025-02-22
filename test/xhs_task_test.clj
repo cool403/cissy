@@ -6,13 +6,14 @@
                                ;; Database nodes currently support drn and dwn, drn is responsible for loading data, dwn is responsible for writing data
                                :nodes           "get-posts->;"
                                :datasource      {}
+                               :sched_type      "once"
                                ;; When customizing task scripts, it needs to be explicitly declared here, note that the absolute path should be written here
                                :entry_script    ["/home/mawdx/桌面/xhs.zip"]
                                :tasks           [{:get-posts {
-                                                        :db_file "/home/mawdx/桌面/xhs1.db"
-                                                        :seed_url "https://chat.deepseek.com/"
-                                                        :cookie_file "/home/mawdx/桌面/xhs.zip"
-                                                        }}]}))
+                                                              :db_file     "/home/mawdx/桌面/xhs1.db"
+                                                              :seed_url    "https://chat.deepseek.com/"
+                                                              ;:cookie_file "/home/mawdx/桌面/xhs.zip"
+                                                              }}]}))
 
 
 (deftest xhs-task-test

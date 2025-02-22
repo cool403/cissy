@@ -70,7 +70,7 @@
   (let [request (-> (new HttpGet (:page_url get-dict))
                     (wrapper-request (:cookie_file get-dict)))
         response (.execute http-client request)
-        status (.getStatusCode response)]
+        status (.getCode response)]
     (if (= status 200)
       (EntityUtils/toString (.getEntity response))
       (throw (Exception. (str "HTTP status: " status ",content: " (.getContent response)))))))
