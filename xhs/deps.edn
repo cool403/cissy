@@ -2,7 +2,8 @@
  :deps {
       ;;  clj-http/clj-http {:mvn/version "3.13.0"} 
         org.apache.httpcomponents.client5/httpclient5 {:mvn/version "5.4.2"}
-        com.vladsch.flexmark/flexmark-all {:mvn/version "0.64.8"}
-        com.openai/openai-java {:mvn/version "0.29.0"}
-  }
+        com.vladsch.flexmark/flexmark-all             {:mvn/version "0.64.8"}
+        com.openai/openai-java                        {:mvn/version "0.29.0"}
+        net.clojars.wkok/openai-clojure               {:mvn/version "0.22.0"}
+        }
  }
