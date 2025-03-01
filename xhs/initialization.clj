@@ -37,29 +37,29 @@
 (defmulti init (fn [options] (:run-mode options)))
 
 ;; db-spec: {dbtype "sqlite",  dbname "db/xhs.db"}
-(defmethod init :db [{:keys [db-spec seed-url]} options]
+(defmethod init :db [{:keys [db-spec seed_url]} options]
   (timbre/info "Initialize database")
   (loop []
     (if @initialized
       (timbre/info "Database already initialized")
       (if (compare-and-set! init-lock false true)
         (do
-          (create-tables db-spec seed-url)
+          (create-tables db-spec seed_url)
           (reset! initialized true))
         (do
           (Thread/sleep 15)
           (recur))))))
 
-(defmethod init :default [{:keys [seed-url queue-path]} options]
+(defmethod init :default [{:keys [seed_url queue_path]} options]
   (timbre/info "runs in the local memory mode")
   (loop []
     (if @initialized
       (timbre/info "Database already initialized")
       (if (compare-and-set! init-lock false true)
         (do
-          (init-url-queue queue-path)
+          (init-url-queue queue_path)
           ;;add -url
-          (add-urls {:run-mode (:run-mode options) :url-type "page" :page-urls [seed-url]})
+          (add-urls {:run-mode (:run-mode options) :url-type "page" :page-urls [seed_url]})
           (reset! initialized true))
         (do
           (Thread/sleep 15)

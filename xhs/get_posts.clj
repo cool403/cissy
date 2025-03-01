@@ -2,10 +2,10 @@
   (:require
    [cissy.registry :refer [defnode]]
    [taoensso.timbre :as timbre]
-   [xhs.initialization :refer [init-db]]
-   [xhs.db :refer [get-todo-pages]]
+   [xhs.initialization :refer [init]]
+   [xhs.url-manager :refer [get-urls add-urls]]
    [xhs.http :as http]
-   [xhs.html-parser :as html-parser]))
+   [xhs.parser :as parser]))
 
 ;; craw page
 (defn- craw-page [page-dict]
@@ -13,7 +13,7 @@
   (let [{:keys [page cookie_file]} page-dict
         {:keys [page_url id]} page
         content (http/http-get {:page_url page_url :cookie_file cookie_file})]
-    (html-parser/parse-html-content {:source :xhs-index :page page :content content})))
+    (parser/parse-html-content {:content-type :home-page :page page :content content :parse-type :llm})))
 
 ; init get-posts url
 ; read people's profile page from database
@@ -24,13 +24,12 @@
         {:keys [task-idx task-name task-config node-graph]} @task-info
         {:keys [get-posts]} task-config
         {:keys [thread-idx]} @node-execution-dict
-        {:keys [seed_url db_file cookie_file]} get-posts
-        db-spec {:dbtype "sqlite" :dbname db_file}]
+        {:keys [seed_url queue_path cookie_file]} get-posts]
     ;; (timbre/info (str "thread-idx=" thread-idx ",seed_url=" seed_url ",db_file=" db_file))
     ;init db
-    (init-db db-spec seed_url)
+    (init {:run-mode "local" :seed_url seed_url :queue_path queue_path})
     ;; load page urls
-    (let [todo-pages (get-todo-pages db-spec thread-idx)]
+    (let [todo-pages (get-urls {:run-mode "local" :url-type "page"})]
       (timbre/info (str "node-id=get-posts,thread-idx=" thread-idx ", get " (count todo-pages) " pages to crawl"))
       (if (> (count todo-pages) 0)
         (doseq [page todo-pages]
