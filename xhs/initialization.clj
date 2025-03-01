@@ -5,7 +5,8 @@
    [next.jdbc :as jdbc]
    [taoensso.timbre :as timbre]
    [xhs.create-table-sql :refer [xhs-comments-table-sql xhs-pages-table-sql
-                                 xhs-posts-table-sql]]))
+                                 xhs-posts-table-sql]]
+   [cissy.init :as init]))
 
 ; the check sql
 (defonce check-table-sql "select 1 from sqlite_master where name='xhs_pages' and type='table'")
@@ -33,8 +34,10 @@
 (defonce init-lock (atom false))
 (defonce initialized (atom false))
 
-;{dbtype "sqlite",  dbname "db/xhs.db"}
-(defn init-db [db-spec seed-url]
+(defmulti init (fn [options] (:run-mode options)))
+
+;; db-spec: {dbtype "sqlite",  dbname "db/xhs.db"}
+(defmethod init :db [{:keys [db-spec seed-url]} options]
   (timbre/info "Initialize database")
   (loop []
     (if @initialized
@@ -46,3 +49,6 @@
         (do
           (Thread/sleep 15)
           (recur))))))
+
+(defmethod init :default [{:keys [seed-url]} options]
+  (timbre/info "runs in the local memory mode"))

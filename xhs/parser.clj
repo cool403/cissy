@@ -1,4 +1,4 @@
-(ns xhs.html-parser
+(ns xhs.parser
   (:require [taoensso.timbre :as timbre])
   (:import [com.vladsch.flexmark.html2md.converter FlexmarkHtmlConverter]))
 
