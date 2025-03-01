@@ -6,7 +6,7 @@
    [taoensso.timbre :as timbre]
    [xhs.create-table-sql :refer [xhs-comments-table-sql xhs-pages-table-sql
                                  xhs-posts-table-sql]]
-   [cissy.init :as init]))
+   [xhs.url-manager :refer [add-urls init-url-queue]]))
 
 ; the check sql
 (defonce check-table-sql "select 1 from sqlite_master where name='xhs_pages' and type='table'")
@@ -50,5 +50,17 @@
           (Thread/sleep 15)
           (recur))))))
 
-(defmethod init :default [{:keys [seed-url]} options]
-  (timbre/info "runs in the local memory mode"))
+(defmethod init :default [{:keys [seed-url queue-path]} options]
+  (timbre/info "runs in the local memory mode")
+  (loop []
+    (if @initialized
+      (timbre/info "Database already initialized")
+      (if (compare-and-set! init-lock false true)
+        (do
+          (init-url-queue queue-path)
+          ;;add -url
+          (add-urls {:run-mode (:run-mode options) :url-type "page" :page-urls [seed-url]})
+          (reset! initialized true))
+        (do
+          (Thread/sleep 15)
+          (recur))))))
