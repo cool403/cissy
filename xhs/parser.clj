@@ -21,7 +21,8 @@
   (let [markdown-content (html-to-markdown content)]
     (try
       (let [posts-list (llm/completion-request markdown-content)]
-        (timbre/info "llm parse home-page result=" posts-list))
+        (timbre/info "llm parse home-page result=" posts-list)
+        )
       (catch Exception e
         (timbre/error "Error when parsing home-page with llm" e)))))
 
