@@ -5,7 +5,8 @@
    [xhs.initialization :refer [init]]
    [xhs.url-manager :refer [get-urls add-urls]]
    [xhs.http :as http]
-   [xhs.parser :as parser]))
+   [xhs.parser :as parser]
+   [xhs.llm :as llm]))
 
 ;; craw page
 (defn- craw-page [page-dict]

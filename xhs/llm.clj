@@ -28,7 +28,7 @@
 
 ;;completion request
 (defn completion-request 
-  ([^String prompt] (completion-request prompt nil))
+  ([^String prompt] (completion-request prompt {:model "deepseek-chat"}))
   ([^String prompt options]
    (let [request (-> (new HttpPost (str (:base-url openai-config) "/v1/completions")) wrapper-request)
          entity (StringEntity. (json/write-str (assoc options :prompt prompt)))]

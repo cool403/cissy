@@ -1,5 +1,6 @@
 (ns xhs.parser
-  (:require [taoensso.timbre :as timbre])
+  (:require [taoensso.timbre :as timbre]
+            [xhs.llm :as llm])
   (:import [com.vladsch.flexmark.html2md.converter FlexmarkHtmlConverter]))
 
 ;; Define a multi-method for parsing HTML content
@@ -16,7 +17,13 @@
 ;; parse xhs-index
 (defmethod parse-html-content [:home-page :llm]
   [{:keys [page content]} :as page-content]
-  (timbre/info "parse-html-content :home-page with llm"))
+  (timbre/info "parse-html-content :home-page with llm")
+  (let [markdown-content (html-to-markdown content)]
+    (try
+      (let [posts-list (llm/completion-request markdown-content)]
+        (timbre/info "llm parse home-page result=" posts-list))
+      (catch Exception e
+        (timbre/error "Error when parsing home-page with llm" e)))))
 
 
 
