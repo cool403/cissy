@@ -69,7 +69,7 @@
 (defn http-get [get-dict]
   (let [request (-> (new HttpGet (:page_url get-dict))
                     (wrapper-request (:cookie_file get-dict)))
-        response (.execute http-client request)
+        response (time (.execute http-client request))
         status (.getCode response)]
     (if (= status 200)
       (EntityUtils/toString (.getEntity response))

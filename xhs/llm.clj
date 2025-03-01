@@ -33,5 +33,9 @@
    (let [request (-> (new HttpPost (str (:base-url openai-config) "/v1/completions")) wrapper-request)
          entity (StringEntity. (json/write-str (assoc options :prompt prompt)))]
      (.setEntity request entity)
-     (let [res (.execute openai-client request)]
-       (EntityUtils/toString (.getEntity res))))))
+     (let [res (.execute openai-client request)
+           status (.getCode res)]
+       (if (= status 200)
+         ;;extract the text 
+         (-> (.getEntity res) EntityUtils/toString (json/read-str :key-fn keyword) :choices first :text)
+         (throw (Exception. (str "HTTP status: " status ",content: " (.getContent res)))))))))
