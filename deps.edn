@@ -14,26 +14,26 @@
          org.clojure/test.check            {:mvn/version "1.1.0"}
          org.clojure/tools.deps            {:mvn/version "0.21.1467"}
          org.clojure/data.csv              {:mvn/version "1.0.1"}
-         org.clojure/tools.namespace       {:mvn/version "1.5.0"}}}
+         org.clojure/tools.namespace       {:mvn/version "1.5.0"}}
 
-:aliases
-{:build {:deps       {io.github.clojure/tools.build {:git/tag "v0.9.6" :git/sha "8e78bcc"}
-                      org.clojure/tools.deps.alpha  {:mvn/version "0.15.1254"}}
-         :ns-default build}
- :test  {:extra-paths ["test"]
-         :extra-deps  {lambdaisland/kaocha {:mvn/version "1.91.1392"}}
-         :main-opts   ["-m" "kaocha.runner"]}
+ :aliases
+ {:build {:deps       {io.github.clojure/tools.build {:git/tag "v0.9.6" :git/sha "8e78bcc"}
+                       org.clojure/tools.deps.alpha  {:mvn/version "0.15.1254"}}
+          :ns-default build}
+  :test  {:extra-paths ["test"]
+          :extra-deps  {lambdaisland/kaocha {:mvn/version "1.91.1392"}}
+          :main-opts   ["-m" "kaocha.runner"]}
 
- :native-image
- {:main-opts ["-m" "clj.native-image" "cissy.app"
-              "--initialize-at-build-time"
-              "--no-fallback"
-              "--enable-http"
-              "--enable-https"
-              "-H:+ReportExceptionStackTraces"
-              "-H:ResourceConfigurationFiles=resources/META-INF/native-image/resource-config.json"
-              "-H:ReflectionConfigurationFiles=resources/META-INF/native-image/reflect-config.json"
-              "-H:Name=cissy"]
-  :jvm-opts  ["-Dclojure.compiler.direct-linking=true"]
-  :deps      {org.clojure/clojure          {:mvn/version "1.11.1"}
-              org.clojure/tools.deps.alpha {:mvn/version "0.15.1254"}}}} }
+  :native-image
+  {:main-opts ["-m" "clj.native-image" "cissy.app"
+               "--initialize-at-build-time"
+               "--no-fallback"
+               "--enable-http"
+               "--enable-https"
+               "-H:+ReportExceptionStackTraces"
+               "-H:ResourceConfigurationFiles=resources/META-INF/native-image/resource-config.json"
+               "-H:ReflectionConfigurationFiles=resources/META-INF/native-image/reflect-config.json"
+               "-H:Name=cissy"]
+   :jvm-opts  ["-Dclojure.compiler.direct-linking=true"]
+   :deps      {org.clojure/clojure          {:mvn/version "1.11.1"}
+               org.clojure/tools.deps.alpha {:mvn/version "0.15.1254"}}}}}
