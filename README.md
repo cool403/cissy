@@ -158,7 +158,7 @@ java -jar cissy.jar demo -z
 
 <a name="drnConfigItem"></a>
 #### `drn`配置项
-```json
+```edn
 {
     :from_table   "users"
     :from_db      "xx"
@@ -170,7 +170,7 @@ java -jar cissy.jar demo -z
 
 <a name="dwnConfigItem"></a>
 #### `dwn`配置项
-```json
+```edn
 {
     :to_table "users"
     :from_db  "xx"
@@ -180,7 +180,7 @@ java -jar cissy.jar demo -z
 
 <a name="csvwConfigItem"></a>
 #### `csvw`配置项
-```json
+```edn
 {
     :target_file "{绝对路径/xx.csv}"
     :threads     1
@@ -189,7 +189,7 @@ java -jar cissy.jar demo -z
 
 <a name="krnConfigItem"></a>
 #### `krn`配置项
-```json
+```edn
 {
     :topic "test-topic"
     :from_db "main"
